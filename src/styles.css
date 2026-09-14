@@ -92,12 +92,19 @@ main {
 .arrival-row:first-child { background: #24231f; }
 .arrival-order { font-family: "DM Mono", monospace; font-size: 12px; color: #77756f; }
 .arrival-destination { display: grid; gap: 4px; min-width: 0; }
-.arrival-destination small, .arrival-when small { font-family: "DM Mono", monospace; color: #8e8b84; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
+.arrival-destination small, .arrival-when small { font-family: "DM Mono", monospace; color: #8e8b84; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
 .arrival-destination strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 17px; font-weight: 500; }
 .arrival-when { display: grid; grid-template-columns: auto auto; align-items: baseline; column-gap: 16px; text-align: right; }
 .arrival-when > span { color: #aaa79f; font-family: "DM Mono", monospace; font-size: 11px; text-transform: uppercase; }
 .arrival-when time { font-family: "DM Mono", monospace; font-size: clamp(20px, 3vw, 30px); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
-.arrival-when small { grid-column: 2; }
+.arrival-annotations { grid-column: 2; display: flex; justify-content: flex-end; gap: 10px; white-space: nowrap; }
+.arrival-time.delay-early, .delay-label.delay-early { color: #bd8cff; }
+.arrival-time.delay-on-time, .delay-label.delay-on-time { color: #7de0b7; }
+.arrival-time.delay-mild, .delay-label.delay-mild { color: #f3b84b; }
+.arrival-time.delay-noticeable, .delay-label.delay-noticeable { color: #ff7548; }
+.arrival-time.delay-official, .delay-label.delay-official { color: #ff3b35; }
+.arrival-time.delay-undetermined { color: #f9f5ec; }
+.delay-label.delay-undetermined { color: #8e8b84; }
 
 .board-message { min-height: 408px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; padding: 40px; color: #aaa79f; text-align: center; }
 .board-message strong { color: #f9f5ec; font-size: 18px; }
@@ -152,7 +159,7 @@ main {
   .selector-panel, .board-header { padding: 24px 20px; }
   .arrival-row { grid-template-columns: 32px 1fr; gap: 10px; min-height: 116px; padding: 14px 20px; }
   .arrival-when { grid-column: 2; grid-template-columns: auto 1fr; text-align: left; column-gap: 12px; }
-  .arrival-when small { grid-column: 2; }
+  .arrival-annotations { justify-content: flex-start; }
   .board-footer { padding: 0 20px; }
   .timetable-section { padding-top: 60px; }
   .timetable-board-header { padding: 24px 20px; }

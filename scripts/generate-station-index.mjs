@@ -86,6 +86,7 @@ await forEachCsvRow("stop_times.txt", (row) => {
   const byService = timetables.get(timetableKey) ?? new Map();
   const events = byService.get(trip.serviceId) ?? [];
   events.push({
+    tripId: row.trip_id,
     arrival: row.arrival_time || null,
     departure: row.departure_time || null,
   });

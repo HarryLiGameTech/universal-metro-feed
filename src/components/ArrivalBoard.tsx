@@ -79,10 +79,16 @@ export function ArrivalBoard({ station, routeId, direction }: ArrivalBoardProps)
                 </div>
                 <div className="arrival-when">
                   <span>{proximity}</span>
-                  <time dateTime={new Date(arrival.eventTime * 1_000).toISOString()}>
+                  <time
+                    className={`arrival-time delay-${arrival.delayStatus}`}
+                    dateTime={new Date(arrival.eventTime * 1_000).toISOString()}
+                  >
                     {timeFormatter.format(arrival.eventTime * 1_000)}
                   </time>
-                  <small>{arrival.eventKind === "departure" ? "Departs" : "Arrives"}</small>
+                  <div className="arrival-annotations">
+                    <small>{arrival.eventKind === "departure" ? "Departs" : "Arrives"}</small>
+                    <small className={`delay-label delay-${arrival.delayStatus}`}>{arrival.delayLabel}</small>
+                  </div>
                 </div>
               </li>
             );

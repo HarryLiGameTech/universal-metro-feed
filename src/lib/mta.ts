@@ -1,6 +1,7 @@
 import GtfsRealtimeBindings, { type transit_realtime } from "gtfs-realtime-bindings";
 import { stations } from "../data/stations.generated";
-import type { Arrival, ArrivalSnapshot, Direction } from "../types";
+import { fetchTimetableSource, findScheduledEventTime, type TimetableSource } from "./timetable";
+import type { Arrival, ArrivalSnapshot, DelayStatus, Direction } from "../types";
 
 const BASE_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/";
 
@@ -48,11 +49,34 @@ function parentStopId(stopId: string | null | undefined) {
   return /[NS]$/.test(stopId) ? stopId.slice(0, -1) : stopId;
 }
 
+const delayLabels: Record<DelayStatus, string> = {
+  early: "Early",
+  "on-time": "On-time or almost",
+  mild: "Mildly delayed",
+  noticeable: "Noticeably delayed",
+  official: "Officially delayed",
+  undetermined: "Untimed",
+};
+
+export function classifyDelay(delaySeconds: number | null) {
+  if (delaySeconds == null || delaySeconds < -120 || delaySeconds > 600) {
+    return { delayStatus: "undetermined" as const, delayLabel: delayLabels.undetermined };
+  }
+
+  if (delaySeconds <= -20) return { delayStatus: "early" as const, delayLabel: delayLabels.early };
+  const difference = Math.abs(delaySeconds);
+  if (difference <= 30) return { delayStatus: "on-time" as const, delayLabel: delayLabels["on-time"] };
+  if (difference <= 60) return { delayStatus: "mild" as const, delayLabel: delayLabels.mild };
+  if (difference <= 299) return { delayStatus: "noticeable" as const, delayLabel: delayLabels.noticeable };
+  return { delayStatus: "official" as const, delayLabel: delayLabels.official };
+}
+
 export function normalizeArrivals(
   feed: transit_realtime.FeedMessage,
   stationId: string,
   routeId: string,
   direction: Direction,
+  timetableSource?: TimetableSource | null,
 ): ArrivalSnapshot {
   const selectedStopId = `${stationId}${direction}`;
   const arrivals: Arrival[] = [];
@@ -69,18 +93,29 @@ export function normalizeArrivals(
     const departureTime = numberFromLong(selected.departure?.time);
     const eventTime = arrivalTime ?? departureTime;
     if (eventTime == null) continue;
+    const eventKind = arrivalTime == null ? "departure" : "arrival";
+    const tripId = tripUpdate.trip.tripId ?? entity.id;
+    const serviceDate = tripUpdate.trip.startDate;
+    const scheduledTime = timetableSource && serviceDate
+      ? findScheduledEventTime(timetableSource, tripId, serviceDate, eventKind, eventTime)
+      : null;
+    const delaySeconds = scheduledTime == null ? null : Math.round(eventTime - scheduledTime);
+    const delay = classifyDelay(delaySeconds);
 
     const destinationId = parentStopId(updates.at(-1)?.stopId);
     arrivals.push({
       id: entity.id,
-      tripId: tripUpdate.trip.tripId ?? entity.id,
+      tripId,
       routeId,
       stopId: selectedStopId,
       direction,
       destinationId,
       destinationName: destinationId ? stationNames.get(destinationId) ?? "Unknown terminal" : "Unknown terminal",
       eventTime,
-      eventKind: arrivalTime == null ? "departure" : "arrival",
+      eventKind,
+      scheduledTime,
+      delaySeconds,
+      ...delay,
     });
   }
 
@@ -102,6 +137,7 @@ export async function fetchArrivals(
   const feedName = FEED_BY_ROUTE[routeId];
   if (!feedName) throw new Error(`No realtime feed is configured for the ${routeId} line.`);
 
+  const timetableSourcePromise = fetchTimetableSource(stationId, routeId, direction, signal).catch(() => null);
   const response = await fetch(`${BASE_URL}${feedName}`, {
     cache: "no-store",
     headers: { Accept: "application/x-protobuf, application/octet-stream" },
@@ -114,5 +150,5 @@ export async function fetchArrivals(
 
   const bytes = new Uint8Array(await response.arrayBuffer());
   const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
-  return normalizeArrivals(feed, stationId, routeId, direction);
+  return normalizeArrivals(feed, stationId, routeId, direction, await timetableSourcePromise);
 }

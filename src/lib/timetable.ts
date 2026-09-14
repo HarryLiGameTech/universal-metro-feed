@@ -1,11 +1,12 @@
 import type { Direction, TimetableDayType, TimetableEvent, TimetableResult } from "../types";
 
-interface RawTimetableEvent {
+export interface RawTimetableEvent {
+  tripId?: string;
   arrival: string | null;
   departure: string | null;
 }
 
-interface TimetableShard {
+export interface TimetableShard {
   services: Record<string, RawTimetableEvent[]>;
 }
 
@@ -22,9 +23,14 @@ interface CalendarException {
   exceptionType: number;
 }
 
-interface CalendarPayload {
+export interface CalendarPayload {
   calendar: CalendarService[];
   exceptions: CalendarException[];
+}
+
+export interface TimetableSource {
+  shard: TimetableShard;
+  calendar: CalendarPayload;
 }
 
 const dayIndexes: Record<TimetableDayType, readonly number[]> = {
@@ -44,6 +50,17 @@ const newYorkDateFormatter = new Intl.DateTimeFormat("en-CA", {
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
+});
+
+const newYorkDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
 });
 
 export function newYorkDateKey(date: Date) {
@@ -126,6 +143,78 @@ function parseGtfsTime(value: string) {
   return Number(hour) * 3_600 + Number(minute) * 60 + Number(second);
 }
 
+function newYorkOffsetMilliseconds(epochMilliseconds: number) {
+  const parts = newYorkDateTimeFormatter.formatToParts(epochMilliseconds);
+  const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  const representedAsUtc = Date.UTC(
+    value("year"),
+    value("month") - 1,
+    value("day"),
+    value("hour"),
+    value("minute"),
+    value("second"),
+  );
+  return representedAsUtc - epochMilliseconds;
+}
+
+export function newYorkServiceTimeToEpoch(dateKey: string, gtfsTime: string) {
+  const year = Number(dateKey.slice(0, 4));
+  const month = Number(dateKey.slice(4, 6));
+  const day = Number(dateKey.slice(6, 8));
+  const totalSeconds = parseGtfsTime(gtfsTime);
+  const dayOffset = Math.floor(totalSeconds / 86_400);
+  const secondsInDay = totalSeconds % 86_400;
+  const hour = Math.floor(secondsInDay / 3_600);
+  const minute = Math.floor((secondsInDay % 3_600) / 60);
+  const second = secondsInDay % 60;
+  const wallClockAsUtc = Date.UTC(year, month - 1, day + dayOffset, hour, minute, second);
+  let epochMilliseconds = wallClockAsUtc;
+
+  // Two passes handle dates where the initial UTC guess has a different DST offset.
+  for (let pass = 0; pass < 2; pass += 1) {
+    epochMilliseconds = wallClockAsUtc - newYorkOffsetMilliseconds(epochMilliseconds);
+  }
+
+  return Math.round(epochMilliseconds / 1_000);
+}
+
+export function findScheduledEventTime(
+  source: TimetableSource,
+  realtimeTripId: string,
+  serviceDate: string,
+  eventKind: "arrival" | "departure",
+  realtimeEventTime: number,
+) {
+  const tripKey = (tripId: string) =>
+    tripId.match(/(?:^|_)([+-]?\d{6}_[A-Z0-9]+\.\.[NS])/i)?.[1] ?? null;
+  const realtimeKey = tripKey(realtimeTripId);
+  const candidates = new Set<number>();
+
+  // MTA may label a post-midnight realtime trip with the new calendar date,
+  // while static GTFS stores it as a 24:xx trip on the previous service day.
+  for (const candidateDate of [serviceDate, shiftDateKey(serviceDate, -1)]) {
+    const activeServices = activeServiceIds(source.calendar, candidateDate);
+    for (const serviceId of activeServices) {
+      for (const event of source.shard.services[serviceId] ?? []) {
+        if (!event.tripId) continue;
+        const isMatch = event.tripId === realtimeTripId ||
+          event.tripId.endsWith(`_${realtimeTripId}`) ||
+          (realtimeKey != null && tripKey(event.tripId) === realtimeKey);
+        if (!isMatch) continue;
+        const time = eventKind === "arrival"
+          ? event.arrival ?? event.departure
+          : event.departure ?? event.arrival;
+        if (time) candidates.add(newYorkServiceTimeToEpoch(candidateDate, time));
+      }
+    }
+  }
+
+  if (candidates.size === 0) return null;
+  return [...candidates].sort(
+    (left, right) => Math.abs(left - realtimeEventTime) - Math.abs(right - realtimeEventTime),
+  )[0] ?? null;
+}
+
 export function renderTimetable(
   shard: TimetableShard,
   calendar: CalendarPayload,
@@ -191,6 +280,19 @@ export async function fetchTimetable(
   requestedDayType: TimetableDayType,
   signal?: AbortSignal,
 ) {
+  const { shard, calendar } = await fetchTimetableSource(stationId, routeId, direction, signal);
+  const availableDays = availableTimetableDays(shard, calendar);
+  const dayType = availableDays.includes(requestedDayType) ? requestedDayType : availableDays[0] ?? requestedDayType;
+  const dateKey = findTimetableDate(shard, calendar, dayType, newYorkDateKey(new Date()));
+  return renderTimetable(shard, calendar, dateKey, dayType, availableDays);
+}
+
+export async function fetchTimetableSource(
+  stationId: string,
+  routeId: string,
+  direction: Direction,
+  signal?: AbortSignal,
+): Promise<TimetableSource> {
   const timetablePath = `/timetables/${encodeURIComponent(stationId)}/${encodeURIComponent(routeId)}-${direction}.json`;
   const [shardResponse, calendarResponse] = await Promise.all([
     fetch(timetablePath, { cache: "no-store", signal }),
@@ -202,8 +304,5 @@ export async function fetchTimetable(
 
   const shard = await shardResponse.json() as TimetableShard;
   const calendar = await calendarResponse.json() as CalendarPayload;
-  const availableDays = availableTimetableDays(shard, calendar);
-  const dayType = availableDays.includes(requestedDayType) ? requestedDayType : availableDays[0] ?? requestedDayType;
-  const dateKey = findTimetableDate(shard, calendar, dayType, newYorkDateKey(new Date()));
-  return renderTimetable(shard, calendar, dateKey, dayType, availableDays);
+  return { shard, calendar };
 }

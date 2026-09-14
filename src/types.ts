@@ -1,5 +1,6 @@
 export type Direction = "N" | "S";
 export type TimetableDayType = "weekday" | "saturday" | "sunday";
+export type DelayStatus = "early" | "on-time" | "mild" | "noticeable" | "official" | "undetermined";
 
 export interface Route {
   id: string;
@@ -31,6 +32,10 @@ export interface Arrival {
   destinationName: string;
   eventTime: number;
   eventKind: "arrival" | "departure";
+  scheduledTime: number | null;
+  delaySeconds: number | null;
+  delayStatus: DelayStatus;
+  delayLabel: string;
 }
 
 export interface ArrivalSnapshot {
