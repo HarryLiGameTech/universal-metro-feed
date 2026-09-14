@@ -4,6 +4,7 @@ import { createInterface } from "node:readline";
 
 const DATA_DIR = new URL("../gtfs_subway/", import.meta.url);
 const OUTPUT = new URL("../src/data/stations.generated.ts", import.meta.url);
+const TIMETABLE_DIR = new URL("../public/timetables/", import.meta.url);
 
 function parseCsvLine(line) {
   const values = [];
@@ -58,24 +59,38 @@ await forEachCsvRow("routes.txt", (row) => {
   });
 });
 
-const tripRoutes = new Map();
+const trips = new Map();
 await forEachCsvRow("trips.txt", (row) => {
-  tripRoutes.set(row.trip_id, row.route_id);
+  trips.set(row.trip_id, {
+    routeId: row.route_id,
+    serviceId: row.service_id,
+  });
 });
 
 const service = new Map();
+const timetables = new Map();
 await forEachCsvRow("stop_times.txt", (row) => {
-  const routeId = tripRoutes.get(row.trip_id);
+  const trip = trips.get(row.trip_id);
   const stopId = row.stop_id;
-  if (!routeId || !/[NS]$/.test(stopId)) return;
+  if (!trip || !/[NS]$/.test(stopId)) return;
 
   const parentId = stopId.slice(0, -1);
   const direction = stopId.at(-1);
   const stationService = service.get(parentId) ?? new Map();
-  const directions = stationService.get(routeId) ?? new Set();
+  const directions = stationService.get(trip.routeId) ?? new Set();
   directions.add(direction);
-  stationService.set(routeId, directions);
+  stationService.set(trip.routeId, directions);
   service.set(parentId, stationService);
+
+  const timetableKey = `${parentId}/${trip.routeId}-${direction}`;
+  const byService = timetables.get(timetableKey) ?? new Map();
+  const events = byService.get(trip.serviceId) ?? [];
+  events.push({
+    arrival: row.arrival_time || null,
+    departure: row.departure_time || null,
+  });
+  byService.set(trip.serviceId, events);
+  timetables.set(timetableKey, byService);
 });
 
 const stations = [];
@@ -109,5 +124,58 @@ const source = `// Generated from the official MTA static GTFS files. Do not edi
 
 writeFileSync(OUTPUT, source);
 
+await mkdir(TIMETABLE_DIR, { recursive: true });
+let timetableFileCount = 0;
+for (const [key, byService] of timetables) {
+  const output = new URL(`${key}.json`, TIMETABLE_DIR);
+  await mkdir(new URL("./", output), { recursive: true });
+
+  const services = Object.fromEntries(
+    [...byService.entries()].map(([serviceId, events]) => [
+      serviceId,
+      events.sort((left, right) => {
+        const leftTime = left.arrival ?? left.departure ?? "";
+        const rightTime = right.arrival ?? right.departure ?? "";
+        return leftTime.localeCompare(rightTime);
+      }),
+    ]),
+  );
+
+  writeFileSync(output, JSON.stringify({ services }));
+  timetableFileCount += 1;
+}
+
+const calendar = [];
+await forEachCsvRow("calendar.txt", (row) => {
+  calendar.push({
+    serviceId: row.service_id,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    days: [
+      row.sunday === "1",
+      row.monday === "1",
+      row.tuesday === "1",
+      row.wednesday === "1",
+      row.thursday === "1",
+      row.friday === "1",
+      row.saturday === "1",
+    ],
+  });
+});
+
+const exceptions = [];
+await forEachCsvRow("calendar_dates.txt", (row) => {
+  exceptions.push({
+    serviceId: row.service_id,
+    date: row.date,
+    exceptionType: Number(row.exception_type),
+  });
+});
+
+writeFileSync(
+  new URL("calendar.json", TIMETABLE_DIR),
+  JSON.stringify({ calendar, exceptions }),
+);
+
 const feedInfo = readFileSync(new URL("feed_info.txt", DATA_DIR), "utf8").trim().split("\n")[1];
-console.log(`Generated ${stations.length} stations from GTFS (${feedInfo ?? "unknown version"}).`);
+console.log(`Generated ${stations.length} stations and ${timetableFileCount} timetable shards from GTFS (${feedInfo ?? "unknown version"}).`);

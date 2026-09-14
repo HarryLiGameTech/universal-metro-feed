@@ -1,4 +1,5 @@
 export type Direction = "N" | "S";
+export type TimetableDayType = "weekday" | "saturday" | "sunday";
 
 export interface Route {
   id: string;
@@ -36,4 +37,25 @@ export interface ArrivalSnapshot {
   arrivals: Arrival[];
   feedTimestamp: number;
   fetchedAt: number;
+}
+
+export interface TimetableEvent {
+  seconds: number;
+  minute: string;
+  hasHalfMinute: boolean;
+  exactTime: string;
+  eventKind: "arrival" | "departure";
+}
+
+export interface TimetableHour {
+  hour: number;
+  events: TimetableEvent[];
+}
+
+export interface TimetableResult {
+  dateKey: string;
+  dayType: TimetableDayType;
+  availableDays: TimetableDayType[];
+  hours: TimetableHour[];
+  scheduledTrainCount: number;
 }

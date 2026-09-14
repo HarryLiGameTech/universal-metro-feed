@@ -1,38 +1,47 @@
 import { ChevronDown } from "lucide-react";
 import { routes, stations } from "../data/stations.generated";
-import type { Direction, Station } from "../types";
+import { timetableDayLabels } from "../lib/timetable";
+import type { Direction, Station, TimetableDayType } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
 interface SelectorPanelProps {
+  idPrefix?: string;
   station: Station;
   routeId: string;
   direction: Direction;
   onStationChange(stationId: string): void;
   onRouteChange(routeId: string): void;
   onDirectionChange(direction: Direction): void;
+  timetableDays?: readonly TimetableDayType[];
+  timetableDay?: TimetableDayType;
+  onTimetableDayChange?(dayType: TimetableDayType): void;
 }
 
 export function SelectorPanel({
+  idPrefix = "platform",
   station,
   routeId,
   direction,
   onStationChange,
   onRouteChange,
   onDirectionChange,
+  timetableDays,
+  timetableDay,
+  onTimetableDayChange,
 }: SelectorPanelProps) {
   const selectedRoute = station.routes.find((item) => item.routeId === routeId) ?? station.routes[0];
   const directions = selectedRoute?.directions ?? ["N", "S"];
 
   return (
-    <section className="selector-panel" aria-labelledby="selector-title">
+    <section className="selector-panel" aria-labelledby={`${idPrefix}-selector-title`}>
       <div className="section-kicker">Choose your platform</div>
-      <h2 id="selector-title">Where are you waiting?</h2>
+      <h2 id={`${idPrefix}-selector-title`}>Where are you waiting?</h2>
 
       <div className="field-group">
-        <label htmlFor="station">Station</label>
+        <label htmlFor={`${idPrefix}-station`}>Station</label>
         <div className="select-shell">
           <select
-            id="station"
+            id={`${idPrefix}-station`}
             value={station.id}
             onChange={(event) => onStationChange(event.target.value)}
           >
@@ -81,6 +90,25 @@ export function SelectorPanel({
           ))}
         </div>
       </fieldset>
+
+      {timetableDays && timetableDay && onTimetableDayChange && (
+        <fieldset className="field-group timetable-day-field">
+          <legend>Day of week</legend>
+          <div className="day-options">
+            {timetableDays.map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={value === timetableDay ? "day-option is-selected" : "day-option"}
+                onClick={() => onTimetableDayChange(value)}
+                aria-pressed={value === timetableDay}
+              >
+                {timetableDayLabels[value]}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
     </section>
   );
 }

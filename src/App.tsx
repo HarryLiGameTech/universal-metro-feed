@@ -4,6 +4,7 @@ import { stations } from "./data/stations.generated";
 import type { Direction } from "./types";
 import { ArrivalBoard } from "./components/ArrivalBoard";
 import { SelectorPanel } from "./components/SelectorPanel";
+import { StaticTimetableSection } from "./components/StaticTimetableSection";
 import "./styles.css";
 
 const firstStation = stations[0] ?? (() => {
@@ -103,6 +104,7 @@ export default function App() {
 
       <div className="workspace">
         <SelectorPanel
+          idPrefix="realtime"
           station={station}
           routeId={routeId}
           direction={direction}
@@ -112,6 +114,8 @@ export default function App() {
         />
         <ArrivalBoard station={station} routeId={routeId} direction={direction} />
       </div>
+
+      <StaticTimetableSection />
 
       <footer className="page-footer">
         <span>Times shown in New York local time.</span>
