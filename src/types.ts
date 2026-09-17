@@ -12,6 +12,10 @@ export interface Route {
 export interface StationRoute {
   routeId: string;
   directions: Direction[];
+  /** GTFS trip_headsign values actually serving this stop, by GTFS stop direction. */
+  headsigns?: Partial<Record<Direction, string[]>>;
+  /** Directed adjacent stop pairs used by this route at this stop. */
+  adjacentSegments?: Partial<Record<Direction, string[]>>;
 }
 
 export interface Station {
@@ -42,6 +46,7 @@ export interface ArrivalSnapshot {
   arrivals: Arrival[];
   feedTimestamp: number;
   fetchedAt: number;
+  unavailableRoutes?: string[];
 }
 
 export interface TimetableEvent {
@@ -50,6 +55,7 @@ export interface TimetableEvent {
   hasHalfMinute: boolean;
   exactTime: string;
   eventKind: "arrival" | "departure";
+  routeId?: string;
 }
 
 export interface TimetableHour {

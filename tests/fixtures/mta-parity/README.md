@@ -4,7 +4,7 @@ These fixtures freeze observable behavior **before** the resolver and Clockface 
 
 ## Inputs
 
-- `static/topology.json`: the minimal network identity needed by a future topology source. The current implementation still reads the generated station index; the parity test verifies that its relevant names match this fixture.
+- `static/topology.json`: the minimal network identity used by the composed topology-source mock. The legacy parity path still reads the generated station index; the parity test verifies that its relevant names match this fixture.
 - `static/calendar.json`: the response body for `/timetables/calendar.json`, including a removed weekday service on September 14.
 - `static/127-1-N.json`: the response body for `/timetables/127/1-N.json`, including a `24:02:30` Sunday trip and an event without a departure time.
 - `realtime/*.feed.json`: GTFS-Realtime `FeedMessage` objects. The test protobuf-encodes them and returns the bytes from the mocked MTA endpoint, so the existing decode path is exercised.

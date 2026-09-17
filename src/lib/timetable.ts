@@ -2,6 +2,7 @@ import type { Direction, TimetableDayType, TimetableEvent, TimetableResult } fro
 
 export interface RawTimetableEvent {
   tripId?: string;
+  routeId?: string;
   arrival: string | null;
   departure: string | null;
 }
@@ -247,6 +248,7 @@ export function renderTimetable(
           hasHalfMinute: second === 30,
           exactTime,
           eventKind,
+          ...(event.routeId ? { routeId: event.routeId } : {}),
         });
       }
     }
@@ -281,6 +283,34 @@ export async function fetchTimetable(
   signal?: AbortSignal,
 ) {
   const { shard, calendar } = await fetchTimetableSource(stationId, routeId, direction, signal);
+  const availableDays = availableTimetableDays(shard, calendar);
+  const dayType = availableDays.includes(requestedDayType) ? requestedDayType : availableDays[0] ?? requestedDayType;
+  const dateKey = findTimetableDate(shard, calendar, dayType, newYorkDateKey(new Date()));
+  return renderTimetable(shard, calendar, dateKey, dayType, availableDays);
+}
+
+export async function fetchTimetableForRoutes(
+  stationId: string,
+  routeIds: readonly string[],
+  direction: Direction,
+  requestedDayType: TimetableDayType,
+  signal?: AbortSignal,
+): Promise<TimetableResult> {
+  if (routeIds.length === 0) throw new Error("Select at least one line.");
+  if (routeIds.length === 1) return fetchTimetable(stationId, routeIds[0]!, direction, requestedDayType, signal);
+
+  const sources = await Promise.all(routeIds.map((routeId) => fetchTimetableSource(stationId, routeId, direction, signal)));
+  const calendar = sources[0]!.calendar;
+  const services: TimetableShard["services"] = {};
+  sources.forEach((source, index) => {
+    const routeId = routeIds[index]!;
+    for (const [serviceId, events] of Object.entries(source.shard.services)) {
+      const merged = services[serviceId] ?? [];
+      merged.push(...events.map((event) => ({ ...event, routeId })));
+      services[serviceId] = merged;
+    }
+  });
+  const shard = { services };
   const availableDays = availableTimetableDays(shard, calendar);
   const dayType = availableDays.includes(requestedDayType) ? requestedDayType : availableDays[0] ?? requestedDayType;
   const dateKey = findTimetableDate(shard, calendar, dayType, newYorkDateKey(new Date()));

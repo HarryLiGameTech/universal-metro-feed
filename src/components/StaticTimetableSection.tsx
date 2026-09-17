@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarClock, RefreshCw } from "lucide-react";
-import { stations } from "../data/stations.generated";
-import { fetchTimetable, newYorkDateKey, timetableDayLabels, timetableDayTypeForDate } from "../lib/timetable";
+import { useCatalog } from "../providers/catalog-context";
+import { fetchTimetableForRoutes, newYorkDateKey, timetableDayLabels, timetableDayTypeForDate } from "../lib/timetable";
+import { directionDisplay, isSharedLineGroup } from "../lib/platform-selection";
 import type { Direction, TimetableDayType, TimetableResult } from "../types";
 import { RouteBullet } from "./RouteBullet";
 import { SelectorPanel } from "./SelectorPanel";
 
-const firstStation = stations[0] ?? (() => {
-  throw new Error("The generated station index is empty.");
-})();
-
 export function StaticTimetableSection() {
+  const { stations } = useCatalog();
+  const firstStation = stations[0] ?? (() => {
+    throw new Error("The provider station catalog is empty.");
+  })();
   const defaultStationId = stations.some((station) => station.id === "127") ? "127" : firstStation.id;
   const [stationId, setStationId] = useState(defaultStationId);
   const station = useMemo(
@@ -20,7 +21,7 @@ export function StaticTimetableSection() {
   const initialRoute = station.routes[0] ?? (() => {
     throw new Error(`No routes found for station ${station.id}.`);
   })();
-  const [routeId, setRouteId] = useState(initialRoute.routeId);
+  const [routeIds, setRouteIds] = useState<string[]>([initialRoute.routeId]);
   const [direction, setDirection] = useState<Direction>(initialRoute.directions[0] ?? "N");
   const [dayType, setDayType] = useState<TimetableDayType>(() => timetableDayTypeForDate(newYorkDateKey(new Date())));
   const [availableDays, setAvailableDays] = useState<TimetableDayType[]>(["weekday", "saturday", "sunday"]);
@@ -33,18 +34,27 @@ export function StaticTimetableSection() {
     const nextRoute = nextStation?.routes[0];
     if (!nextStation || !nextRoute) return;
     setStationId(nextStationId);
-    setRouteId(nextRoute.routeId);
+    setRouteIds([nextRoute.routeId]);
     setDirection(nextRoute.directions[0] ?? "N");
   }
 
   function selectRoute(nextRouteId: string) {
     const nextRoute = station.routes.find((item) => item.routeId === nextRouteId);
     if (!nextRoute) return;
-    setRouteId(nextRouteId);
+    setRouteIds([nextRouteId]);
     setDirection(nextRoute.directions.includes(direction) ? direction : nextRoute.directions[0] ?? "N");
   }
 
+  function selectLineGroup(nextRouteIds: string[]) {
+    if (isSharedLineGroup(station, direction, nextRouteIds)) setRouteIds(nextRouteIds);
+  }
+
   function selectDirection(nextDirection: Direction) {
+    if (routeIds.length > 1 && !isSharedLineGroup(station, nextDirection, routeIds)) {
+      const fallbackRoute = station.routes.find((item) => routeIds.includes(item.routeId) && item.directions.includes(nextDirection));
+      if (!fallbackRoute) return;
+      setRouteIds([fallbackRoute.routeId]);
+    }
     setDirection(nextDirection);
   }
 
@@ -54,7 +64,7 @@ export function StaticTimetableSection() {
     setStatus("loading");
     setError("");
 
-    void fetchTimetable(station.id, routeId, direction, dayType, controller.signal)
+    void fetchTimetableForRoutes(station.id, routeIds, direction, dayType, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
           setAvailableDays(result.availableDays);
@@ -72,7 +82,7 @@ export function StaticTimetableSection() {
     return () => {
       controller.abort();
     };
-  }, [station.id, routeId, direction, dayType]);
+  }, [station.id, routeIds, direction, dayType]);
 
   return (
     <section className="timetable-section" aria-labelledby="timetable-section-title">
@@ -88,10 +98,11 @@ export function StaticTimetableSection() {
         <SelectorPanel
           idPrefix="timetable"
           station={station}
-          routeId={routeId}
+          routeIds={routeIds}
           direction={direction}
           onStationChange={selectStation}
           onRouteChange={selectRoute}
+          onLineGroupChange={selectLineGroup}
           onDirectionChange={selectDirection}
           timetableDays={availableDays}
           timetableDay={dayType}
@@ -101,8 +112,12 @@ export function StaticTimetableSection() {
         <div className="timetable-board">
           <header className="timetable-board-header">
             <div className="board-eyebrow">
-              <RouteBullet routeId={routeId} size="large" />
-              <span>{direction === "N" ? "Northbound" : "Southbound"}</span>
+              <div className="route-bullet-group">
+                {routeIds.map((routeId) => <RouteBullet key={routeId} routeId={routeId} size={routeIds.length > 1 ? "small" : "large"} />)}
+              </div>
+              <span title={directionDisplay(station, routeIds, direction).full}>
+                {directionDisplay(station, routeIds, direction).short}
+              </span>
             </div>
             <h3>{station.name}</h3>
             {timetable && (
@@ -132,11 +147,12 @@ export function StaticTimetableSection() {
                       <span
                         className={event.hasHalfMinute ? "timetable-minute has-half-minute" : "timetable-minute"}
                         key={`${event.seconds}-${event.eventKind}-${eventIndex}`}
-                        title={`${event.eventKind === "departure" ? "Departs" : "Arrives"} ${event.exactTime}`}
-                        aria-label={`${event.eventKind === "departure" ? "Departs" : "Arrives"} at ${event.exactTime}`}
+                        title={`${event.routeId ? `Line ${event.routeId} · ` : ""}${event.eventKind === "departure" ? "Departs" : "Arrives"} ${event.exactTime}`}
+                        aria-label={`${event.routeId ? `Line ${event.routeId} ` : ""}${event.eventKind === "departure" ? "Departs" : "Arrives"} at ${event.exactTime}`}
                       >
                         <span>{event.minute}</span>
                         {event.hasHalfMinute && <sup aria-hidden="true">+</sup>}
+                        {event.routeId && <span className="timetable-route-tag">{event.routeId}</span>}
                       </span>
                     ))}
                   </div>

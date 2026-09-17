@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 const DATA_DIR = new URL("../gtfs_subway/", import.meta.url);
 const OUTPUT = new URL("../src/data/stations.generated.ts", import.meta.url);
 const TIMETABLE_DIR = new URL("../public/timetables/", import.meta.url);
+const CATALOG_OUTPUT = new URL("../public/providers/mta-subway/catalog.json", import.meta.url);
 
 function parseCsvLine(line) {
   const values = [];
@@ -64,11 +65,14 @@ await forEachCsvRow("trips.txt", (row) => {
   trips.set(row.trip_id, {
     routeId: row.route_id,
     serviceId: row.service_id,
+    headsign: row.trip_headsign,
   });
 });
 
 const service = new Map();
 const timetables = new Map();
+const tripStops = new Map();
+const headsignCounts = new Map();
 await forEachCsvRow("stop_times.txt", (row) => {
   const trip = trips.get(row.trip_id);
   const stopId = row.stop_id;
@@ -82,7 +86,18 @@ await forEachCsvRow("stop_times.txt", (row) => {
   stationService.set(trip.routeId, directions);
   service.set(parentId, stationService);
 
-  const timetableKey = `${parentId}/${trip.routeId}-${direction}`;
+  const platformRouteKey = `${parentId}/${trip.routeId}-${direction}`;
+  const headsign = row.stop_headsign || trip.headsign;
+  if (headsign) {
+    const counts = headsignCounts.get(platformRouteKey) ?? new Map();
+    counts.set(headsign, (counts.get(headsign) ?? 0) + 1);
+    headsignCounts.set(platformRouteKey, counts);
+  }
+  const stops = tripStops.get(row.trip_id) ?? [];
+  stops.push({ stopId, sequence: Number(row.stop_sequence) });
+  tripStops.set(row.trip_id, stops);
+
+  const timetableKey = platformRouteKey;
   const byService = timetables.get(timetableKey) ?? new Map();
   const events = byService.get(trip.serviceId) ?? [];
   events.push({
@@ -93,6 +108,28 @@ await forEachCsvRow("stop_times.txt", (row) => {
   byService.set(trip.serviceId, events);
   timetables.set(timetableKey, byService);
 });
+
+// A shared name or parent station is not proof that two lines share a segment.
+// Record the actual directed adjacent stop pairs from trip stop sequences.
+const adjacentSegments = new Map();
+for (const [tripId, stops] of tripStops) {
+  const routeId = trips.get(tripId)?.routeId;
+  if (!routeId) continue;
+  stops.sort((left, right) => left.sequence - right.sequence);
+  for (let index = 1; index < stops.length; index += 1) {
+    const previous = stops[index - 1].stopId;
+    const current = stops[index].stopId;
+    if (previous === current) continue;
+    const segment = `${previous}>${current}`;
+    for (const stopId of [previous, current]) {
+      const key = `${stopId.slice(0, -1)}/${routeId}-${stopId.at(-1)}`;
+      const segments = adjacentSegments.get(key) ?? new Set();
+      segments.add(segment);
+      adjacentSegments.set(key, segments);
+    }
+  }
+}
+tripStops.clear();
 
 const stations = [];
 await forEachCsvRow("stops.txt", (row) => {
@@ -110,6 +147,16 @@ await forEachCsvRow("stops.txt", (row) => {
       .map(([routeId, directions]) => ({
         routeId,
         directions: [...directions].sort(),
+        headsigns: Object.fromEntries([...directions].map((direction) => {
+          const counts = headsignCounts.get(`${row.stop_id}/${routeId}-${direction}`) ?? new Map();
+          return [direction, [...counts.entries()]
+            .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+            .map(([headsign]) => headsign)];
+        })),
+        adjacentSegments: Object.fromEntries([...directions].map((direction) => [
+          direction,
+          [...(adjacentSegments.get(`${row.stop_id}/${routeId}-${direction}`) ?? [])].sort(),
+        ])),
       }))
       .sort((a, b) => a.routeId.localeCompare(b.routeId, undefined, { numeric: true })),
   });
@@ -117,13 +164,31 @@ await forEachCsvRow("stops.txt", (row) => {
 
 stations.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 
+// This TypeScript export remains only for legacy regression tests. Keep its
+// historical shape stable; the browser consumes the richer runtime catalog.
+const legacyStations = stations.map((station) => ({
+  id: station.id,
+  name: station.name,
+  latitude: station.latitude,
+  longitude: station.longitude,
+  routes: station.routes.map(({ routeId, directions }) => ({ routeId, directions })),
+}));
+
 await mkdir(new URL("../src/data/", import.meta.url), { recursive: true });
 const source = `// Generated from the official MTA static GTFS files. Do not edit by hand.\n` +
   `import type { Route, Station } from "../types";\n\n` +
   `export const routes: Record<string, Route> = ${JSON.stringify(Object.fromEntries(routes), null, 2)};\n\n` +
-  `export const stations: readonly Station[] = ${JSON.stringify(stations, null, 2)};\n`;
+  `export const stations: readonly Station[] = ${JSON.stringify(legacyStations, null, 2)};\n`;
 
 writeFileSync(OUTPUT, source);
+
+await mkdir(new URL("./", CATALOG_OUTPUT), { recursive: true });
+writeFileSync(CATALOG_OUTPUT, JSON.stringify({
+  providerId: "mta-subway",
+  timezone: "America/New_York",
+  routes: Object.fromEntries(routes),
+  stations,
+}));
 
 await mkdir(TIMETABLE_DIR, { recursive: true });
 let timetableFileCount = 0;

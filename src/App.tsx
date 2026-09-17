@@ -1,26 +1,58 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Activity, ExternalLink } from "lucide-react";
-import { stations } from "./data/stations.generated";
 import type { Direction } from "./types";
+import { isSharedLineGroup } from "./lib/platform-selection";
+import { CatalogContext } from "./providers/catalog-context";
+import { loadProviderCatalog, loadProviderManifest, loadProviderRegistry, type ProviderCatalog } from "./providers/registry";
 import { ArrivalBoard } from "./components/ArrivalBoard";
 import { SelectorPanel } from "./components/SelectorPanel";
 import { StaticTimetableSection } from "./components/StaticTimetableSection";
 import "./styles.css";
 
-const firstStation = stations[0] ?? (() => {
-  throw new Error("The generated station index is empty.");
-})();
-const DEFAULT_STATION_ID = stations.some((station) => station.id === "127") ? "127" : firstStation.id;
-
 export default function App() {
-  const [stationId, setStationId] = useState(DEFAULT_STATION_ID);
+  const initialProvider = useQuery({
+    queryKey: ["initial-provider", "mta-subway"],
+    queryFn: async () => {
+      const registry = await loadProviderRegistry();
+      const descriptor = registry.providers.find((provider) => provider.id === "mta-subway");
+      if (!descriptor) throw new Error("The MTA subway provider is not configured.");
+      const manifest = await loadProviderManifest(descriptor);
+      const catalog = await loadProviderCatalog(manifest.topology.catalogUrl, descriptor.id);
+      return { catalog, manifest };
+    },
+    staleTime: Infinity,
+    retry: 1,
+  });
+
+  if (initialProvider.isPending) {
+    return <main><div className="board-message">Loading subway stations…</div></main>;
+  }
+  if (initialProvider.isError) {
+    return <main><div className="board-message board-message--error">{initialProvider.error.message}</div></main>;
+  }
+
+  return (
+    <CatalogContext.Provider value={initialProvider.data.catalog}>
+      <MtaApp catalog={initialProvider.data.catalog} />
+    </CatalogContext.Provider>
+  );
+}
+
+function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
+  const stations = catalog.stations;
+  const firstStation = stations[0] ?? (() => {
+    throw new Error("The provider station catalog is empty.");
+  })();
+  const defaultStationId = stations.some((station) => station.id === "127") ? "127" : firstStation.id;
+  const [stationId, setStationId] = useState(defaultStationId);
   const station = useMemo(
     () => stations.find((item) => item.id === stationId) ?? firstStation,
     [stationId],
   );
   const initialRoute = station.routes[0];
   if (!initialRoute) throw new Error(`No routes found for station ${station.id}.`);
-  const [routeId, setRouteId] = useState(initialRoute.routeId);
+  const [routeIds, setRouteIds] = useState<string[]>([initialRoute.routeId]);
   const [direction, setDirection] = useState<Direction>(initialRoute.directions[0] ?? "N");
 
   const selectPlatform = useCallback((nextStationId: string, nextRouteId?: string, nextDirection?: Direction) => {
@@ -33,7 +65,7 @@ export default function App() {
       throw new Error(`${nextRoute.routeId} does not serve ${nextStation.name} in direction ${resolvedDirection}`);
     }
     setStationId(nextStationId);
-    setRouteId(nextRoute.routeId);
+    setRouteIds([nextRoute.routeId]);
     setDirection(resolvedDirection);
   }, []);
 
@@ -44,8 +76,23 @@ export default function App() {
   function selectRoute(nextRouteId: string) {
     const nextRoute = station.routes.find((item) => item.routeId === nextRouteId);
     if (!nextRoute) return;
-    setRouteId(nextRouteId);
+    setRouteIds([nextRouteId]);
     if (!nextRoute.directions.includes(direction)) setDirection(nextRoute.directions[0] ?? "N");
+  }
+
+  function selectLineGroup(nextRouteIds: string[]) {
+    if (isSharedLineGroup(station, direction, nextRouteIds)) setRouteIds(nextRouteIds);
+  }
+
+  function selectDirection(nextDirection: Direction) {
+    if (routeIds.length > 1 && !isSharedLineGroup(station, nextDirection, routeIds)) {
+      const fallbackRoute = station.routes.find((item) => routeIds.includes(item.routeId) && item.directions.includes(nextDirection));
+      if (!fallbackRoute) return;
+      setRouteIds([fallbackRoute.routeId]);
+    } else if (!station.routes.some((item) => item.routeId === routeIds[0] && item.directions.includes(nextDirection))) {
+      return;
+    }
+    setDirection(nextDirection);
   }
 
   useEffect(() => {
@@ -106,13 +153,14 @@ export default function App() {
         <SelectorPanel
           idPrefix="realtime"
           station={station}
-          routeId={routeId}
+          routeIds={routeIds}
           direction={direction}
           onStationChange={selectStation}
           onRouteChange={selectRoute}
-          onDirectionChange={setDirection}
+          onLineGroupChange={selectLineGroup}
+          onDirectionChange={selectDirection}
         />
-        <ArrivalBoard station={station} routeId={routeId} direction={direction} />
+        <ArrivalBoard station={station} routeIds={routeIds} direction={direction} />
       </div>
 
       <StaticTimetableSection />

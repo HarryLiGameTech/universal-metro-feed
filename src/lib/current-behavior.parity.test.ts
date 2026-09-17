@@ -12,10 +12,12 @@ import expectedNoStaticArrivals from "../../tests/fixtures/mta-parity/expected/n
 import expectedWeekdayTimetable from "../../tests/fixtures/mta-parity/expected/weekday-timetable.json";
 import expectedExceptionTimetable from "../../tests/fixtures/mta-parity/expected/exception-overnight-timetable.json";
 import { fetchArrivals } from "./mta";
-import { fetchTimetable, renderTimetable } from "./timetable";
+import { fetchTimetable, fetchTimetableForRoutes, renderTimetable } from "./timetable";
+import { fetchComposedMtaArrivals, fetchComposedMtaArrivalsForRoutes, mtaResolver } from "../providers/mta/composed-resolver";
 
 const realtimeUrl = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs";
 const platformUrl = "/timetables/127/1-N.json";
+const secondPlatformUrl = "/timetables/127/2-N.json";
 const calendarUrl = "/timetables/calendar.json";
 
 function installMockResponses(feed: object, options: { scheduleAvailable?: boolean } = {}) {
@@ -34,7 +36,23 @@ function installMockResponses(feed: object, options: { scheduleAvailable?: boole
         ? new Response("Not found", { status: 404 })
         : Response.json(shard);
     }
+    if (url === secondPlatformUrl) {
+      return Response.json({ services: {
+        Weekday: [{ tripId: "second-route", arrival: "08:02:00", departure: "08:02:00" }],
+      } });
+    }
     if (url === calendarUrl) return Response.json(calendar);
+    if (url === "/providers/mta-subway/catalog.json") {
+      return Response.json({
+        providerId: topology.providerId,
+        timezone: topology.timezone,
+        routes: {},
+        stations: [
+          { id: topology.selectedPlatform.stationId, name: topology.selectedPlatform.stationName },
+          { id: topology.knownTerminal.stationId, name: topology.knownTerminal.stationName },
+        ],
+      });
+    }
     throw new Error(`Unexpected request in parity fixture: ${url}`);
   });
 
@@ -70,6 +88,47 @@ describe("current MTA behavior: frozen parity fixtures", () => {
     ].sort());
   });
 
+  it("projects the composed MTA resolver to the exact weekday legacy snapshot", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    installMockResponses(weekdayFeed);
+
+    expect(await fetchComposedMtaArrivals("127", "1", "N")).toEqual(expectedWeekdayArrivals);
+  });
+
+  it("merges shared-line arrivals chronologically while fetching their common feed only once", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    const mockFetch = installMockResponses(weekdayFeed);
+
+    const result = await fetchComposedMtaArrivalsForRoutes("127", ["1", "2"], "N");
+    expect(result.arrivals.map((arrival) => [arrival.routeId, arrival.tripId])).toEqual([
+      ["2", "other-route-trip"],
+      ["1", "048000_1..N03R"],
+      ["1", "048600_1..N03R"],
+      ["1", "unmatched-trip"],
+    ]);
+    expect(mockFetch.mock.calls.filter(([input]) => String(input) === realtimeUrl)).toHaveLength(1);
+  });
+
+  it("retains source and temporal semantics before the legacy projection", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    installMockResponses(weekdayFeed);
+
+    const result = await mtaResolver.resolveDepartures(
+      { providerId: "mta-subway", stationId: "127", routeId: "1", directionId: "N" },
+      { nowSeconds: 1789473600 },
+    );
+    expect(result.sources.map((source) => source.sourceId)).toEqual([
+      "mta-static-gtfs",
+      "mta-static-gtfs",
+      "mta-gtfs-realtime",
+    ]);
+    expect(result.data.arrivals[0]?.predictionTime).toMatchObject({ kind: "estimate", resolution: "second" });
+    expect(result.data.arrivals[0]?.scheduleTime).toMatchObject({ kind: "uninterpreted", serializedResolution: "second" });
+  });
+
   it("uses the previous service day for a post-midnight realtime trip", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T04:02:30.000Z"));
@@ -78,12 +137,28 @@ describe("current MTA behavior: frozen parity fixtures", () => {
     expect(await fetchArrivals("127", "1", "N")).toEqual(expectedOvernightArrivals);
   });
 
+  it("keeps the composed overnight result identical to the legacy result", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T04:02:30.000Z"));
+    installMockResponses(overnightFeed);
+
+    expect(await fetchComposedMtaArrivals("127", "1", "N")).toEqual(expectedOvernightArrivals);
+  });
+
   it("returns live arrivals without delay values when the static response is unavailable", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
     installMockResponses(weekdayFeed, { scheduleAvailable: false });
 
     expect(await fetchArrivals("127", "1", "N")).toEqual(expectedNoStaticArrivals);
+  });
+
+  it("keeps the composed realtime-only fallback identical to the legacy result", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    installMockResponses(weekdayFeed, { scheduleAvailable: false });
+
+    expect(await fetchComposedMtaArrivals("127", "1", "N")).toEqual(expectedNoStaticArrivals);
   });
 
   it("renders the current weekday timetable from mocked Clockface-shaped static responses", async () => {
@@ -96,6 +171,18 @@ describe("current MTA behavior: frozen parity fixtures", () => {
       calendarUrl,
       platformUrl,
     ].sort());
+  });
+
+  it("combines a shared-line timetable on one service date and retains each event's route", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    installMockResponses(weekdayFeed);
+
+    const result = await fetchTimetableForRoutes("127", ["1", "2"], "N", "weekday");
+    expect(result.dateKey).toBe("20260915");
+    expect(result.scheduledTrainCount).toBe(expectedWeekdayTimetable.scheduledTrainCount + 1);
+    expect(result.hours.flatMap((hour) => hour.events).map((event) => event.routeId))
+      .toEqual(["1", "2", "1", "1"]);
   });
 
   it("applies a calendar exception but retains the prior Sunday's 24-hour trip", () => {

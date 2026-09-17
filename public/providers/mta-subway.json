@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "mta-subway",
+  "timezone": "America/New_York",
+  "topology": {
+    "kind": "clockface-compat-static",
+    "catalogUrl": "/providers/mta-subway/catalog.json"
+  },
+  "schedule": {
+    "kind": "gtfs-static"
+  },
+  "predictions": {
+    "kind": "gtfs-realtime",
+    "adapter": "mta"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "providers": [
+    {
+      "id": "mta-subway",
+      "names": {
+        "en": "New York City Subway"
+      },
+      "cities": [
+        {
+          "id": "us-ny-new-york",
+          "names": {
+            "en": "New York"
+          }
+        }
+      ],
+      "manifest": "/providers/mta-subway.json"
+    }
+  ]
+}

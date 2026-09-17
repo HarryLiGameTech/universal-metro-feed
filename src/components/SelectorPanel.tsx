@@ -1,16 +1,18 @@
 import { ChevronDown } from "lucide-react";
-import { routes, stations } from "../data/stations.generated";
+import { useCatalog } from "../providers/catalog-context";
 import { timetableDayLabels } from "../lib/timetable";
+import { directionDisplay, sharedLineGroups } from "../lib/platform-selection";
 import type { Direction, Station, TimetableDayType } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
 interface SelectorPanelProps {
   idPrefix?: string;
   station: Station;
-  routeId: string;
+  routeIds: readonly string[];
   direction: Direction;
   onStationChange(stationId: string): void;
   onRouteChange(routeId: string): void;
+  onLineGroupChange(routeIds: string[]): void;
   onDirectionChange(direction: Direction): void;
   timetableDays?: readonly TimetableDayType[];
   timetableDay?: TimetableDayType;
@@ -20,17 +22,21 @@ interface SelectorPanelProps {
 export function SelectorPanel({
   idPrefix = "platform",
   station,
-  routeId,
+  routeIds,
   direction,
   onStationChange,
   onRouteChange,
+  onLineGroupChange,
   onDirectionChange,
   timetableDays,
   timetableDay,
   onTimetableDayChange,
 }: SelectorPanelProps) {
-  const selectedRoute = station.routes.find((item) => item.routeId === routeId) ?? station.routes[0];
-  const directions = selectedRoute?.directions ?? ["N", "S"];
+  const { routes, stations } = useCatalog();
+  const selectedRoute = station.routes.find((item) => item.routeId === routeIds[0]) ?? station.routes[0];
+  const directions = (selectedRoute?.directions ?? []).filter((value) =>
+    routeIds.every((routeId) => station.routes.some((item) => item.routeId === routeId && item.directions.includes(value))));
+  const groups = sharedLineGroups(station, direction);
 
   return (
     <section className="selector-panel" aria-labelledby={`${idPrefix}-selector-title`}>
@@ -62,32 +68,57 @@ export function SelectorPanel({
             <button
               key={item.routeId}
               type="button"
-              className={item.routeId === routeId ? "route-option is-selected" : "route-option"}
+              className={routeIds.length === 1 && item.routeId === routeIds[0] ? "route-option is-selected" : "route-option"}
               onClick={() => onRouteChange(item.routeId)}
-              aria-pressed={item.routeId === routeId}
-              title={routes[item.routeId as keyof typeof routes]?.name}
+              aria-pressed={routeIds.length === 1 && item.routeId === routeIds[0]}
+              aria-label={`Line ${item.routeId}`}
+              title={routes[item.routeId]?.name}
             >
               <RouteBullet routeId={item.routeId} />
             </button>
           ))}
         </div>
+        {groups.length > 0 && (
+          <div className="shared-line-options">
+            {groups.map((group) => {
+              const selected = routeIds.length === group.length && group.every((routeId) => routeIds.includes(routeId));
+              return (
+                <button
+                  key={group.join("-")}
+                  type="button"
+                  className={selected ? "shared-line-option is-selected" : "shared-line-option"}
+                  onClick={() => onLineGroupChange(group)}
+                  aria-pressed={selected}
+                  title={`GTFS confirms a shared directed segment for ${group.join(" / ")}`}
+                >
+                  <span>Any line</span>
+                  <small>{group.join(" / ")} · shared segment</small>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </fieldset>
 
       <fieldset className="field-group">
         <legend>Direction</legend>
         <div className="direction-options">
-          {directions.map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={value === direction ? "direction-option is-selected" : "direction-option"}
-              onClick={() => onDirectionChange(value)}
-              aria-pressed={value === direction}
-            >
-              <span>{value === "N" ? "Northbound" : "Southbound"}</span>
-              <small>{value === "N" ? "Uptown / Bronx" : "Downtown / Brooklyn"}</small>
-            </button>
-          ))}
+          {directions.map((value) => {
+            const label = directionDisplay(station, routeIds, value);
+            return (
+              <button
+                key={value}
+                type="button"
+                className={value === direction ? "direction-option is-selected" : "direction-option"}
+                onClick={() => onDirectionChange(value)}
+                aria-pressed={value === direction}
+                title={label.full}
+              >
+                <span>{label.short}</span>
+                <small>{value}</small>
+              </button>
+            );
+          })}
         </div>
       </fieldset>
 

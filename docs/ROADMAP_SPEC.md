@@ -1,6 +1,6 @@
 # Universal Metro Feed Roadmap Specification
 
-Status: Draft for implementation  
+Status: Implementation in progress
 Scope: Frontend architecture and product behavior; backend and device responsibility boundaries  
 Language: English  
 
@@ -16,6 +16,23 @@ The product must support transit providers with materially different data maturi
 The frontend is the first implementation target. This document specifies its architecture, data semantics, configuration, resilience, and user-facing behavior.
 
 Clockface, Witness, and phone/glasses clients are included only to define ownership and integration boundaries. Their internal architecture, technology choices, storage, deployment, algorithms, and implementation plans are intentionally deferred. Implementing those systems is the next project stage, not part of the frontend work authorized by this roadmap.
+
+### Implementation progress (2026-09-17)
+
+| Workstream | Status | Implemented so far | Remaining before complete |
+| --- | --- | --- | --- |
+| Pre-refactor parity gate | Complete for the current MTA fixtures | Static/calendar and protobuf feed mocks, frozen outputs, legacy and composed-path parity tests | Add fixtures for each newly encountered provider quirk |
+| Phase 1: Canonical foundation | In progress | Initial `StrictTime`, provenance-bearing `Resolved<T>`, provider-scoped query, and precision tests | Complete topology/capability model; remove New York assumptions from shared timetable/UI code; finish contract tests |
+| Phase 2: Source composition | In progress | Generic composed resolver; MTA topology, static schedule, and GTFS-Realtime prediction sources; current arrival board uses the composed path through a legacy projection | Migrate static timetable view; remove legacy projection; implement generalized identity, tracing, and all degradation states |
+| Phase 3: Registry and Clockface boundary | In progress | Runtime JSON provider registry and lazy MTA manifest; MTA catalog loaded on demand; generated station index removed from the production browser bundle | Provider switching and city search; YAML authoring/compilation; real Clockface integration after its deferred backend stage |
+| Phase 4: Multi-shape prediction | Not started | None | Non-GTFS adapters are deliberately out of the current concrete scope |
+| Phase 5: Frequency inference | Not started | None | Contracts and mock-driven inference |
+| Phase 6: Product hardening | In progress | MTA direction labels now use GTFS headsigns; GTFS-adjacent-segment evidence gates shared-line selection in live and static views; live rows show compact source trip IDs; desktop/mobile layout reviewed | Shareable navigation, broader accessibility/performance review, and complete failure-state work |
+| Clockface, Witness, phone, glasses | Deferred | Responsibility boundaries only | Implement in the next stage, after frontend contracts are stable |
+
+The current MTA static schedule's second-level *semantic* precision has not been verified. The composed path therefore marks parsed schedule timestamps as `uninterpreted` in `StrictTime`; a temporary legacy projection preserves the existing UI output until a provider-specific precision policy is established and reviewed. This is an explicit migration boundary, not a claim that the raw `:00` seconds are exact.
+
+The current `clockface-compat-static` catalog is a generated frontend asset, **not** a Clockface backend implementation. It exercises the frontend loading boundary while preserving the previously agreed deferral of Clockface internals. The production main JavaScript no longer imports `stations.generated.ts`, but the static timetable view still uses the legacy timetable fetch/render path.
 
 ## 2. Product and Engineering Goals
 
@@ -614,6 +631,9 @@ Rendered with an "Earliest" qualifier
 - Allow a static-only provider profile to remain a useful product.
 - Allow a prediction-only provider profile to remain a useful product.
 - Never show empty controls for capabilities a provider does not support.
+- Use provider headsigns or equivalent direction metadata for platform labels; compass letters alone are not a rider-facing direction name.
+- Offer an "any line" platform view only when route grouping has source-backed evidence, such as a shared directed GTFS stop-to-stop segment. Do not infer it from a shared station name alone.
+- Keep each arrival's route visible when multiple lines are combined, and retain the source trip identifier (when supplied) even if the UI abbreviates it.
 
 ### 14.3 Source and freshness disclosure
 

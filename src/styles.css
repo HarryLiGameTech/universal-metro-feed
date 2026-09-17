@@ -67,9 +67,19 @@ main {
 .route-bullet { display: inline-grid; place-items: center; flex: 0 0 auto; border-radius: 50%; font-family: "DM Mono", monospace; font-weight: 500; line-height: 1; }
 .route-bullet--small { width: 34px; height: 34px; font-size: 13px; }
 .route-bullet--large { width: 52px; height: 52px; font-size: 18px; }
+.route-bullet-group { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+
+.shared-line-options { display: grid; gap: 7px; margin-top: 12px; }
+.shared-line-option { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 10px 12px; text-align: left; }
+.shared-line-option span { font-size: 13px; font-weight: 700; }
+.shared-line-option small { color: var(--muted); font-family: "DM Mono", monospace; font-size: 10px; }
+.shared-line-option.is-selected { border-color: var(--ink); background: var(--ink); color: white; }
+.shared-line-option.is-selected small { color: #c8c5be; }
+.shared-line-option:focus-visible { outline: 3px solid rgba(25, 25, 23, 0.2); outline-offset: 2px; }
 
 .direction-options { display: grid; gap: 8px; }
-.direction-option { text-align: left; display: flex; justify-content: space-between; gap: 12px; border: 1px solid var(--line); background: transparent; padding: 13px 14px; color: var(--ink); }
+.direction-option { text-align: left; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border: 1px solid var(--line); background: transparent; padding: 13px 14px; color: var(--ink); }
+.direction-option span { min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
 .direction-option small { color: var(--muted); }
 .direction-option.is-selected { color: white; background: var(--ink); border-color: var(--ink); }
 .direction-option.is-selected small { color: #c8c5be; }
@@ -82,6 +92,7 @@ main {
 .board { min-width: 0; display: flex; flex-direction: column; background: #171715; color: #f9f5ec; }
 .board-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 30px 34px 26px; border-bottom: 1px solid #3a3934; }
 .board-eyebrow { display: flex; align-items: center; gap: 14px; color: #aaa79f; font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.board-eyebrow > span { line-height: 1.4; overflow-wrap: anywhere; }
 .board-header h2 { margin: 18px 0 0; font-size: clamp(28px, 4vw, 46px); line-height: 1; letter-spacing: -0.055em; }
 .live-status { display: inline-flex; align-items: center; gap: 7px; color: #7de0b7; font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
 .live-status svg { animation: pulse 1.7s ease-in-out infinite; }
@@ -92,8 +103,11 @@ main {
 .arrival-row:first-child { background: #24231f; }
 .arrival-order { font-family: "DM Mono", monospace; font-size: 12px; color: #77756f; }
 .arrival-destination { display: grid; gap: 4px; min-width: 0; }
+.arrival-destination-meta { display: flex; align-items: center; gap: 9px; min-height: 14px; }
 .arrival-destination small, .arrival-when small { font-family: "DM Mono", monospace; color: #8e8b84; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
 .arrival-destination strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 17px; font-weight: 500; }
+.arrival-destination .arrival-trip { letter-spacing: 0.02em; text-transform: none; }
+.partial-feed-warning { padding: 10px 34px; border-bottom: 1px solid #594b36; color: #ffcd86; font-family: "DM Mono", monospace; font-size: 10px; }
 .arrival-when { display: grid; grid-template-columns: auto auto; align-items: baseline; column-gap: 16px; text-align: right; }
 .arrival-when > span { color: #aaa79f; font-family: "DM Mono", monospace; font-size: 11px; text-transform: uppercase; }
 .arrival-when time { font-family: "DM Mono", monospace; font-size: clamp(20px, 3vw, 30px); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
@@ -136,6 +150,7 @@ main {
 .timetable-minute { display: inline-grid; grid-template-columns: 2ch 0.7ch; align-items: start; width: 3.05ch; font-family: "DM Mono", monospace; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; cursor: help; }
 .timetable-minute > span { min-width: 0; }
 .timetable-minute sup { color: var(--signal); font-size: 0.58em; line-height: 1; margin: 0.08em 0 0 0.08em; }
+.timetable-minute .timetable-route-tag { grid-column: 1 / -1; color: var(--muted); font-size: 9px; line-height: 1; }
 .timetable-footer { min-height: 48px; margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 0 34px; border-top: 1px solid var(--line); color: var(--muted); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 .timetable-footer strong { color: var(--ink); font-weight: 500; }
 
@@ -160,6 +175,7 @@ main {
   .arrival-row { grid-template-columns: 32px 1fr; gap: 10px; min-height: 116px; padding: 14px 20px; }
   .arrival-when { grid-column: 2; grid-template-columns: auto 1fr; text-align: left; column-gap: 12px; }
   .arrival-annotations { justify-content: flex-start; }
+  .partial-feed-warning { padding-inline: 20px; }
   .board-footer { padding: 0 20px; }
   .timetable-section { padding-top: 60px; }
   .timetable-board-header { padding: 24px 20px; }

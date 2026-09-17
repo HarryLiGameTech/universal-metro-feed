@@ -1,5 +1,4 @@
 import GtfsRealtimeBindings, { type transit_realtime } from "gtfs-realtime-bindings";
-import { stations } from "../data/stations.generated";
 import { fetchTimetableSource, findScheduledEventTime, type TimetableSource } from "./timetable";
 import type { Arrival, ArrivalSnapshot, DelayStatus, Direction } from "../types";
 
@@ -38,7 +37,11 @@ const FEED_BY_ROUTE: Record<string, string> = {
   SI: "nyct%2Fgtfs-si",
 };
 
-const stationNames = new Map(stations.map((station) => [station.id, station.name]));
+export function feedNameForRoute(routeId: string) {
+  const feedName = FEED_BY_ROUTE[routeId];
+  if (!feedName) throw new Error(`No realtime feed is configured for the ${routeId} line.`);
+  return feedName;
+}
 
 function numberFromLong(value: number | { toString(): string } | null | undefined) {
   return value == null ? null : Number(value.toString());
@@ -77,6 +80,7 @@ export function normalizeArrivals(
   routeId: string,
   direction: Direction,
   timetableSource?: TimetableSource | null,
+  stationNameLookup: ReadonlyMap<string, string> = new Map(),
 ): ArrivalSnapshot {
   const selectedStopId = `${stationId}${direction}`;
   const arrivals: Arrival[] = [];
@@ -110,7 +114,7 @@ export function normalizeArrivals(
       stopId: selectedStopId,
       direction,
       destinationId,
-      destinationName: destinationId ? stationNames.get(destinationId) ?? "Unknown terminal" : "Unknown terminal",
+      destinationName: destinationId ? stationNameLookup.get(destinationId) ?? "Unknown terminal" : "Unknown terminal",
       eventTime,
       eventKind,
       scheduledTime,
@@ -134,10 +138,19 @@ export async function fetchArrivals(
   direction: Direction,
   signal?: AbortSignal,
 ) {
-  const feedName = FEED_BY_ROUTE[routeId];
-  if (!feedName) throw new Error(`No realtime feed is configured for the ${routeId} line.`);
-
+  feedNameForRoute(routeId);
   const timetableSourcePromise = fetchTimetableSource(stationId, routeId, direction, signal).catch(() => null);
+  const feed = await fetchMtaFeed(routeId, signal);
+  // Kept only for pre-refactor parity tests. The active composed path loads a
+  // provider catalog at runtime and passes its own lookup to normalizeArrivals.
+  const { stations } = await import("../data/stations.generated");
+  const stationNameLookup = new Map(stations.map((station) => [station.id, station.name]));
+  return normalizeArrivals(feed, stationId, routeId, direction, await timetableSourcePromise, stationNameLookup);
+}
+
+export async function fetchMtaFeed(routeId: string, signal?: AbortSignal) {
+  const feedName = feedNameForRoute(routeId);
+
   const response = await fetch(`${BASE_URL}${feedName}`, {
     cache: "no-store",
     headers: { Accept: "application/x-protobuf, application/octet-stream" },
@@ -149,6 +162,5 @@ export async function fetchArrivals(
   }
 
   const bytes = new Uint8Array(await response.arrayBuffer());
-  const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
-  return normalizeArrivals(feed, stationId, routeId, direction, await timetableSourcePromise);
+  return GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
 }

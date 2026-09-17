@@ -1,6 +1,8 @@
 import { AlertTriangle, Radio, RefreshCw } from "lucide-react";
 import { useArrivals } from "../hooks/useArrivals";
 import { useClock } from "../hooks/useClock";
+import { directionDisplay } from "../lib/platform-selection";
+import { compactTripId } from "../lib/trip-label";
 import type { Direction, Station } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
@@ -14,13 +16,14 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
 
 interface ArrivalBoardProps {
   station: Station;
-  routeId: string;
+  routeIds: readonly string[];
   direction: Direction;
 }
 
-export function ArrivalBoard({ station, routeId, direction }: ArrivalBoardProps) {
+export function ArrivalBoard({ station, routeIds, direction }: ArrivalBoardProps) {
   const now = useClock();
-  const query = useArrivals(station.id, routeId, direction);
+  const query = useArrivals(station.id, routeIds, direction);
+  const heading = directionDisplay(station, routeIds, direction);
   const nowSeconds = now / 1_000;
   const arrivals = (query.data?.arrivals ?? [])
     .filter((arrival) => arrival.eventTime >= nowSeconds - 5)
@@ -33,8 +36,10 @@ export function ArrivalBoard({ station, routeId, direction }: ArrivalBoardProps)
       <header className="board-header">
         <div>
           <div className="board-eyebrow">
-            <RouteBullet routeId={routeId} size="large" />
-            <span>{direction === "N" ? "Northbound" : "Southbound"}</span>
+            <div className="route-bullet-group">
+              {routeIds.map((routeId) => <RouteBullet key={routeId} routeId={routeId} size={routeIds.length > 1 ? "small" : "large"} />)}
+            </div>
+            <span title={heading.full}>{heading.short}</span>
           </div>
           <h2 id="arrivals-title">{station.name}</h2>
         </div>
@@ -44,6 +49,12 @@ export function ArrivalBoard({ station, routeId, direction }: ArrivalBoardProps)
           <span>{isStale ? "Feed delayed" : query.isFetching ? "Refreshing" : "Live"}</span>
         </div>
       </header>
+
+      {query.data?.unavailableRoutes?.length ? (
+        <div className="partial-feed-warning" role="status">
+          Live feed unavailable for line {query.data.unavailableRoutes.join(" / ")}; showing the other selected lines.
+        </div>
+      ) : null}
 
       {query.isPending ? (
         <div className="board-message">
@@ -74,8 +85,14 @@ export function ArrivalBoard({ station, routeId, direction }: ArrivalBoardProps)
               <li key={`${arrival.tripId}-${arrival.eventTime}`} className="arrival-row">
                 <div className="arrival-order">{String(index + 1).padStart(2, "0")}</div>
                 <div className="arrival-destination">
-                  <small>To</small>
+                  <div className="arrival-destination-meta">
+                    {routeIds.length > 1 && <RouteBullet routeId={arrival.routeId} size="small" />}
+                    <small>To</small>
+                  </div>
                   <strong>{arrival.destinationName}</strong>
+                  <small className="arrival-trip" title={`Full source ID: ${arrival.tripId}`}>
+                    {arrival.tripId === arrival.id ? "Feed ID" : "Trip ID"} {compactTripId(arrival.tripId)}
+                  </small>
                 </div>
                 <div className="arrival-when">
                   <span>{proximity}</span>

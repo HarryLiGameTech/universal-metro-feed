@@ -1,4 +1,4 @@
-import { routes } from "../data/stations.generated";
+import { useCatalog } from "../providers/catalog-context";
 
 interface RouteBulletProps {
   routeId: string;
@@ -6,7 +6,8 @@ interface RouteBulletProps {
 }
 
 export function RouteBullet({ routeId, size = "small" }: RouteBulletProps) {
-  const route = routes[routeId as keyof typeof routes];
+  const { routes } = useCatalog();
+  const route = routes[routeId];
 
   return (
     <span

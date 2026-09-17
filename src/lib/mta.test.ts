@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
+import { stations } from "../data/stations.generated";
 import { classifyDelay, normalizeArrivals } from "./mta";
 import { newYorkServiceTimeToEpoch } from "./timetable";
+
+const stationNames = new Map(stations.map((station) => [station.id, station.name]));
 
 function makeFeed() {
   return GtfsRealtimeBindings.transit_realtime.FeedMessage.fromObject({
@@ -40,17 +43,17 @@ function makeFeed() {
 
 describe("normalizeArrivals", () => {
   it("filters by station, route and direction and sorts chronologically", () => {
-    const result = normalizeArrivals(makeFeed(), "127", "1", "N");
+    const result = normalizeArrivals(makeFeed(), "127", "1", "N", undefined, stationNames);
     expect(result.arrivals.map((arrival) => arrival.tripId)).toEqual(["trip-1", "trip-2"]);
   });
 
   it("uses departure time when an origin has no arrival time", () => {
-    const result = normalizeArrivals(makeFeed(), "127", "1", "N");
+    const result = normalizeArrivals(makeFeed(), "127", "1", "N", undefined, stationNames);
     expect(result.arrivals[0]).toMatchObject({ eventKind: "departure", eventTime: 2_100 });
   });
 
   it("uses the final stop update as the destination", () => {
-    const result = normalizeArrivals(makeFeed(), "127", "1", "N");
+    const result = normalizeArrivals(makeFeed(), "127", "1", "N", undefined, stationNames);
     expect(result.arrivals[0]?.destinationId).toBe("101");
     expect(result.arrivals[0]?.destinationName).toBe("Van Cortlandt Park-242 St");
   });
@@ -104,7 +107,7 @@ describe("normalizeArrivals", () => {
       },
     };
 
-    expect(normalizeArrivals(feed, "127", "1", "N", timetableSource).arrivals[0]).toMatchObject({
+    expect(normalizeArrivals(feed, "127", "1", "N", timetableSource, stationNames).arrivals[0]).toMatchObject({
       scheduledTime,
       delaySeconds: 45,
       delayStatus: "mild",
@@ -145,7 +148,7 @@ describe("normalizeArrivals", () => {
       },
     };
 
-    expect(normalizeArrivals(feed, "638", "6", "N", timetableSource).arrivals[0]).toMatchObject({
+    expect(normalizeArrivals(feed, "638", "6", "N", timetableSource, stationNames).arrivals[0]).toMatchObject({
       scheduledTime,
       delaySeconds: 20,
       delayStatus: "on-time",
