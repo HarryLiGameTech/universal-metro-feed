@@ -1,0 +1,21 @@
+{
+  "arrivals": [
+    {
+      "id": "after-midnight",
+      "tripId": "144000_1..N03R",
+      "routeId": "1",
+      "stopId": "127N",
+      "direction": "N",
+      "destinationId": "101",
+      "destinationName": "Van Cortlandt Park-242 St",
+      "eventTime": 1789358570,
+      "eventKind": "arrival",
+      "scheduledTime": 1789358550,
+      "delaySeconds": 20,
+      "delayStatus": "on-time",
+      "delayLabel": "On-time or almost"
+    }
+  ],
+  "feedTimestamp": 1789358550,
+  "fetchedAt": 1789358550
+}

@@ -1,0 +1,17 @@
+{
+  "providerId": "mta-subway",
+  "timezone": "America/New_York",
+  "routeId": "1",
+  "selectedPlatform": {
+    "stationId": "127",
+    "stopId": "127N",
+    "direction": "N",
+    "stationName": "Times Sq-42 St"
+  },
+  "knownTerminal": {
+    "stationId": "101",
+    "stopId": "101N",
+    "stationName": "Van Cortlandt Park-242 St"
+  },
+  "unknownTerminalStopId": "ZZZN"
+}

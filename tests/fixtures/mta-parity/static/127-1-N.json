@@ -1,0 +1,35 @@
+{
+  "services": {
+    "Weekday": [
+      {
+        "tripId": "ASP26GEN-Weekday-00_048000_1..N09X001",
+        "arrival": "08:00:00",
+        "departure": "08:00:00"
+      },
+      {
+        "tripId": "ASP26GEN-Weekday-00_048600_1..N09X001",
+        "arrival": "08:10:30",
+        "departure": null
+      },
+      {
+        "tripId": "ASP26GEN-Weekday-00_143400_1..N09X001",
+        "arrival": "23:54:00",
+        "departure": "23:54:00"
+      }
+    ],
+    "Saturday": [
+      {
+        "tripId": "ASP26GEN-Saturday-00_054000_1..N09X001",
+        "arrival": "09:00:00",
+        "departure": "09:00:00"
+      }
+    ],
+    "Sunday": [
+      {
+        "tripId": "ASP26GEN-Sunday-00_144000_1..N09X001",
+        "arrival": "24:02:30",
+        "departure": "24:02:30"
+      }
+    ]
+  }
+}

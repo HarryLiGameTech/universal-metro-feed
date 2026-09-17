@@ -1,0 +1,22 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "1.0",
+    "timestamp": 1789358550
+  },
+  "entity": [
+    {
+      "id": "after-midnight",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "144000_1..N03R",
+          "routeId": "1",
+          "startDate": "20260914"
+        },
+        "stopTimeUpdate": [
+          { "stopId": "127N", "arrival": { "time": 1789358570 } },
+          { "stopId": "101N", "arrival": { "time": 1789360800 } }
+        ]
+      }
+    }
+  ]
+}

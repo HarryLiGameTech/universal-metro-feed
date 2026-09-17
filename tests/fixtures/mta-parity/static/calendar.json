@@ -1,0 +1,29 @@
+{
+  "calendar": [
+    {
+      "serviceId": "Weekday",
+      "startDate": "20260901",
+      "endDate": "20260930",
+      "days": [false, true, true, true, true, true, false]
+    },
+    {
+      "serviceId": "Saturday",
+      "startDate": "20260901",
+      "endDate": "20260930",
+      "days": [false, false, false, false, false, false, true]
+    },
+    {
+      "serviceId": "Sunday",
+      "startDate": "20260901",
+      "endDate": "20260930",
+      "days": [true, false, false, false, false, false, false]
+    }
+  ],
+  "exceptions": [
+    {
+      "serviceId": "Weekday",
+      "date": "20260914",
+      "exceptionType": 2
+    }
+  ]
+}

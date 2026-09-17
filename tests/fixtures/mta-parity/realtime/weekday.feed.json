@@ -1,0 +1,89 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "1.0",
+    "timestamp": 1789473600
+  },
+  "entity": [
+    {
+      "id": "later",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "048000_1..N03R",
+          "routeId": "1",
+          "startDate": "20260915"
+        },
+        "stopTimeUpdate": [
+          { "stopId": "127N", "arrival": { "time": 1789473645 } },
+          { "stopId": "101N", "arrival": { "time": 1789476000 } }
+        ]
+      }
+    },
+    {
+      "id": "other-route",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "other-route-trip",
+          "routeId": "2",
+          "startDate": "20260915"
+        },
+        "stopTimeUpdate": [
+          { "stopId": "127N", "arrival": { "time": 1789473610 } }
+        ]
+      }
+    },
+    {
+      "id": "origin-departure",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "048600_1..N03R",
+          "routeId": "1",
+          "startDate": "20260915"
+        },
+        "stopTimeUpdate": [
+          { "stopId": "127N", "departure": { "time": 1789474250 } },
+          { "stopId": "101N", "arrival": { "time": 1789476600 } }
+        ]
+      }
+    },
+    {
+      "id": "opposite-platform",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "opposite-platform-trip",
+          "routeId": "1",
+          "startDate": "20260915"
+        },
+        "stopTimeUpdate": [
+          { "stopId": "127S", "arrival": { "time": 1789473620 } }
+        ]
+      }
+    },
+    {
+      "id": "no-event-time",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "no-time-trip",
+          "routeId": "1",
+          "startDate": "20260915"
+        },
+        "stopTimeUpdate": [
+          { "stopId": "127N" }
+        ]
+      }
+    },
+    {
+      "id": "no-static-match",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "unmatched-trip",
+          "routeId": "1",
+          "startDate": "20260915"
+        },
+        "stopTimeUpdate": [
+          { "stopId": "127N", "arrival": { "time": 1789474800 } },
+          { "stopId": "ZZZN", "arrival": { "time": 1789477200 } }
+        ]
+      }
+    }
+  ]
+}

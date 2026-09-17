@@ -1,0 +1,39 @@
+{
+  "dateKey": "20260915",
+  "dayType": "weekday",
+  "availableDays": ["weekday", "saturday", "sunday"],
+  "hours": [
+    {
+      "hour": 8,
+      "events": [
+        {
+          "seconds": 28800,
+          "minute": "00",
+          "hasHalfMinute": false,
+          "exactTime": "08:00:00",
+          "eventKind": "departure"
+        },
+        {
+          "seconds": 29430,
+          "minute": "10",
+          "hasHalfMinute": true,
+          "exactTime": "08:10:30",
+          "eventKind": "arrival"
+        }
+      ]
+    },
+    {
+      "hour": 23,
+      "events": [
+        {
+          "seconds": 86040,
+          "minute": "54",
+          "hasHalfMinute": false,
+          "exactTime": "23:54:00",
+          "eventKind": "departure"
+        }
+      ]
+    }
+  ],
+  "scheduledTrainCount": 3
+}

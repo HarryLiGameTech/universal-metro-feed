@@ -1,0 +1,51 @@
+{
+  "arrivals": [
+    {
+      "id": "later",
+      "tripId": "048000_1..N03R",
+      "routeId": "1",
+      "stopId": "127N",
+      "direction": "N",
+      "destinationId": "101",
+      "destinationName": "Van Cortlandt Park-242 St",
+      "eventTime": 1789473645,
+      "eventKind": "arrival",
+      "scheduledTime": null,
+      "delaySeconds": null,
+      "delayStatus": "undetermined",
+      "delayLabel": "Untimed"
+    },
+    {
+      "id": "origin-departure",
+      "tripId": "048600_1..N03R",
+      "routeId": "1",
+      "stopId": "127N",
+      "direction": "N",
+      "destinationId": "101",
+      "destinationName": "Van Cortlandt Park-242 St",
+      "eventTime": 1789474250,
+      "eventKind": "departure",
+      "scheduledTime": null,
+      "delaySeconds": null,
+      "delayStatus": "undetermined",
+      "delayLabel": "Untimed"
+    },
+    {
+      "id": "no-static-match",
+      "tripId": "unmatched-trip",
+      "routeId": "1",
+      "stopId": "127N",
+      "direction": "N",
+      "destinationId": "ZZZ",
+      "destinationName": "Unknown terminal",
+      "eventTime": 1789474800,
+      "eventKind": "arrival",
+      "scheduledTime": null,
+      "delaySeconds": null,
+      "delayStatus": "undetermined",
+      "delayLabel": "Untimed"
+    }
+  ],
+  "feedTimestamp": 1789473600,
+  "fetchedAt": 1789473600
+}

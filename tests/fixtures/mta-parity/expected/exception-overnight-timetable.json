@@ -1,0 +1,20 @@
+{
+  "dateKey": "20260914",
+  "dayType": "weekday",
+  "availableDays": ["weekday", "saturday", "sunday"],
+  "hours": [
+    {
+      "hour": 0,
+      "events": [
+        {
+          "seconds": 150,
+          "minute": "02",
+          "hasHalfMinute": true,
+          "exactTime": "00:02:30",
+          "eventKind": "departure"
+        }
+      ]
+    }
+  ],
+  "scheduledTrainCount": 1
+}

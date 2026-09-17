@@ -1,0 +1,104 @@
+import GtfsRealtimeBindings from "gtfs-realtime-bindings";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { stations } from "../data/stations.generated";
+import calendar from "../../tests/fixtures/mta-parity/static/calendar.json";
+import shard from "../../tests/fixtures/mta-parity/static/127-1-N.json";
+import topology from "../../tests/fixtures/mta-parity/static/topology.json";
+import weekdayFeed from "../../tests/fixtures/mta-parity/realtime/weekday.feed.json";
+import overnightFeed from "../../tests/fixtures/mta-parity/realtime/overnight.feed.json";
+import expectedWeekdayArrivals from "../../tests/fixtures/mta-parity/expected/weekday-arrivals.json";
+import expectedOvernightArrivals from "../../tests/fixtures/mta-parity/expected/overnight-arrivals.json";
+import expectedNoStaticArrivals from "../../tests/fixtures/mta-parity/expected/no-static-arrivals.json";
+import expectedWeekdayTimetable from "../../tests/fixtures/mta-parity/expected/weekday-timetable.json";
+import expectedExceptionTimetable from "../../tests/fixtures/mta-parity/expected/exception-overnight-timetable.json";
+import { fetchArrivals } from "./mta";
+import { fetchTimetable, renderTimetable } from "./timetable";
+
+const realtimeUrl = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs";
+const platformUrl = "/timetables/127/1-N.json";
+const calendarUrl = "/timetables/calendar.json";
+
+function installMockResponses(feed: object, options: { scheduleAvailable?: boolean } = {}) {
+  const message = GtfsRealtimeBindings.transit_realtime.FeedMessage.fromObject(feed);
+  const encodedFeed = GtfsRealtimeBindings.transit_realtime.FeedMessage.encode(message).finish();
+
+  const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url === realtimeUrl) {
+      return new Response(new Uint8Array(encodedFeed), {
+        headers: { "Content-Type": "application/x-protobuf" },
+      });
+    }
+    if (url === platformUrl) {
+      return options.scheduleAvailable === false
+        ? new Response("Not found", { status: 404 })
+        : Response.json(shard);
+    }
+    if (url === calendarUrl) return Response.json(calendar);
+    throw new Error(`Unexpected request in parity fixture: ${url}`);
+  });
+
+  vi.stubGlobal("fetch", mockFetch);
+  return mockFetch;
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
+describe("current MTA behavior: frozen parity fixtures", () => {
+  it("pins the generated station names used by the legacy destination resolver", () => {
+    const selected = stations.find((station) => station.id === topology.selectedPlatform.stationId);
+    const terminal = stations.find((station) => station.id === topology.knownTerminal.stationId);
+    expect(selected?.name).toBe(topology.selectedPlatform.stationName);
+    expect(terminal?.name).toBe(topology.knownTerminal.stationName);
+    expect(selected?.routes.find((route) => route.routeId === topology.routeId)?.directions)
+      .toContain(topology.selectedPlatform.direction);
+  });
+
+  it("resolves a weekday protobuf feed and static schedule into the current arrival snapshot", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    const mockFetch = installMockResponses(weekdayFeed);
+
+    expect(await fetchArrivals("127", "1", "N")).toEqual(expectedWeekdayArrivals);
+    expect(mockFetch.mock.calls.map(([input]) => String(input)).sort()).toEqual([
+      calendarUrl,
+      platformUrl,
+      realtimeUrl,
+    ].sort());
+  });
+
+  it("uses the previous service day for a post-midnight realtime trip", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T04:02:30.000Z"));
+    installMockResponses(overnightFeed);
+
+    expect(await fetchArrivals("127", "1", "N")).toEqual(expectedOvernightArrivals);
+  });
+
+  it("returns live arrivals without delay values when the static response is unavailable", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    installMockResponses(weekdayFeed, { scheduleAvailable: false });
+
+    expect(await fetchArrivals("127", "1", "N")).toEqual(expectedNoStaticArrivals);
+  });
+
+  it("renders the current weekday timetable from mocked Clockface-shaped static responses", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T12:00:00.000Z"));
+    const mockFetch = installMockResponses(weekdayFeed);
+
+    expect(await fetchTimetable("127", "1", "N", "weekday")).toEqual(expectedWeekdayTimetable);
+    expect(mockFetch.mock.calls.map(([input]) => String(input)).sort()).toEqual([
+      calendarUrl,
+      platformUrl,
+    ].sort());
+  });
+
+  it("applies a calendar exception but retains the prior Sunday's 24-hour trip", () => {
+    expect(renderTimetable(shard, calendar, "20260914")).toEqual(expectedExceptionTimetable);
+  });
+});
