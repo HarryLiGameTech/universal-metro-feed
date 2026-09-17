@@ -23,16 +23,18 @@ Clockface, Witness, and phone/glasses clients are included only to define owners
 | --- | --- | --- | --- |
 | Pre-refactor parity gate | Complete for the current MTA fixtures | Static/calendar and protobuf feed mocks, frozen outputs, legacy and composed-path parity tests | Add fixtures for each newly encountered provider quirk |
 | Phase 1: Canonical foundation | In progress | Initial `StrictTime`, provenance-bearing `Resolved<T>`, provider-scoped query, and precision tests | Complete topology/capability model; remove New York assumptions from shared timetable/UI code; finish contract tests |
-| Phase 2: Source composition | In progress | Generic composed resolver; MTA topology, static schedule, and GTFS-Realtime prediction sources; current arrival board uses the composed path through a legacy projection | Migrate static timetable view; remove legacy projection; implement generalized identity, tracing, and all degradation states |
+| Phase 2: Source composition | In progress | Generic composed resolver; MTA topology, static schedule, and GTFS-Realtime prediction sources; trip-path expansion uses the same source/fusion contract; current arrival board still uses a legacy projection | Migrate static timetable view; remove legacy projection; implement generalized identity, tracing, and all degradation states |
 | Phase 3: Registry and Clockface boundary | In progress | Runtime JSON provider registry and lazy MTA manifest; MTA catalog loaded on demand; generated station index removed from the production browser bundle | Provider switching and city search; YAML authoring/compilation; real Clockface integration after its deferred backend stage |
 | Phase 4: Multi-shape prediction | Not started | None | Non-GTFS adapters are deliberately out of the current concrete scope |
 | Phase 5: Frequency inference | Not started | None | Contracts and mock-driven inference |
-| Phase 6: Product hardening | In progress | MTA direction labels now use GTFS headsigns; GTFS-adjacent-segment evidence gates shared-line selection in live and static views; live rows show compact source trip IDs; desktop/mobile layout reviewed | Shareable navigation, broader accessibility/performance review, and complete failure-state work |
+| Phase 6: Product hardening | In progress | MTA direction labels use GTFS headsigns; GTFS-adjacent-segment evidence gates shared-line selection; live rows show compact trip IDs and expand into a horizontally scrollable, stop-by-stop arrival/departure path | Shareable navigation, broader accessibility/performance review, and complete failure-state work |
 | Clockface, Witness, phone, glasses | Deferred | Responsibility boundaries only | Implement in the next stage, after frontend contracts are stable |
 
-The current MTA static schedule's second-level *semantic* precision has not been verified. The composed path therefore marks parsed schedule timestamps as `uninterpreted` in `StrictTime`; a temporary legacy projection preserves the existing UI output until a provider-specific precision policy is established and reviewed. This is an explicit migration boundary, not a claim that the raw `:00` seconds are exact.
+MTA-subway's static GTFS `stop_time` seconds were confirmed as semantically meaningful for this provider on 2026-09-17. Its adapter therefore represents scheduled timestamps as `StrictTime` `exact` at second resolution. This is an MTA-specific policy, **not** a GTFS-wide assumption: every additional provider must establish its own precision policy. Realtime stop times remain second-resolution **estimates**, not exact observations. This intentional semantic correction is covered by an updated parity assertion; the existing arrival values remain unchanged.
 
 The current `clockface-compat-static` catalog is a generated frontend asset, **not** a Clockface backend implementation. It exercises the frontend loading boundary while preserving the previously agreed deferral of Clockface internals. The production main JavaScript no longer imports `stations.generated.ts`, but the static timetable view still uses the legacy timetable fetch/render path.
+
+The MTA trip-path view likewise loads generated, bucketed static GTFS trip-stop artifacts only after a rider expands a train. These are temporary Clockface-compatible static assets, not a Clockface backend. They are not embedded in the application JavaScript; the later Clockface service can replace this schedule source without changing the trip-path UI contract.
 
 ## 2. Product and Engineering Goals
 
@@ -634,6 +636,12 @@ Rendered with an "Earliest" qualifier
 - Use provider headsigns or equivalent direction metadata for platform labels; compass letters alone are not a rider-facing direction name.
 - Offer an "any line" platform view only when route grouping has source-backed evidence, such as a shared directed GTFS stop-to-stop segment. Do not infer it from a shared station name alone.
 - Keep each arrival's route visible when multiple lines are combined, and retain the source trip identifier (when supplied) even if the UI abbreviates it.
+- Allow a rider to expand a specific trackable trip into a horizontally scrollable stop sequence with separate arrival and departure fields. Load full static GTFS trip paths on demand rather than putting them in the main browser bundle.
+- Center the expanded horizontal sequence on the selected station when it first loads, while leaving subsequent manual scrolling undisturbed.
+- For each current or downstream stop/event, prefer a fresh matching live prediction over a static schedule. For passed stops, show the static schedule rather than reconstructing historical actual times without an observation record. Never fill a missing arrival from departure or vice versa, and label partial feed-only topology as partial.
+- Keep source-backed stop topology visible when both arrival and departure times are missing. If trip/date matching is ambiguous, retain an unambiguous stop sequence but suppress uncertain static clock times.
+- Preserve an expanded trip and its horizontal scroll position across background refreshes, including transient feed failures; only a platform change or explicit rider action closes it.
+- Color a stop's live arrival and departure predictions using the existing delay bands computed from that stop's live versus static **departure** time. When no comparable departure pair exists, use neutral styling rather than implying on-time service.
 
 ### 14.3 Source and freshness disclosure
 

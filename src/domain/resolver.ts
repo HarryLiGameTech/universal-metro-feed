@@ -33,24 +33,24 @@ export interface ResolutionContext {
   nowSeconds: number;
 }
 
-export interface TopologySource<T> {
-  load(query: PlatformQuery, context: ResolutionContext): Promise<Resolved<T>>;
+export interface TopologySource<T, TQuery extends PlatformQuery = PlatformQuery> {
+  load(query: TQuery, context: ResolutionContext): Promise<Resolved<T>>;
 }
 
-export interface ScheduleSource<T> {
-  load(query: PlatformQuery, context: ResolutionContext): Promise<Resolved<T>>;
+export interface ScheduleSource<T, TQuery extends PlatformQuery = PlatformQuery> {
+  load(query: TQuery, context: ResolutionContext): Promise<Resolved<T>>;
 }
 
-export interface PredictionSource<T> {
-  load(query: PlatformQuery, context: ResolutionContext): Promise<Resolved<T>>;
+export interface PredictionSource<T, TQuery extends PlatformQuery = PlatformQuery> {
+  load(query: TQuery, context: ResolutionContext): Promise<Resolved<T>>;
 }
 
-export interface ObservationSource<T> {
-  load(query: PlatformQuery, context: ResolutionContext): Promise<Resolved<T>>;
+export interface ObservationSource<T, TQuery extends PlatformQuery = PlatformQuery> {
+  load(query: TQuery, context: ResolutionContext): Promise<Resolved<T>>;
 }
 
-export interface FusionInput<TTopology, TSchedule, TPrediction, TObservation> {
-  query: PlatformQuery;
+export interface FusionInput<TTopology, TSchedule, TPrediction, TObservation, TQuery extends PlatformQuery = PlatformQuery> {
+  query: TQuery;
   context: ResolutionContext;
   topology: Resolved<TTopology>;
   schedule: Resolved<TSchedule> | null;
@@ -59,14 +59,14 @@ export interface FusionInput<TTopology, TSchedule, TPrediction, TObservation> {
   warnings: ResolutionWarning[];
 }
 
-export interface FusionPolicy<TTopology, TSchedule, TPrediction, TObservation, TOutput> {
-  resolve(input: FusionInput<TTopology, TSchedule, TPrediction, TObservation>): Resolved<TOutput>;
+export interface FusionPolicy<TTopology, TSchedule, TPrediction, TObservation, TOutput, TQuery extends PlatformQuery = PlatformQuery> {
+  resolve(input: FusionInput<TTopology, TSchedule, TPrediction, TObservation, TQuery>): Resolved<TOutput>;
 }
 
-async function loadOptional<T>(
-  source: ScheduleSource<T> | PredictionSource<T> | ObservationSource<T> | null,
+async function loadOptional<T, TQuery extends PlatformQuery>(
+  source: ScheduleSource<T, TQuery> | PredictionSource<T, TQuery> | ObservationSource<T, TQuery> | null,
   kind: ResolutionWarning["source"],
-  query: PlatformQuery,
+  query: TQuery,
   context: ResolutionContext,
 ): Promise<{ result: Resolved<T> | null; warning?: ResolutionWarning }> {
   if (!source) return { result: null };
@@ -85,16 +85,16 @@ async function loadOptional<T>(
 }
 
 /** Coordinates independent data sources; provider quirks stay in sources and fusion policies. */
-export class CompositeMetroDataResolver<TTopology, TSchedule, TPrediction, TObservation, TOutput> {
+export class CompositeMetroDataResolver<TTopology, TSchedule, TPrediction, TObservation, TOutput, TQuery extends PlatformQuery = PlatformQuery> {
   constructor(
-    private readonly topologySource: TopologySource<TTopology>,
-    private readonly scheduleSource: ScheduleSource<TSchedule> | null,
-    private readonly predictionSource: PredictionSource<TPrediction> | null,
-    private readonly observationSource: ObservationSource<TObservation> | null,
-    private readonly fusionPolicy: FusionPolicy<TTopology, TSchedule, TPrediction, TObservation, TOutput>,
+    private readonly topologySource: TopologySource<TTopology, TQuery>,
+    private readonly scheduleSource: ScheduleSource<TSchedule, TQuery> | null,
+    private readonly predictionSource: PredictionSource<TPrediction, TQuery> | null,
+    private readonly observationSource: ObservationSource<TObservation, TQuery> | null,
+    private readonly fusionPolicy: FusionPolicy<TTopology, TSchedule, TPrediction, TObservation, TOutput, TQuery>,
   ) {}
 
-  async resolveDepartures(query: PlatformQuery, context: ResolutionContext): Promise<Resolved<TOutput>> {
+  async resolveDepartures(query: TQuery, context: ResolutionContext): Promise<Resolved<TOutput>> {
     const [topology, scheduleLoad, predictionLoad, observationLoad] = await Promise.all([
       this.topologySource.load(query, context),
       loadOptional(this.scheduleSource, "schedule", query, context),

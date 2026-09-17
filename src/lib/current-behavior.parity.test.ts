@@ -126,7 +126,8 @@ describe("current MTA behavior: frozen parity fixtures", () => {
       "mta-gtfs-realtime",
     ]);
     expect(result.data.arrivals[0]?.predictionTime).toMatchObject({ kind: "estimate", resolution: "second" });
-    expect(result.data.arrivals[0]?.scheduleTime).toMatchObject({ kind: "uninterpreted", serializedResolution: "second" });
+    // MTA-subway policy was explicitly confirmed: GTFS stop_time seconds are real.
+    expect(result.data.arrivals[0]?.scheduleTime).toMatchObject({ kind: "exact", resolution: "second" });
   });
 
   it("uses the previous service day for a post-midnight realtime trip", async () => {

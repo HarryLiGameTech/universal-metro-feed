@@ -186,9 +186,6 @@ export function findScheduledEventTime(
   eventKind: "arrival" | "departure",
   realtimeEventTime: number,
 ) {
-  const tripKey = (tripId: string) =>
-    tripId.match(/(?:^|_)([+-]?\d{6}_[A-Z0-9]+\.\.[NS])/i)?.[1] ?? null;
-  const realtimeKey = tripKey(realtimeTripId);
   const candidates = new Set<number>();
 
   // MTA may label a post-midnight realtime trip with the new calendar date,
@@ -198,10 +195,7 @@ export function findScheduledEventTime(
     for (const serviceId of activeServices) {
       for (const event of source.shard.services[serviceId] ?? []) {
         if (!event.tripId) continue;
-        const isMatch = event.tripId === realtimeTripId ||
-          event.tripId.endsWith(`_${realtimeTripId}`) ||
-          (realtimeKey != null && tripKey(event.tripId) === realtimeKey);
-        if (!isMatch) continue;
+        if (!matchesStaticTripId(event.tripId, realtimeTripId)) continue;
         const time = eventKind === "arrival"
           ? event.arrival ?? event.departure
           : event.departure ?? event.arrival;
@@ -214,6 +208,15 @@ export function findScheduledEventTime(
   return [...candidates].sort(
     (left, right) => Math.abs(left - realtimeEventTime) - Math.abs(right - realtimeEventTime),
   )[0] ?? null;
+}
+
+/** MTA realtime IDs sometimes omit the static GTFS service prefix. */
+export function matchesStaticTripId(staticTripId: string, realtimeTripId: string) {
+  const tripKey = (tripId: string) =>
+    tripId.match(/(?:^|_)([+-]?\d{6}_[A-Z0-9]+\.\.[NS])/i)?.[1] ?? null;
+  const realtimeKey = tripKey(realtimeTripId);
+  return staticTripId === realtimeTripId || staticTripId.endsWith(`_${realtimeTripId}`) ||
+    (realtimeKey != null && tripKey(staticTripId) === realtimeKey);
 }
 
 export function renderTimetable(

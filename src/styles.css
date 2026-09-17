@@ -16,6 +16,7 @@
 }
 
 * { box-sizing: border-box; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, select { font: inherit; }
@@ -99,8 +100,12 @@ main {
 .live-status.is-stale { color: #ffad73; }
 
 .arrival-list { list-style: none; margin: 0; padding: 0; flex: 1; }
-.arrival-row { min-height: 102px; display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 18px; padding: 15px 34px; border-bottom: 1px solid #33322e; }
-.arrival-row:first-child { background: #24231f; }
+.arrival-row { position: relative; width: 100%; min-height: 102px; display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 18px; padding: 15px 34px; border: 0; border-bottom: 1px solid #33322e; background: transparent; color: inherit; text-align: left; }
+.arrival-entry:first-child > .arrival-row { background: #24231f; }
+.arrival-row:hover { background: #292824; }
+.arrival-row:focus-visible { outline: 2px solid #7de0b7; outline-offset: -3px; }
+.arrival-disclosure { position: absolute; right: 12px; bottom: 9px; color: #8e8b84; transition: transform 140ms ease; }
+.arrival-disclosure.is-open { transform: rotate(180deg); }
 .arrival-order { font-family: "DM Mono", monospace; font-size: 12px; color: #77756f; }
 .arrival-destination { display: grid; gap: 4px; min-width: 0; }
 .arrival-destination-meta { display: flex; align-items: center; gap: 9px; min-height: 14px; }
@@ -119,6 +124,36 @@ main {
 .arrival-time.delay-official, .delay-label.delay-official { color: #ff3b35; }
 .arrival-time.delay-undetermined { color: #f9f5ec; }
 .delay-label.delay-undetermined { color: #8e8b84; }
+
+.trip-path-panel { min-width: 0; padding: 19px 0 17px; border-bottom: 1px solid #45433e; background: #20201d; }
+.trip-path-heading { display: flex; justify-content: space-between; gap: 12px; padding: 0 34px 12px; color: #d8d4cb; font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.trip-path-heading > span { color: #8e8b84; font-size: 10px; }
+.trip-path-scroll { max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-color: #77736b transparent; }
+.trip-path-scroll:focus-visible { outline: 2px solid #7de0b7; outline-offset: -2px; }
+.trip-path-content { position: relative; display: flex; width: max-content; min-width: 100%; }
+.trip-path-axis { position: sticky; z-index: 1; left: 0; display: flex; flex: 0 0 52px; flex-direction: column; padding: 85px 7px 0 14px; background: #20201d; color: #8e8b84; font-family: "DM Mono", monospace; font-size: 10px; line-height: 25px; text-transform: uppercase; }
+.trip-path-stops { display: flex; width: max-content; min-width: 100%; margin: 0; padding: 8px 34px 12px 0; list-style: none; }
+.trip-path-stop { flex: 0 0 180px; min-width: 0; padding: 0 11px 0 0; color: #eee9df; }
+.trip-path-stop.is-past { color: #a49f96; }
+.trip-path-rail { position: relative; height: 18px; border-top: 1px solid #817c73; margin-top: 7px; }
+.trip-path-rail > span { position: absolute; top: -7px; left: 0; width: 13px; height: 13px; border: 2px solid #aaa59b; border-radius: 50%; background: #20201d; }
+.trip-path-stop.is-current .trip-path-rail > span { border-color: #7de0b7; background: #7de0b7; box-shadow: 0 0 0 3px rgba(125, 224, 183, 0.17); }
+.trip-path-stop-name { height: 42px; margin: 2px 0 8px; padding-right: 5px; overflow: hidden; font-size: 13px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.trip-path-stop.is-current .trip-path-stop-name { color: #7de0b7; }
+.trip-path-time { display: flex; align-items: baseline; min-height: 25px; font-family: "DM Mono", monospace; font-variant-numeric: tabular-nums; }
+.trip-path-time > strong { font-size: 12px; font-weight: 500; white-space: nowrap; }
+.trip-path-time.is-prediction > strong { color: #eee9df; }
+.trip-path-time.is-prediction.delay-early > strong { color: #bd8cff; }
+.trip-path-time.is-prediction.delay-on-time > strong { color: #7de0b7; }
+.trip-path-time.is-prediction.delay-mild > strong { color: #f3b84b; }
+.trip-path-time.is-prediction.delay-noticeable > strong { color: #ff7548; }
+.trip-path-time.is-prediction.delay-official > strong { color: #ff3b35; }
+.trip-path-time.is-missing > strong { color: #77736b; }
+.trip-path-legend { display: flex; flex-wrap: wrap; gap: 7px 18px; padding: 12px 34px 0; border-top: 1px solid #34332f; color: #aaa59b; font-family: "DM Mono", monospace; font-size: 10px; line-height: 1.5; }
+.trip-path-legend b { color: #eee9df; font-weight: 500; }
+.trip-path-message { display: flex; align-items: center; gap: 8px; min-height: 80px; padding: 12px 34px; color: #aaa59b; font-size: 12px; }
+.trip-path-message.is-error { color: #ffad73; }
+.trip-path-message button { border: 1px solid #706e68; background: transparent; color: #f9f5ec; padding: 4px 8px; }
 
 .board-message { min-height: 408px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; padding: 40px; color: #aaa79f; text-align: center; }
 .board-message strong { color: #f9f5ec; font-size: 18px; }
@@ -173,10 +208,15 @@ main {
   .intro h1 { font-size: 48px; }
   .selector-panel, .board-header { padding: 24px 20px; }
   .arrival-row { grid-template-columns: 32px 1fr; gap: 10px; min-height: 116px; padding: 14px 20px; }
+  .arrival-disclosure { right: 7px; bottom: 7px; }
   .arrival-when { grid-column: 2; grid-template-columns: auto 1fr; text-align: left; column-gap: 12px; }
   .arrival-annotations { justify-content: flex-start; }
   .partial-feed-warning { padding-inline: 20px; }
   .board-footer { padding: 0 20px; }
+  .trip-path-heading, .trip-path-legend { padding-left: 20px; padding-right: 20px; }
+  .trip-path-axis { flex-basis: 43px; padding-left: 9px; }
+  .trip-path-stops { padding-right: 20px; }
+  .trip-path-message { padding-left: 20px; padding-right: 20px; }
   .timetable-section { padding-top: 60px; }
   .timetable-board-header { padding: 24px 20px; }
   .timetable-grid { padding: 8px 20px 16px; }

@@ -8,6 +8,7 @@ import { loadProviderCatalog, loadProviderManifest, loadProviderRegistry, type P
 import { ArrivalBoard } from "./components/ArrivalBoard";
 import { SelectorPanel } from "./components/SelectorPanel";
 import { StaticTimetableSection } from "./components/StaticTimetableSection";
+import { fetchMtaTripPath } from "./providers/mta/trip-path-resolver";
 import "./styles.css";
 
 export default function App() {
@@ -160,7 +161,7 @@ function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
           onLineGroupChange={selectLineGroup}
           onDirectionChange={selectDirection}
         />
-        <ArrivalBoard station={station} routeIds={routeIds} direction={direction} />
+        <ArrivalBoard providerId={catalog.providerId} loadTripPath={fetchMtaTripPath} station={station} routeIds={routeIds} direction={direction} />
       </div>
 
       <StaticTimetableSection />

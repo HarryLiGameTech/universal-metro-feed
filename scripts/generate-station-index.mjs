@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 const DATA_DIR = new URL("../gtfs_subway/", import.meta.url);
 const OUTPUT = new URL("../src/data/stations.generated.ts", import.meta.url);
 const TIMETABLE_DIR = new URL("../public/timetables/", import.meta.url);
+const TRIP_PATH_DIR = new URL("../public/trip-paths/mta-subway/", import.meta.url);
 const CATALOG_OUTPUT = new URL("../public/providers/mta-subway/catalog.json", import.meta.url);
 
 function parseCsvLine(line) {
@@ -94,7 +95,12 @@ await forEachCsvRow("stop_times.txt", (row) => {
     headsignCounts.set(platformRouteKey, counts);
   }
   const stops = tripStops.get(row.trip_id) ?? [];
-  stops.push({ stopId, sequence: Number(row.stop_sequence) });
+  stops.push({
+    stopId,
+    sequence: Number(row.stop_sequence),
+    arrival: row.arrival_time || null,
+    departure: row.departure_time || null,
+  });
   tripStops.set(row.trip_id, stops);
 
   const timetableKey = platformRouteKey;
@@ -128,6 +134,35 @@ for (const [tripId, stops] of tripStops) {
       adjacentSegments.set(key, segments);
     }
   }
+}
+
+// Click-to-expand topology is kept in small, on-demand shards, never in the
+// main application bundle or the station catalog. The backend may later serve
+// the same contract without changing the resolver or UI.
+function tripBucket(tripId) {
+  let hash = 0;
+  for (let index = 0; index < tripId.length; index += 1) {
+    hash = (Math.imul(hash, 31) + tripId.charCodeAt(index)) >>> 0;
+  }
+  return (hash % 128).toString(16).padStart(2, "0");
+}
+
+const tripPathBuckets = new Map();
+for (const [tripId, stops] of tripStops) {
+  const trip = trips.get(tripId);
+  if (!trip) continue;
+  const bucketId = tripBucket(tripId);
+  const bucket = tripPathBuckets.get(bucketId) ?? {};
+  bucket[tripId] = {
+    routeId: trip.routeId,
+    serviceId: trip.serviceId,
+    stops,
+  };
+  tripPathBuckets.set(bucketId, bucket);
+}
+await mkdir(TRIP_PATH_DIR, { recursive: true });
+for (const [bucketId, tripsInBucket] of tripPathBuckets) {
+  writeFileSync(new URL(`${bucketId}.json`, TRIP_PATH_DIR), JSON.stringify({ trips: tripsInBucket }));
 }
 tripStops.clear();
 

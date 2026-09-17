@@ -1,6 +1,7 @@
 node_modules/
 dist/
 public/timetables/
+public/trip-paths/
 public/providers/mta-subway/catalog.json
 *.tsbuildinfo
 .DS_Store

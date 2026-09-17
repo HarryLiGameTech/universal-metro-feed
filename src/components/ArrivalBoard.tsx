@@ -1,10 +1,14 @@
-import { AlertTriangle, Radio, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, ChevronDown, Radio, RefreshCw } from "lucide-react";
 import { useArrivals } from "../hooks/useArrivals";
 import { useClock } from "../hooks/useClock";
 import { directionDisplay } from "../lib/platform-selection";
+import { arrivalIdentity, visibleArrivals } from "../lib/arrival-board-state";
 import { compactTripId } from "../lib/trip-label";
-import type { Direction, Station } from "../types";
+import type { TripPathLoader } from "../domain/trip-path";
+import type { Arrival, Direction, Station } from "../types";
 import { RouteBullet } from "./RouteBullet";
+import { TripPathPanel } from "./TripPathPanel";
 
 const timeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/New_York",
@@ -15,19 +19,23 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 interface ArrivalBoardProps {
+  providerId: string;
+  loadTripPath: TripPathLoader;
   station: Station;
   routeIds: readonly string[];
   direction: Direction;
 }
 
-export function ArrivalBoard({ station, routeIds, direction }: ArrivalBoardProps) {
+export function ArrivalBoard({ providerId, loadTripPath, station, routeIds, direction }: ArrivalBoardProps) {
+  const [expandedTrip, setExpandedTrip] = useState<{ platformKey: string; arrival: Arrival } | null>(null);
   const now = useClock();
   const query = useArrivals(station.id, routeIds, direction);
   const heading = directionDisplay(station, routeIds, direction);
   const nowSeconds = now / 1_000;
-  const arrivals = (query.data?.arrivals ?? [])
-    .filter((arrival) => arrival.eventTime >= nowSeconds - 5)
-    .slice(0, 4);
+  const platformKey = `${providerId}:${station.id}:${direction}:${routeIds.join(",")}`;
+  useEffect(() => setExpandedTrip(null), [platformKey]);
+  const selectedArrival = expandedTrip?.platformKey === platformKey ? expandedTrip.arrival : null;
+  const arrivals = visibleArrivals(query.data?.arrivals ?? [], nowSeconds, selectedArrival);
   const feedAge = query.data ? Math.max(0, nowSeconds - query.data.feedTimestamp) : Infinity;
   const isStale = feedAge > 90;
 
@@ -56,13 +64,17 @@ export function ArrivalBoard({ station, routeIds, direction }: ArrivalBoardProps
         </div>
       ) : null}
 
+      {query.isError && query.data ? (
+        <div className="partial-feed-warning" role="status">Refresh failed; showing the last available feed.</div>
+      ) : null}
+
       {query.isPending ? (
         <div className="board-message">
           <RefreshCw className="spin" aria-hidden="true" />
           <strong>Reading the MTA feed…</strong>
           <span>Decoding the latest train positions.</span>
         </div>
-      ) : query.isError ? (
+      ) : query.isError && !query.data ? (
         <div className="board-message board-message--error">
           <AlertTriangle aria-hidden="true" />
           <strong>Realtime feed unavailable</strong>
@@ -76,13 +88,24 @@ export function ArrivalBoard({ station, routeIds, direction }: ArrivalBoardProps
         </div>
       ) : (
         <ol className="arrival-list">
-          {arrivals.map((arrival, index) => {
+          {arrivals.map(({ arrival, retained, fromFeed }, index) => {
             const secondsAway = Math.max(0, Math.round(arrival.eventTime - nowSeconds));
             const minutesAway = Math.floor(secondsAway / 60);
-            const proximity = index === 0 ? "Next" : minutesAway < 1 ? "Due" : `${minutesAway} min`;
+            const proximity = !fromFeed ? "Last seen" : arrival.eventTime < nowSeconds - 5 ? "Passed" :
+              index === 0 ? "Next" : minutesAway < 1 ? "Due" : `${minutesAway} min`;
+            const tripKey = arrivalIdentity(arrival);
+            const expanded = selectedArrival != null && arrivalIdentity(selectedArrival) === tripKey;
+            const panelId = `trip-path-${station.id}-${index}`;
 
             return (
-              <li key={`${arrival.tripId}-${arrival.eventTime}`} className="arrival-row">
+              <li key={tripKey} className={retained ? "arrival-entry is-retained" : "arrival-entry"}>
+                <button
+                  type="button"
+                  className="arrival-row"
+                  aria-expanded={expanded}
+                  aria-controls={expanded ? panelId : undefined}
+                  onClick={() => setExpandedTrip(expanded ? null : { platformKey, arrival })}
+                >
                 <div className="arrival-order">{String(index + 1).padStart(2, "0")}</div>
                 <div className="arrival-destination">
                   <div className="arrival-destination-meta">
@@ -103,10 +126,23 @@ export function ArrivalBoard({ station, routeIds, direction }: ArrivalBoardProps
                     {timeFormatter.format(arrival.eventTime * 1_000)}
                   </time>
                   <div className="arrival-annotations">
-                    <small>{arrival.eventKind === "departure" ? "Departs" : "Arrives"}</small>
+                    <small>{fromFeed ? arrival.eventKind === "departure" ? "Departs" : "Arrives" : "Last prediction"}</small>
                     <small className={`delay-label delay-${arrival.delayStatus}`}>{arrival.delayLabel}</small>
                   </div>
                 </div>
+                <ChevronDown className={expanded ? "arrival-disclosure is-open" : "arrival-disclosure"} size={15} aria-hidden="true" />
+                <span className="sr-only">{expanded ? "Hide" : "Show"} stop-by-stop times</span>
+                </button>
+                {expanded && <TripPathPanel panelId={panelId} loadTripPath={loadTripPath} query={{
+                  providerId,
+                  stationId: station.id,
+                  routeId: arrival.routeId,
+                  directionId: direction,
+                  tripId: arrival.tripId,
+                  entityId: arrival.id,
+                  anchorEventTime: arrival.eventTime,
+                  anchorEventKind: arrival.eventKind,
+                }} />}
               </li>
             );
           })}

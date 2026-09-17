@@ -9,14 +9,14 @@ import {
   type ScheduleSource,
   type TopologySource,
 } from "../../domain/resolver";
-import { estimatedTime, uninterpretedTime, type StrictTime } from "../../domain/strict-time";
+import type { StrictTime } from "../../domain/strict-time";
 import { feedNameForRoute, fetchMtaFeed, normalizeArrivals } from "../../lib/mta";
 import { fetchTimetableSource, type TimetableSource } from "../../lib/timetable";
 import { loadProviderCatalog } from "../registry";
 import type { Arrival, ArrivalSnapshot, Direction } from "../../types";
+import { mtaPredictedTime, mtaScheduledTime } from "./time-policy";
 
 const providerId = "mta-subway";
-const timezone = "America/New_York";
 
 interface MtaTopology {
   stationNames: ReadonlyMap<string, string>;
@@ -113,15 +113,8 @@ const mtaFusionPolicy: FusionPolicy<MtaTopology, TimetableSource, MtaFeedSnapsho
           const { eventTime, scheduledTime, ...other } = arrival;
           return {
             ...other,
-            predictionTime: estimatedTime(eventTime, timezone, "second"),
-            // Current GTFS supplies a second-formatted value, but the publishing
-            // semantics have not yet been audited. Keep it out of StrictTime UI.
-            scheduleTime: scheduledTime == null ? null : uninterpretedTime(
-              scheduledTime,
-              timezone,
-              "second",
-              "MTA static stop_time precision has not been audited",
-            ),
+            predictionTime: mtaPredictedTime(eventTime),
+            scheduleTime: scheduledTime == null ? null : mtaScheduledTime(scheduledTime),
           };
         }),
         feedTimestamp: snapshot.feedTimestamp,
@@ -153,7 +146,7 @@ export function toLegacyArrivalSnapshot(resolved: Resolved<MtaDepartures>): Arri
       return {
         ...other,
         eventTime: predictionTime.epochSeconds,
-        scheduledTime: scheduleTime?.kind === "uninterpreted" ? scheduleTime.epochSeconds : null,
+        scheduledTime: scheduleTime?.kind === "exact" ? scheduleTime.epochSeconds : null,
       };
     }),
     feedTimestamp: resolved.data.feedTimestamp,
