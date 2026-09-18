@@ -41,6 +41,15 @@ export function directionDestinations(station: Station, routeIds: readonly strin
 
 export function directionDisplay(station: Station, routeIds: readonly string[], direction: Direction) {
   const destinations = directionDestinations(station, routeIds, direction);
+  const published = routeIds.length === 1
+    ? station.routes.find((route) => route.routeId === routeIds[0])?.directionNames?.[direction]
+    : undefined;
+  if (published) {
+    return {
+      short: published,
+      full: destinations.length > 0 ? `${published} · Toward ${destinations.join(" / ")}` : published,
+    };
+  }
   if (destinations.length === 0) {
     return { short: `Direction ${direction}`, full: `Direction ${direction}` };
   }
@@ -51,4 +60,3 @@ export function directionDisplay(station: Station, routeIds: readonly string[], 
     full: `Toward ${destinations.join(" / ")}`,
   };
 }
-

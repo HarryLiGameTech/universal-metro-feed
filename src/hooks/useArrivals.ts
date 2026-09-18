@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchComposedMtaArrivalsForRoutes } from "../providers/mta/composed-resolver";
-import type { Direction } from "../types";
+import type { ArrivalLoader, Direction } from "../types";
 
 export const REFRESH_INTERVAL_MS = 5_000;
 
-export function useArrivals(stationId: string, routeIds: readonly string[], direction: Direction) {
+export function useArrivals(providerId: string, stationId: string, routeIds: readonly string[], direction: Direction, load: ArrivalLoader, refreshIntervalMs = REFRESH_INTERVAL_MS) {
   return useQuery({
-    queryKey: ["mta-arrivals", stationId, routeIds, direction],
-    queryFn: ({ signal }) => fetchComposedMtaArrivalsForRoutes(stationId, routeIds, direction, signal),
-    refetchInterval: REFRESH_INTERVAL_MS,
+    queryKey: ["arrivals", providerId, stationId, routeIds, direction],
+    queryFn: ({ signal }) => load(stationId, routeIds, direction, signal),
+    refetchInterval: refreshIntervalMs,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: "always",
     staleTime: 0,

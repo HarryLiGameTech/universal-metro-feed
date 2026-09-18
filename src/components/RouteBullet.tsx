@@ -16,9 +16,9 @@ export function RouteBullet({ routeId, size = "small" }: RouteBulletProps) {
         backgroundColor: route?.color ?? "#555",
         color: route?.textColor ?? "#fff",
       }}
-      aria-label={`${routeId} train`}
+      aria-label={`${route?.name ?? routeId} train`}
     >
-      {routeId}
+      {route?.label ?? routeId}
     </span>
   );
 }

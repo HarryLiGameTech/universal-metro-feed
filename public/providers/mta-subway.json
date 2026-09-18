@@ -2,6 +2,8 @@
   "schemaVersion": 1,
   "id": "mta-subway",
   "timezone": "America/New_York",
+  "defaultStationId": "127",
+  "sourceUrl": "https://api.mta.info/",
   "topology": {
     "kind": "clockface-compat-static",
     "catalogUrl": "/providers/mta-subway/catalog.json"

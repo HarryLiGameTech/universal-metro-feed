@@ -6,6 +6,12 @@
       "names": {
         "en": "New York City Subway"
       },
+      "introduction": {
+        "kicker": "NYC subway · direct from the source",
+        "description": "Exact arrival and departure times from the MTA feed, refreshed every five seconds.",
+        "locality": "New York",
+        "attribution": "the MTA"
+      },
       "cities": [
         {
           "id": "us-ny-new-york",
@@ -15,6 +21,20 @@
         }
       ],
       "manifest": "/providers/mta-subway.json"
+    },
+    {
+      "id": "mbta-subway",
+      "names": { "en": "Boston Subway & Light Rail" },
+      "introduction": {
+        "kicker": "Boston subway · direct from the source",
+        "description": "Live arrival estimates and scheduled service, requested directly from the MBTA.",
+        "locality": "Boston",
+        "attribution": "the MBTA"
+      },
+      "cities": [
+        { "id": "us-ma-boston", "names": { "en": "Boston" } }
+      ],
+      "manifest": "/providers/mbta-subway.json"
     }
   ]
 }

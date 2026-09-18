@@ -11,7 +11,7 @@ import expectedOvernightArrivals from "../../tests/fixtures/mta-parity/expected/
 import expectedNoStaticArrivals from "../../tests/fixtures/mta-parity/expected/no-static-arrivals.json";
 import expectedWeekdayTimetable from "../../tests/fixtures/mta-parity/expected/weekday-timetable.json";
 import expectedExceptionTimetable from "../../tests/fixtures/mta-parity/expected/exception-overnight-timetable.json";
-import { fetchArrivals } from "./mta";
+import { fetchArrivals } from "../providers/mta/feed";
 import { fetchTimetable, fetchTimetableForRoutes, renderTimetable } from "./timetable";
 import { fetchComposedMtaArrivals, fetchComposedMtaArrivalsForRoutes, mtaResolver } from "../providers/mta/composed-resolver";
 

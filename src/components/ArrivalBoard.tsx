@@ -5,31 +5,28 @@ import { useClock } from "../hooks/useClock";
 import { directionDisplay } from "../lib/platform-selection";
 import { arrivalIdentity, visibleArrivals } from "../lib/arrival-board-state";
 import { compactTripId } from "../lib/trip-label";
-import type { TripPathLoader } from "../domain/trip-path";
+import { presentStrictTime } from "../domain/strict-time";
+import type { ProviderRuntime } from "../providers/runtime";
 import type { Arrival, Direction, Station } from "../types";
 import { RouteBullet } from "./RouteBullet";
 import { TripPathPanel } from "./TripPathPanel";
 
-const timeFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/New_York",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false,
-});
-
 interface ArrivalBoardProps {
   providerId: string;
-  loadTripPath: TripPathLoader;
+  timezone: string;
+  runtime: ProviderRuntime;
   station: Station;
   routeIds: readonly string[];
   direction: Direction;
 }
 
-export function ArrivalBoard({ providerId, loadTripPath, station, routeIds, direction }: ArrivalBoardProps) {
+export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds, direction }: ArrivalBoardProps) {
   const [expandedTrip, setExpandedTrip] = useState<{ platformKey: string; arrival: Arrival } | null>(null);
   const now = useClock();
-  const query = useArrivals(station.id, routeIds, direction);
+  const query = useArrivals(providerId, station.id, routeIds, direction, runtime.loadArrivals, runtime.refreshIntervalMs);
+  const timeFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  });
   const heading = directionDisplay(station, routeIds, direction);
   const nowSeconds = now / 1_000;
   const platformKey = `${providerId}:${station.id}:${direction}:${routeIds.join(",")}`;
@@ -37,7 +34,10 @@ export function ArrivalBoard({ providerId, loadTripPath, station, routeIds, dire
   const selectedArrival = expandedTrip?.platformKey === platformKey ? expandedTrip.arrival : null;
   const arrivals = visibleArrivals(query.data?.arrivals ?? [], nowSeconds, selectedArrival);
   const feedAge = query.data ? Math.max(0, nowSeconds - query.data.feedTimestamp) : Infinity;
-  const isStale = feedAge > 90;
+const isStale = feedAge > 90;
+
+  const uncertaintyLabel = (seconds: number) => seconds >= 60 && seconds % 60 === 0
+    ? `±${seconds / 60} min estimate` : `±${seconds} sec estimate`;
 
   return (
     <section className="board" aria-labelledby="arrivals-title" aria-live="polite">
@@ -71,7 +71,7 @@ export function ArrivalBoard({ providerId, loadTripPath, station, routeIds, dire
       {query.isPending ? (
         <div className="board-message">
           <RefreshCw className="spin" aria-hidden="true" />
-          <strong>Reading the MTA feed…</strong>
+          <strong>Reading {runtime.feedLabel}…</strong>
           <span>Decoding the latest train positions.</span>
         </div>
       ) : query.isError && !query.data ? (
@@ -96,6 +96,8 @@ export function ArrivalBoard({ providerId, loadTripPath, station, routeIds, dire
             const tripKey = arrivalIdentity(arrival);
             const expanded = selectedArrival != null && arrivalIdentity(selectedArrival) === tripKey;
             const panelId = `trip-path-${station.id}-${index}`;
+            const semantic = arrival.displayTime?.kind === "uninterpreted" ? null : arrival.displayTime;
+            const presented = semantic ? presentStrictTime(semantic) : null;
 
             return (
               <li key={tripKey} className={retained ? "arrival-entry is-retained" : "arrival-entry"}>
@@ -123,17 +125,18 @@ export function ArrivalBoard({ providerId, loadTripPath, station, routeIds, dire
                     className={`arrival-time delay-${arrival.delayStatus}`}
                     dateTime={new Date(arrival.eventTime * 1_000).toISOString()}
                   >
-                    {timeFormatter.format(arrival.eventTime * 1_000)}
+                    {presented ? `${presented.qualifier === "about" ? "~" : ""}${presented.primary}` : timeFormatter.format(arrival.eventTime * 1_000)}
                   </time>
                   <div className="arrival-annotations">
                     <small>{fromFeed ? arrival.eventKind === "departure" ? "Departs" : "Arrives" : "Last prediction"}</small>
-                    <small className={`delay-label delay-${arrival.delayStatus}`}>{arrival.delayLabel}</small>
+                    <small className={`delay-label delay-${arrival.delayStatus}`}>{semantic?.kind === "estimate" && semantic.toleranceSeconds != null
+                      ? uncertaintyLabel(semantic.toleranceSeconds) : arrival.delayLabel}</small>
                   </div>
                 </div>
                 <ChevronDown className={expanded ? "arrival-disclosure is-open" : "arrival-disclosure"} size={15} aria-hidden="true" />
                 <span className="sr-only">{expanded ? "Hide" : "Show"} stop-by-stop times</span>
                 </button>
-                {expanded && <TripPathPanel panelId={panelId} loadTripPath={loadTripPath} query={{
+                {expanded && <TripPathPanel panelId={panelId} loadTripPath={runtime.loadTripPath} refreshIntervalMs={runtime.refreshIntervalMs} query={{
                   providerId,
                   stationId: station.id,
                   routeId: arrival.routeId,
@@ -150,11 +153,11 @@ export function ArrivalBoard({ providerId, loadTripPath, station, routeIds, dire
       )}
 
       <footer className="board-footer">
-        <span>MTA feed age</span>
+        <span>{runtime.feedLabel} age</span>
         <strong>{Number.isFinite(feedAge) ? `${Math.floor(feedAge)} sec` : "—"}</strong>
         <span className="footer-divider" aria-hidden="true" />
         <span>Auto-refresh</span>
-        <strong>5 sec</strong>
+        <strong>{runtime.refreshIntervalMs / 1_000} sec</strong>
       </footer>
     </section>
   );

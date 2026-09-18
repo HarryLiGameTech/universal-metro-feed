@@ -1,6 +1,6 @@
 import GtfsRealtimeBindings, { type transit_realtime } from "gtfs-realtime-bindings";
-import { fetchTimetableSource, findScheduledEventTime, type TimetableSource } from "./timetable";
-import type { Arrival, ArrivalSnapshot, DelayStatus, Direction } from "../types";
+import { fetchTimetableSource, findScheduledEventTime, type TimetableSource } from "../../lib/timetable";
+import type { Arrival, ArrivalSnapshot, DelayStatus, Direction } from "../../types";
 
 const BASE_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/";
 
@@ -143,7 +143,7 @@ export async function fetchArrivals(
   const feed = await fetchMtaFeed(routeId, signal);
   // Kept only for pre-refactor parity tests. The active composed path loads a
   // provider catalog at runtime and passes its own lookup to normalizeArrivals.
-  const { stations } = await import("../data/stations.generated");
+  const { stations } = await import("../../data/stations.generated");
   const stationNameLookup = new Map(stations.map((station) => [station.id, station.name]));
   return normalizeArrivals(feed, stationId, routeId, direction, await timetableSourcePromise, stationNameLookup);
 }

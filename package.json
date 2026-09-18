@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "generate:data": "node scripts/generate-station-index.mjs",
+    "generate:data": "node scripts/providers/mta/generate-static.mjs",
+    "update:mbta-data": "node scripts/providers/gtfs/generate-catalog.mjs public/providers/mbta-subway.json",
     "dev": "npm run generate:data && vite",
     "build": "npm run generate:data && tsc -b && vite build",
     "test": "vitest run"

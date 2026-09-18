@@ -5,6 +5,7 @@ export interface ProviderDescriptor {
   names: Record<string, string>;
   cities: Array<{ id: string; names: Record<string, string> }>;
   manifest: string;
+  introduction?: { kicker: string; description: string; locality: string; attribution: string };
 }
 
 export interface ProviderRegistry {
@@ -16,9 +17,12 @@ export interface ProviderManifest {
   schemaVersion: 1;
   id: string;
   timezone: string;
-  topology: { kind: "clockface-compat-static"; catalogUrl: string };
-  schedule: { kind: "gtfs-static" | "none" };
-  predictions: { kind: "gtfs-realtime" | "none"; adapter?: string };
+  sourceUrl?: string;
+  refreshIntervalMs?: number;
+  defaultStationId?: string;
+  topology: { kind: "clockface-compat-static" | "gtfs-static"; catalogUrl: string };
+  schedule: { kind: "gtfs-static" | "mbta-v3" | "none" };
+  predictions: { kind: "gtfs-realtime" | "mbta-v3" | "none"; adapter?: string };
 }
 
 export interface ProviderCatalog {
@@ -47,6 +51,8 @@ export function parseProviderRegistry(value: unknown): ProviderRegistry {
   for (const provider of providers) {
     if (!isRecord(provider) || typeof provider.id !== "string" || !provider.id ||
         !isRecord(provider.names) || typeof provider.manifest !== "string" ||
+        (provider.introduction !== undefined && (!isRecord(provider.introduction) ||
+          ["kicker", "description", "locality", "attribution"].some((key) => typeof (provider.introduction as Record<string, unknown>)[key] !== "string"))) ||
         !Array.isArray(provider.cities) || provider.cities.some((city: unknown) =>
           !isRecord(city) || typeof city.id !== "string" || !isRecord(city.names))) {
       throw new Error("Invalid provider registry entry.");
@@ -60,10 +66,13 @@ export function parseProviderRegistry(value: unknown): ProviderRegistry {
 export function parseProviderManifest(value: unknown, expectedId: string): ProviderManifest {
   if (!isRecord(value) || value.schemaVersion !== 1 || value.id !== expectedId ||
       typeof value.timezone !== "string" || !isRecord(value.topology) ||
-      value.topology.kind !== "clockface-compat-static" ||
+      !["clockface-compat-static", "gtfs-static"].includes(String(value.topology.kind)) ||
       typeof value.topology.catalogUrl !== "string" ||
-      !isRecord(value.schedule) || !["gtfs-static", "none"].includes(String(value.schedule.kind)) ||
-      !isRecord(value.predictions) || !["gtfs-realtime", "none"].includes(String(value.predictions.kind))) {
+      !isRecord(value.schedule) || !["gtfs-static", "mbta-v3", "none"].includes(String(value.schedule.kind)) ||
+      !isRecord(value.predictions) || !["gtfs-realtime", "mbta-v3", "none"].includes(String(value.predictions.kind)) ||
+      (value.sourceUrl !== undefined && typeof value.sourceUrl !== "string") ||
+      (value.defaultStationId !== undefined && typeof value.defaultStationId !== "string") ||
+      (value.refreshIntervalMs !== undefined && (typeof value.refreshIntervalMs !== "number" || value.refreshIntervalMs < 5_000))) {
     throw new Error(`Invalid provider manifest: ${expectedId}`);
   }
   return value as unknown as ProviderManifest;

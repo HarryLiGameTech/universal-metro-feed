@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "mbta-subway",
+  "timezone": "America/New_York",
+  "defaultStationId": "place-sstat",
+  "sourceUrl": "https://www.mbta.com/developers/gtfs",
+  "refreshIntervalMs": 20000,
+  "topology": {
+    "kind": "gtfs-static",
+    "sourceUrl": "https://cdn.mbta.com/MBTA_GTFS.zip",
+    "catalogUrl": "/providers/mbta-subway/catalog.json",
+    "routeTypes": [0, 1]
+  },
+  "schedule": { "kind": "mbta-v3" },
+  "predictions": { "kind": "mbta-v3", "adapter": "mbta-v3" }
+}

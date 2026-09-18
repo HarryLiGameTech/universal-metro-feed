@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import registryFixture from "../../public/providers/index.json";
 import manifestFixture from "../../public/providers/mta-subway.json";
+import mbtaManifestFixture from "../../public/providers/mbta-subway.json";
 import { parseProviderCatalog, parseProviderManifest, parseProviderRegistry } from "./registry";
 
 describe("provider configuration", () => {
@@ -12,6 +13,15 @@ describe("provider configuration", () => {
     });
     expect(parseProviderManifest(manifestFixture, "mta-subway").topology.catalogUrl)
       .toBe("/providers/mta-subway/catalog.json");
+  });
+
+  it("registers Boston independently and preserves its GTFS topology with an API fallback", () => {
+    const registry = parseProviderRegistry(registryFixture);
+    expect(registry.providers.find((provider) => provider.id === "mbta-subway")?.cities)
+      .toMatchObject([{ id: "us-ma-boston" }]);
+    const manifest = parseProviderManifest(mbtaManifestFixture, "mbta-subway");
+    expect(manifest.topology.kind).toBe("gtfs-static");
+    expect(manifest.predictions.adapter).toBe("mbta-v3");
   });
 
   it("accepts one provider associated with multiple cities", () => {

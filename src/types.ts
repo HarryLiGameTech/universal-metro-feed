@@ -1,10 +1,14 @@
-export type Direction = "N" | "S";
+import type { StrictTime } from "./domain/strict-time";
+
+/** Provider-scoped direction ID (for example MTA N/S or GTFS 0/1). */
+export type Direction = string;
 export type TimetableDayType = "weekday" | "saturday" | "sunday";
 export type DelayStatus = "early" | "on-time" | "mild" | "noticeable" | "official" | "undetermined";
 
 export interface Route {
   id: string;
   name: string;
+  label?: string;
   color: string;
   textColor: string;
 }
@@ -16,6 +20,10 @@ export interface StationRoute {
   headsigns?: Partial<Record<Direction, string[]>>;
   /** Directed adjacent stop pairs used by this route at this stop. */
   adjacentSegments?: Partial<Record<Direction, string[]>>;
+  /** GTFS child boarding stops included in this station/route/direction. */
+  stopIds?: Partial<Record<Direction, string[]>>;
+  /** Provider-published wayfinding label, if available. */
+  directionNames?: Partial<Record<Direction, string>>;
 }
 
 export interface Station {
@@ -40,6 +48,8 @@ export interface Arrival {
   delaySeconds: number | null;
   delayStatus: DelayStatus;
   delayLabel: string;
+  /** Optional semantic time; legacy MTA projection still uses eventTime. */
+  displayTime?: StrictTime;
 }
 
 export interface ArrivalSnapshot {
@@ -48,6 +58,13 @@ export interface ArrivalSnapshot {
   fetchedAt: number;
   unavailableRoutes?: string[];
 }
+
+export type ArrivalLoader = (
+  stationId: string,
+  routeIds: readonly string[],
+  direction: Direction,
+  signal?: AbortSignal,
+) => Promise<ArrivalSnapshot>;
 
 export interface TimetableEvent {
   seconds: number;

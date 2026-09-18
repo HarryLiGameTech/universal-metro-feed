@@ -10,7 +10,7 @@ import {
   type TopologySource,
 } from "../../domain/resolver";
 import type { StrictTime } from "../../domain/strict-time";
-import { feedNameForRoute, fetchMtaFeed, normalizeArrivals } from "../../lib/mta";
+import { feedNameForRoute, fetchMtaFeed, normalizeArrivals } from "./feed";
 import { fetchTimetableSource, type TimetableSource } from "../../lib/timetable";
 import { loadProviderCatalog } from "../registry";
 import type { Arrival, ArrivalSnapshot, Direction } from "../../types";

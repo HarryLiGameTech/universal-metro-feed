@@ -1,51 +1,87 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, ExternalLink } from "lucide-react";
+import { Activity, ChevronDown, ExternalLink } from "lucide-react";
 import type { Direction } from "./types";
 import { isSharedLineGroup } from "./lib/platform-selection";
 import { CatalogContext } from "./providers/catalog-context";
-import { loadProviderCatalog, loadProviderManifest, loadProviderRegistry, type ProviderCatalog } from "./providers/registry";
+import { loadProviderCatalog, loadProviderManifest, loadProviderRegistry, type ProviderCatalog, type ProviderDescriptor, type ProviderManifest } from "./providers/registry";
 import { ArrivalBoard } from "./components/ArrivalBoard";
 import { SelectorPanel } from "./components/SelectorPanel";
 import { StaticTimetableSection } from "./components/StaticTimetableSection";
-import { fetchMtaTripPath } from "./providers/mta/trip-path-resolver";
+import { runtimeForProvider, type ProviderRuntime } from "./providers/runtime";
 import "./styles.css";
 
 export default function App() {
-  const initialProvider = useQuery({
-    queryKey: ["initial-provider", "mta-subway"],
+  const [providerId, setProviderId] = useState("mta-subway");
+  const registry = useQuery({
+    queryKey: ["provider-registry"],
+    queryFn: loadProviderRegistry,
+    staleTime: Infinity,
+    retry: 1,
+  });
+  const descriptor = registry.data?.providers.find((provider) => provider.id === providerId);
+  const selectedProvider = useQuery({
+    queryKey: ["provider", providerId],
     queryFn: async () => {
-      const registry = await loadProviderRegistry();
-      const descriptor = registry.providers.find((provider) => provider.id === "mta-subway");
-      if (!descriptor) throw new Error("The MTA subway provider is not configured.");
+      if (!descriptor) throw new Error(`Provider ${providerId} is not configured.`);
       const manifest = await loadProviderManifest(descriptor);
       const catalog = await loadProviderCatalog(manifest.topology.catalogUrl, descriptor.id);
-      return { catalog, manifest };
+      return { catalog, manifest, runtime: await runtimeForProvider(manifest) };
     },
+    enabled: descriptor != null,
     staleTime: Infinity,
     retry: 1,
   });
 
-  if (initialProvider.isPending) {
+  if (registry.isPending) {
     return <main><div className="board-message">Loading subway stations…</div></main>;
   }
-  if (initialProvider.isError) {
-    return <main><div className="board-message board-message--error">{initialProvider.error.message}</div></main>;
+  if (registry.isError) {
+    return <main><div className="board-message board-message--error">{registry.error.message}</div></main>;
+  }
+  if (selectedProvider.isPending || selectedProvider.isError || !descriptor || !selectedProvider.data) {
+    return <main>
+      <nav className="topbar" aria-label="Primary">
+        <a className="brand" href="/"><Activity aria-hidden="true" /><span>On The Platform</span></a>
+        <ProviderSelect providers={registry.data.providers} providerId={providerId} onProviderChange={setProviderId} />
+      </nav>
+      <div className={selectedProvider.isError ? "board-message board-message--error" : "board-message"}>
+        {selectedProvider.isError ? selectedProvider.error.message : "Loading subway stations…"}
+      </div>
+    </main>;
   }
 
   return (
-    <CatalogContext.Provider value={initialProvider.data.catalog}>
-      <MtaApp catalog={initialProvider.data.catalog} />
+    <CatalogContext.Provider value={selectedProvider.data.catalog}>
+      <ProviderApp
+        key={providerId}
+        descriptor={descriptor}
+        providers={registry.data.providers}
+        catalog={selectedProvider.data.catalog}
+        manifest={selectedProvider.data.manifest}
+        runtime={selectedProvider.data.runtime}
+        providerId={providerId}
+        onProviderChange={setProviderId}
+      />
     </CatalogContext.Provider>
   );
 }
 
-function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
+function ProviderApp({ descriptor, providers, catalog, manifest, runtime, providerId, onProviderChange }: {
+  descriptor: ProviderDescriptor;
+  providers: ProviderDescriptor[];
+  catalog: ProviderCatalog;
+  manifest: ProviderManifest;
+  runtime: ProviderRuntime;
+  providerId: string;
+  onProviderChange(id: string): void;
+}) {
   const stations = catalog.stations;
   const firstStation = stations[0] ?? (() => {
     throw new Error("The provider station catalog is empty.");
   })();
-  const defaultStationId = stations.some((station) => station.id === "127") ? "127" : firstStation.id;
+  const defaultStationId = manifest.defaultStationId && stations.some((station) => station.id === manifest.defaultStationId)
+    ? manifest.defaultStationId : firstStation.id;
   const [stationId, setStationId] = useState(defaultStationId);
   const station = useMemo(
     () => stations.find((item) => item.id === stationId) ?? firstStation,
@@ -54,14 +90,14 @@ function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
   const initialRoute = station.routes[0];
   if (!initialRoute) throw new Error(`No routes found for station ${station.id}.`);
   const [routeIds, setRouteIds] = useState<string[]>([initialRoute.routeId]);
-  const [direction, setDirection] = useState<Direction>(initialRoute.directions[0] ?? "N");
+  const [direction, setDirection] = useState<Direction>(initialRoute.directions[0] ?? "");
 
   const selectPlatform = useCallback((nextStationId: string, nextRouteId?: string, nextDirection?: Direction) => {
     const nextStation = stations.find((item) => item.id === nextStationId);
     if (!nextStation) throw new Error(`Unknown station: ${nextStationId}`);
     const nextRoute = nextStation.routes.find((item) => item.routeId === nextRouteId) ?? nextStation.routes[0];
     if (!nextRoute) throw new Error(`No routes found for station ${nextStationId}`);
-    const resolvedDirection = nextDirection ?? nextRoute.directions[0] ?? "N";
+    const resolvedDirection = nextDirection ?? nextRoute.directions[0] ?? "";
     if (!nextRoute.directions.includes(resolvedDirection)) {
       throw new Error(`${nextRoute.routeId} does not serve ${nextStation.name} in direction ${resolvedDirection}`);
     }
@@ -78,7 +114,7 @@ function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
     const nextRoute = station.routes.find((item) => item.routeId === nextRouteId);
     if (!nextRoute) return;
     setRouteIds([nextRouteId]);
-    if (!nextRoute.directions.includes(direction)) setDirection(nextRoute.directions[0] ?? "N");
+    if (!nextRoute.directions.includes(direction)) setDirection(nextRoute.directions[0] ?? "");
   }
 
   function selectLineGroup(nextRouteIds: string[]) {
@@ -108,9 +144,9 @@ function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
       inputSchema: {
         type: "object",
         properties: {
-          stationId: { type: "string", description: "MTA parent station stop ID, for example 127." },
-          routeId: { type: "string", description: "Subway route ID, for example 1, A, or N." },
-          direction: { type: "string", enum: ["N", "S"] },
+          stationId: { type: "string", description: "A parent station stop ID from the selected provider." },
+          routeId: { type: "string", description: "A route ID serving that station." },
+          direction: { type: "string", description: "A direction ID supplied by the selected provider." },
         },
         required: ["stationId", "routeId", "direction"],
         additionalProperties: false,
@@ -120,7 +156,7 @@ function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
         if (!input || typeof input !== "object") throw new Error("A platform selection is required.");
         const values = input as Record<string, unknown>;
         if (typeof values.stationId !== "string" || typeof values.routeId !== "string" ||
-            (values.direction !== "N" && values.direction !== "S")) {
+            typeof values.direction !== "string") {
           throw new Error("stationId, routeId, and direction must be valid strings.");
         }
         selectPlatform(values.stationId, values.routeId, values.direction);
@@ -138,16 +174,19 @@ function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
           <Activity aria-hidden="true" />
           <span>On The Platform</span>
         </a>
-        <a className="source-link" href="https://api.mta.info/" target="_blank" rel="noreferrer">
-          <ExternalLink aria-hidden="true" size={16} />
-          MTA data source
-        </a>
+        <div className="topbar-actions">
+          <ProviderSelect providers={providers} providerId={providerId} onProviderChange={onProviderChange} />
+          {manifest.sourceUrl && <a className="source-link" href={manifest.sourceUrl} target="_blank" rel="noreferrer">
+            <ExternalLink aria-hidden="true" size={16} />
+            Data source
+          </a>}
+        </div>
       </nav>
 
       <header className="intro">
-        <p className="section-kicker">NYC subway · direct from the source</p>
+        <p className="section-kicker">{descriptor.introduction?.kicker ?? `${descriptor.names.en ?? descriptor.id} · direct from the source`}</p>
         <h1>The next train,<br /><em>without the wait.</em></h1>
-        <p>Exact arrival and departure times from the MTA feed, refreshed every five seconds.</p>
+        <p>{descriptor.introduction?.description ?? "Live arrival estimates and scheduled service."}</p>
       </header>
 
       <div className="workspace">
@@ -161,15 +200,31 @@ function MtaApp({ catalog }: { catalog: ProviderCatalog }) {
           onLineGroupChange={selectLineGroup}
           onDirectionChange={selectDirection}
         />
-        <ArrivalBoard providerId={catalog.providerId} loadTripPath={fetchMtaTripPath} station={station} routeIds={routeIds} direction={direction} />
+        <ArrivalBoard providerId={catalog.providerId} timezone={manifest.timezone} runtime={runtime} station={station} routeIds={routeIds} direction={direction} />
       </div>
 
-      <StaticTimetableSection />
+      <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} />
 
       <footer className="page-footer">
-        <span>Times shown in New York local time.</span>
-        <span>Not affiliated with the MTA.</span>
+        <span>Times shown in {descriptor.introduction?.locality ?? manifest.timezone} local time.</span>
+        <span>Not affiliated with {descriptor.introduction?.attribution ?? descriptor.names.en ?? descriptor.id}.</span>
       </footer>
     </main>
   );
+}
+
+function ProviderSelect({ providers, providerId, onProviderChange }: {
+  providers: ProviderDescriptor[];
+  providerId: string;
+  onProviderChange(id: string): void;
+}) {
+  return <label className="provider-select" htmlFor="provider-choice">
+    <span>Provider</span>
+    <span className="provider-select-shell">
+      <select id="provider-choice" value={providerId} onChange={(event) => onProviderChange(event.target.value)}>
+        {providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.names.en ?? provider.id}</option>)}
+      </select>
+      <ChevronDown aria-hidden="true" size={15} />
+    </span>
+  </label>;
 }

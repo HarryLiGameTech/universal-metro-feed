@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
-import { stations } from "../data/stations.generated";
-import { classifyDelay, normalizeArrivals } from "./mta";
-import { newYorkServiceTimeToEpoch } from "./timetable";
+import { stations } from "../../data/stations.generated";
+import { classifyDelay, normalizeArrivals } from "./feed";
+import { newYorkServiceTimeToEpoch } from "../../lib/timetable";
 
 const stationNames = new Map(stations.map((station) => [station.id, station.name]));
 

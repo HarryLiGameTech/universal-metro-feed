@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { useCatalog } from "../providers/catalog-context";
-import { timetableDayLabels } from "../lib/timetable";
+import { timetableDayLabels } from "../lib/service-date";
 import { directionDisplay, sharedLineGroups } from "../lib/platform-selection";
 import type { Direction, Station, TimetableDayType } from "../types";
 import { RouteBullet } from "./RouteBullet";
@@ -115,7 +115,7 @@ export function SelectorPanel({
                 title={label.full}
               >
                 <span>{label.short}</span>
-                <small>{value}</small>
+                  {!selectedRoute?.directionNames?.[value] && <small>{value}</small>}
               </button>
             );
           })}

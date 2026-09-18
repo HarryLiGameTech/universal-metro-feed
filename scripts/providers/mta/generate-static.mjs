@@ -2,11 +2,11 @@ import { createReadStream, readFileSync, writeFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { createInterface } from "node:readline";
 
-const DATA_DIR = new URL("../gtfs_subway/", import.meta.url);
-const OUTPUT = new URL("../src/data/stations.generated.ts", import.meta.url);
-const TIMETABLE_DIR = new URL("../public/timetables/", import.meta.url);
-const TRIP_PATH_DIR = new URL("../public/trip-paths/mta-subway/", import.meta.url);
-const CATALOG_OUTPUT = new URL("../public/providers/mta-subway/catalog.json", import.meta.url);
+const DATA_DIR = new URL("../../../gtfs_subway/", import.meta.url);
+const OUTPUT = new URL("../../../src/data/stations.generated.ts", import.meta.url);
+const TIMETABLE_DIR = new URL("../../../public/timetables/", import.meta.url);
+const TRIP_PATH_DIR = new URL("../../../public/trip-paths/mta-subway/", import.meta.url);
+const CATALOG_OUTPUT = new URL("../../../public/providers/mta-subway/catalog.json", import.meta.url);
 
 function parseCsvLine(line) {
   const values = [];
@@ -209,7 +209,7 @@ const legacyStations = stations.map((station) => ({
   routes: station.routes.map(({ routeId, directions }) => ({ routeId, directions })),
 }));
 
-await mkdir(new URL("../src/data/", import.meta.url), { recursive: true });
+await mkdir(new URL("../../../src/data/", import.meta.url), { recursive: true });
 const source = `// Generated from the official MTA static GTFS files. Do not edit by hand.\n` +
   `import type { Route, Station } from "../types";\n\n` +
   `export const routes: Record<string, Route> = ${JSON.stringify(Object.fromEntries(routes), null, 2)};\n\n` +

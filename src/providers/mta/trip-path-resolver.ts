@@ -9,7 +9,7 @@ import {
   type PredictionSource,
 } from "../../domain/resolver";
 import type { TripPath, TripPathQuery, TripStopTime } from "../../domain/trip-path";
-import { classifyDelay, fetchMtaFeed } from "../../lib/mta";
+import { classifyDelay, fetchMtaFeed } from "./feed";
 import {
   activeServiceIds,
   fetchTimetableSource,

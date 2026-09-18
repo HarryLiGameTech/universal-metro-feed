@@ -32,8 +32,13 @@ function StopTime({ value, label, departureDelayStatus }: {
   );
 }
 
-export function TripPathPanel({ query, panelId, loadTripPath }: { query: TripPathQuery; panelId: string; loadTripPath: TripPathLoader }) {
-  const result = useTripPath(query, loadTripPath);
+export function TripPathPanel({ query, panelId, loadTripPath, refreshIntervalMs = 5_000 }: {
+  query: TripPathQuery;
+  panelId: string;
+  loadTripPath: TripPathLoader;
+  refreshIntervalMs?: number;
+}) {
+  const result = useTripPath(query, loadTripPath, refreshIntervalMs);
   const nowSeconds = useClock(1_000) / 1_000;
   const path = result.data?.data;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -81,7 +86,7 @@ export function TripPathPanel({ query, panelId, loadTripPath }: { query: TripPat
             </div>
           </div>
           <div className="trip-path-legend">
-            <span><b>~</b> Live prediction · color follows departure delay</span>
+            <span><b>~</b> Live prediction · color follows departure delay when comparable</span>
             <span><b>=</b> Scheduled</span>
             <span>— Not supplied</span>
             {path.topology === "partial" && <span>Only stops present in the live feed are shown.</span>}
