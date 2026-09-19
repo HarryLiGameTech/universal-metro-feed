@@ -1,4 +1,5 @@
 import type { Direction, TimetableDayType, TimetableEvent, TimetableResult } from "../types";
+import { assetUrl } from "./asset-url";
 import { shiftDateKey, timetableDayTypeForDate } from "./service-date";
 export { shiftDateKey, timetableDayTypeForDate, timetableDayLabels } from "./service-date";
 
@@ -308,8 +309,8 @@ export async function fetchTimetableSource(
 ): Promise<TimetableSource> {
   const timetablePath = `/timetables/${encodeURIComponent(stationId)}/${encodeURIComponent(routeId)}-${direction}.json`;
   const [shardResponse, calendarResponse] = await Promise.all([
-    fetch(timetablePath, { cache: "no-store", signal }),
-    fetch("/timetables/calendar.json", { cache: "no-store", signal }),
+    fetch(assetUrl(timetablePath), { cache: "no-store", signal }),
+    fetch(assetUrl("/timetables/calendar.json"), { cache: "no-store", signal }),
   ]);
 
   if (!shardResponse.ok) throw new Error("No static schedule was found for this platform.");

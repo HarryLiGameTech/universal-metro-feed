@@ -1,4 +1,5 @@
 import type { transit_realtime } from "gtfs-realtime-bindings";
+import { assetUrl } from "../../lib/asset-url";
 import {
   CompositeMetroDataResolver,
   type FusionPolicy,
@@ -70,7 +71,7 @@ class MtaTripScheduleSource implements ScheduleSource<ScheduleCandidates, TripPa
       events.flatMap((event) => event.tripId && matchesStaticTripId(event.tripId, query.tripId) ? [event.tripId] : [])));
     const paths: Record<string, StaticTripPath> = {};
     const shards = await Promise.all([...new Set([...matchingIds].map(tripPathBucket))].map(async (bucket) => {
-      const response = await fetch(`/trip-paths/${providerId}/${bucket}.json`, { signal: context.signal });
+      const response = await fetch(assetUrl(`/trip-paths/${providerId}/${bucket}.json`), { signal: context.signal });
       if (!response.ok) throw new Error("Trip stop sequence could not be loaded.");
       return response.json() as Promise<StaticTripPathShard>;
     }));

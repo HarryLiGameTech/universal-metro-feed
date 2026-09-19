@@ -1,4 +1,5 @@
 import type { Route, Station } from "../types";
+import { assetUrl } from "../lib/asset-url";
 
 export interface ProviderDescriptor {
   id: string;
@@ -33,7 +34,7 @@ export interface ProviderCatalog {
 }
 
 async function fetchJson(url: string): Promise<unknown> {
-  const response = await fetch(url);
+  const response = await fetch(assetUrl(url));
   if (!response.ok) throw new Error(`Could not load provider data from ${url} (${response.status}).`);
   return response.json() as Promise<unknown>;
 }

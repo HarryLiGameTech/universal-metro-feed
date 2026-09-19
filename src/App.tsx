@@ -42,7 +42,7 @@ export default function App() {
   if (selectedProvider.isPending || selectedProvider.isError || !descriptor || !selectedProvider.data) {
     return <main>
       <nav className="topbar" aria-label="Primary">
-        <a className="brand" href="/"><Activity aria-hidden="true" /><span>On The Platform</span></a>
+        <a className="brand" href={import.meta.env.BASE_URL}><Activity aria-hidden="true" /><span>On The Platform</span></a>
         <ProviderSelect providers={registry.data.providers} providerId={providerId} onProviderChange={setProviderId} />
       </nav>
       <div className={selectedProvider.isError ? "board-message board-message--error" : "board-message"}>
@@ -170,7 +170,7 @@ function ProviderApp({ descriptor, providers, catalog, manifest, runtime, provid
   return (
     <main>
       <nav className="topbar" aria-label="Primary">
-        <a className="brand" href="/">
+        <a className="brand" href={import.meta.env.BASE_URL}>
           <Activity aria-hidden="true" />
           <span>On The Platform</span>
         </a>
