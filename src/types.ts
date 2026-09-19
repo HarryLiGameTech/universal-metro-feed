@@ -1,4 +1,5 @@
 import type { StrictTime } from "./domain/strict-time";
+import type { IdentityStability } from "./domain/resolver";
 
 /** Provider-scoped direction ID (for example MTA N/S or GTFS 0/1). */
 export type Direction = string;
@@ -24,19 +25,25 @@ export interface StationRoute {
   stopIds?: Partial<Record<Direction, string[]>>;
   /** Provider-published wayfinding label, if available. */
   directionNames?: Partial<Record<Direction, string>>;
+  /** Explicitly configured origins; do not infer a trip path from this metadata. */
+  originDirections?: Direction[];
 }
 
 export interface Station {
   id: string;
   name: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   routes: StationRoute[];
 }
 
 export interface Arrival {
   id: string;
-  tripId: string;
+  tripId: string | null;
+  identityStability?: IdentityStability;
+  timeSource?: "schedule" | "prediction";
+  /** A direction label must not claim to be this particular train's destination. */
+  destinationKind?: "destination" | "direction";
   routeId: string;
   stopId: string;
   direction: Direction;
@@ -54,7 +61,8 @@ export interface Arrival {
 
 export interface ArrivalSnapshot {
   arrivals: Arrival[];
-  feedTimestamp: number;
+  /** Null when the source does not publish its own generation timestamp. */
+  feedTimestamp: number | null;
   fetchedAt: number;
   unavailableRoutes?: string[];
 }

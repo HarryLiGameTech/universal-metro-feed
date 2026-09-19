@@ -12,8 +12,9 @@ export type TimetableLoader = (
 
 export interface ProviderRuntime {
   loadArrivals: ArrivalLoader;
-  loadTripPath: TripPathLoader;
-  loadTimetable: TimetableLoader;
+  loadTripPath: TripPathLoader | null;
+  loadTimetable: TimetableLoader | null;
+  arrivalSource: "prediction" | "schedule";
   feedLabel: string;
   refreshIntervalMs: number;
 }
@@ -24,6 +25,7 @@ export async function runtimeForProvider(manifest: ProviderManifest): Promise<Pr
     const { mtaLoaders } = await import("./mta/runtime");
     return {
       ...mtaLoaders,
+      arrivalSource: "prediction",
       feedLabel: "MTA feed",
       refreshIntervalMs: manifest.refreshIntervalMs ?? 5_000,
     };
@@ -34,8 +36,22 @@ export async function runtimeForProvider(manifest: ProviderManifest): Promise<Pr
       loadArrivals: fetchMbtaArrivals,
       loadTripPath: fetchMbtaTripPath,
       loadTimetable: fetchMbtaTimetable,
+      arrivalSource: "prediction",
       feedLabel: "MBTA predictions",
       refreshIntervalMs: manifest.refreshIntervalMs ?? 20_000,
+    };
+  }
+  if (manifest.schedule.kind === "proprietary-http" && manifest.predictions.kind === "none") {
+    const { ProprietaryHttpResolver } = await import("./http/proprietary-http-resolver");
+    const { scheduleAdapter } = await import("./http/adapters");
+    const resolver = new ProprietaryHttpResolver(manifest, scheduleAdapter(manifest.schedule.adapter));
+    return {
+      loadArrivals: resolver.loadArrivals,
+      loadTripPath: null,
+      loadTimetable: null,
+      arrivalSource: "schedule",
+      feedLabel: "Partial timetable",
+      refreshIntervalMs: manifest.refreshIntervalMs ?? 30_000,
     };
   }
   throw new Error(`No frontend adapter is available for ${manifest.id}.`);

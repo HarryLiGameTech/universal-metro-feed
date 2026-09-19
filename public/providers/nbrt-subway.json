@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "nbrt-subway",
+  "timezone": "Asia/Shanghai",
+  "defaultStationId": "16",
+  "sourceUrl": "https://metroinfo.ditiego.net/Api/Stations/ScheduleTime/16?DeviceType=6",
+  "refreshIntervalMs": 30000,
+  "topology": {
+    "kind": "station-directory",
+    "catalogUrl": "/providers/nbrt-subway/catalog.json"
+  },
+  "schedule": {
+    "kind": "proprietary-http",
+    "adapter": "nbrt-schedule-time",
+    "urlTemplate": "https://metroinfo.ditiego.net/Api/Stations/ScheduleTime/{stationId}?DeviceType=6",
+    "coverage": "partial"
+  },
+  "predictions": { "kind": "none" }
+}

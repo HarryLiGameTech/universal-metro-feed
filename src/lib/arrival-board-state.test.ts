@@ -12,6 +12,11 @@ function arrival(tripId: string, id: string, eventTime: number): Arrival {
 }
 
 describe("expanded arrival continuity", () => {
+  it("keeps separate record identities when the provider has no trip IDs", () => {
+    const first = { ...arrival("unused", "row-a", 1_200), tripId: null };
+    const second = { ...first, id: "row-b" };
+    expect(arrivalIdentity(first)).not.toBe(arrivalIdentity(second));
+  });
   it("matches a train across feed refreshes when its entity ID and ETA change", () => {
     const selected = arrival("trip-1", "entity-a", 1_200);
     const refreshed = arrival("trip-1", "entity-b", 1_230);

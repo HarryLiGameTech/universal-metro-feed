@@ -21,8 +21,13 @@ export interface ProviderManifest {
   sourceUrl?: string;
   refreshIntervalMs?: number;
   defaultStationId?: string;
-  topology: { kind: "clockface-compat-static" | "gtfs-static"; catalogUrl: string };
-  schedule: { kind: "gtfs-static" | "mbta-v3" | "none" };
+  topology: { kind: "clockface-compat-static" | "gtfs-static" | "station-directory"; catalogUrl: string };
+  schedule: { kind: "gtfs-static" | "mbta-v3" | "none" } | {
+    kind: "proprietary-http";
+    adapter: string;
+    urlTemplate: string;
+    coverage: "partial";
+  };
   predictions: { kind: "gtfs-realtime" | "mbta-v3" | "none"; adapter?: string };
 }
 
@@ -67,9 +72,12 @@ export function parseProviderRegistry(value: unknown): ProviderRegistry {
 export function parseProviderManifest(value: unknown, expectedId: string): ProviderManifest {
   if (!isRecord(value) || value.schemaVersion !== 1 || value.id !== expectedId ||
       typeof value.timezone !== "string" || !isRecord(value.topology) ||
-      !["clockface-compat-static", "gtfs-static"].includes(String(value.topology.kind)) ||
+      !["clockface-compat-static", "gtfs-static", "station-directory"].includes(String(value.topology.kind)) ||
       typeof value.topology.catalogUrl !== "string" ||
-      !isRecord(value.schedule) || !["gtfs-static", "mbta-v3", "none"].includes(String(value.schedule.kind)) ||
+      !isRecord(value.schedule) || !["gtfs-static", "mbta-v3", "proprietary-http", "none"].includes(String(value.schedule.kind)) ||
+      (value.schedule.kind === "proprietary-http" && (typeof value.schedule.adapter !== "string" ||
+        typeof value.schedule.urlTemplate !== "string" || !value.schedule.urlTemplate.includes("{stationId}") ||
+        !value.schedule.urlTemplate.startsWith("https://") || value.schedule.coverage !== "partial")) ||
       !isRecord(value.predictions) || !["gtfs-realtime", "mbta-v3", "none"].includes(String(value.predictions.kind)) ||
       (value.sourceUrl !== undefined && typeof value.sourceUrl !== "string") ||
       (value.defaultStationId !== undefined && typeof value.defaultStationId !== "string") ||

@@ -35,6 +35,20 @@
         { "id": "us-ma-boston", "names": { "en": "Boston" } }
       ],
       "manifest": "/providers/mbta-subway.json"
+    },
+    {
+      "id": "nbrt-subway",
+      "names": { "en": "Ningbo Rail Transit · 宁波地铁", "zh-CN": "宁波地铁" },
+      "introduction": {
+        "kicker": "Ningbo metro · published schedule",
+        "description": "Upcoming published times from a partial station timetable. These are planned times, with no live predictions or delay information.",
+        "locality": "Ningbo",
+        "attribution": "Ningbo Rail Transit"
+      },
+      "cities": [
+        { "id": "cn-zj-ningbo", "names": { "en": "Ningbo", "zh-CN": "宁波" } }
+      ],
+      "manifest": "/providers/nbrt-subway.json"
     }
   ]
 }

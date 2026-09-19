@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, ChevronDown, Radio, RefreshCw } from "lucide-react";
+import { AlertTriangle, CalendarClock, ChevronDown, Radio, RefreshCw } from "lucide-react";
 import { useArrivals } from "../hooks/useArrivals";
 import { useClock } from "../hooks/useClock";
 import { directionDisplay } from "../lib/platform-selection";
@@ -29,12 +29,14 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds,
   });
   const heading = directionDisplay(station, routeIds, direction);
   const nowSeconds = now / 1_000;
+  const scheduled = runtime.arrivalSource === "schedule";
   const platformKey = `${providerId}:${station.id}:${direction}:${routeIds.join(",")}`;
   useEffect(() => setExpandedTrip(null), [platformKey]);
-  const selectedArrival = expandedTrip?.platformKey === platformKey ? expandedTrip.arrival : null;
+  const selectedArrival = runtime.loadTripPath && expandedTrip?.platformKey === platformKey ? expandedTrip.arrival : null;
   const arrivals = visibleArrivals(query.data?.arrivals ?? [], nowSeconds, selectedArrival);
-  const feedAge = query.data ? Math.max(0, nowSeconds - query.data.feedTimestamp) : Infinity;
-const isStale = feedAge > 90;
+  const ageTimestamp = query.data ? scheduled ? query.data.fetchedAt : query.data.feedTimestamp : null;
+  const feedAge = ageTimestamp != null ? Math.max(0, nowSeconds - ageTimestamp) : Infinity;
+  const isStale = feedAge > Math.max(90, runtime.refreshIntervalMs / 1_000 * 3);
 
   const uncertaintyLabel = (seconds: number) => seconds >= 60 && seconds % 60 === 0
     ? `±${seconds / 60} min estimate` : `±${seconds} sec estimate`;
@@ -52,15 +54,15 @@ const isStale = feedAge > 90;
           <h2 id="arrivals-title">{station.name}</h2>
         </div>
 
-        <div className={isStale ? "live-status is-stale" : "live-status"}>
-          {isStale ? <AlertTriangle size={16} /> : <Radio size={16} />}
-          <span>{isStale ? "Feed delayed" : query.isFetching ? "Refreshing" : "Live"}</span>
+        <div className={`live-status${scheduled ? " is-schedule" : ""}${isStale && query.data ? " is-stale" : ""}`}>
+          {isStale && query.data ? <AlertTriangle size={16} /> : scheduled ? <CalendarClock size={16} /> : <Radio size={16} />}
+          <span>{scheduled ? isStale && query.data ? "Refresh overdue" : "Partial timetable" : isStale ? "Feed delayed" : query.isFetching ? "Refreshing" : "Live"}</span>
         </div>
       </header>
 
       {query.data?.unavailableRoutes?.length ? (
         <div className="partial-feed-warning" role="status">
-          Live feed unavailable for line {query.data.unavailableRoutes.join(" / ")}; showing the other selected lines.
+          {scheduled ? "Schedule" : "Live feed"} unavailable for line {query.data.unavailableRoutes.join(" / ")}; showing the other selected lines.
         </div>
       ) : null}
 
@@ -72,19 +74,19 @@ const isStale = feedAge > 90;
         <div className="board-message">
           <RefreshCw className="spin" aria-hidden="true" />
           <strong>Reading {runtime.feedLabel}…</strong>
-          <span>Decoding the latest train positions.</span>
+          <span>{scheduled ? "Loading published times for this station." : "Decoding the latest train positions."}</span>
         </div>
       ) : query.isError && !query.data ? (
         <div className="board-message board-message--error">
           <AlertTriangle aria-hidden="true" />
-          <strong>Realtime feed unavailable</strong>
+          <strong>{scheduled ? "Partial timetable unavailable" : "Realtime feed unavailable"}</strong>
           <span>{query.error.message}</span>
           <button type="button" onClick={() => query.refetch()}>Try again</button>
         </div>
       ) : arrivals.length === 0 ? (
         <div className="board-message">
-          <strong>No upcoming trains in the live feed</strong>
-          <span>The feed will check again automatically.</span>
+          <strong>{scheduled ? "No upcoming times in this partial timetable" : "No upcoming trains in the live feed"}</strong>
+          <span>{scheduled ? "This is not a full-day schedule. Times will refresh automatically." : "The feed will check again automatically."}</span>
         </div>
       ) : (
         <ol className="arrival-list">
@@ -98,45 +100,48 @@ const isStale = feedAge > 90;
             const panelId = `trip-path-${station.id}-${index}`;
             const semantic = arrival.displayTime?.kind === "uninterpreted" ? null : arrival.displayTime;
             const presented = semantic ? presentStrictTime(semantic) : null;
+            const canExpand = runtime.loadTripPath != null && arrival.tripId != null;
+            const Row = canExpand ? "button" : "div";
+            const isSchedule = arrival.timeSource === "schedule" || scheduled;
 
             return (
               <li key={tripKey} className={retained ? "arrival-entry is-retained" : "arrival-entry"}>
-                <button
-                  type="button"
-                  className="arrival-row"
-                  aria-expanded={expanded}
+                <Row
+                  type={canExpand ? "button" : undefined}
+                  className={`arrival-row${canExpand ? "" : " is-static"}`}
+                  aria-expanded={canExpand ? expanded : undefined}
                   aria-controls={expanded ? panelId : undefined}
-                  onClick={() => setExpandedTrip(expanded ? null : { platformKey, arrival })}
+                  onClick={canExpand ? () => setExpandedTrip(expanded ? null : { platformKey, arrival }) : undefined}
                 >
                 <div className="arrival-order">{String(index + 1).padStart(2, "0")}</div>
                 <div className="arrival-destination">
                   <div className="arrival-destination-meta">
                     {routeIds.length > 1 && <RouteBullet routeId={arrival.routeId} size="small" />}
-                    <small>To</small>
+                    <small>{arrival.destinationKind === "direction" ? "Toward" : "To"}</small>
                   </div>
                   <strong>{arrival.destinationName}</strong>
-                  <small className="arrival-trip" title={`Full source ID: ${arrival.tripId}`}>
+                  {arrival.tripId != null && <small className="arrival-trip" title={`Full source ID: ${arrival.tripId}`}>
                     {arrival.tripId === arrival.id ? "Feed ID" : "Trip ID"} {compactTripId(arrival.tripId)}
-                  </small>
+                  </small>}
                 </div>
                 <div className="arrival-when">
                   <span>{proximity}</span>
                   <time
-                    className={`arrival-time delay-${arrival.delayStatus}`}
+                    className={isSchedule ? "arrival-time is-scheduled" : `arrival-time delay-${arrival.delayStatus}`}
                     dateTime={new Date(arrival.eventTime * 1_000).toISOString()}
                   >
                     {presented ? `${presented.qualifier === "about" ? "~" : ""}${presented.primary}` : timeFormatter.format(arrival.eventTime * 1_000)}
                   </time>
                   <div className="arrival-annotations">
-                    <small>{fromFeed ? arrival.eventKind === "departure" ? "Departs" : "Arrives" : "Last prediction"}</small>
-                    <small className={`delay-label delay-${arrival.delayStatus}`}>{semantic?.kind === "estimate" && semantic.toleranceSeconds != null
-                      ? uncertaintyLabel(semantic.toleranceSeconds) : arrival.delayLabel}</small>
+                    <small>{isSchedule ? arrival.eventKind === "departure" ? "Scheduled departure" : "Scheduled arrival" : fromFeed ? arrival.eventKind === "departure" ? "Departs" : "Arrives" : "Last prediction"}</small>
+                    {!isSchedule && <small className={`delay-label delay-${arrival.delayStatus}`}>{semantic?.kind === "estimate" && semantic.toleranceSeconds != null
+                      ? uncertaintyLabel(semantic.toleranceSeconds) : arrival.delayLabel}</small>}
                   </div>
                 </div>
-                <ChevronDown className={expanded ? "arrival-disclosure is-open" : "arrival-disclosure"} size={15} aria-hidden="true" />
-                <span className="sr-only">{expanded ? "Hide" : "Show"} stop-by-stop times</span>
-                </button>
-                {expanded && <TripPathPanel panelId={panelId} loadTripPath={runtime.loadTripPath} refreshIntervalMs={runtime.refreshIntervalMs} query={{
+                {canExpand && <ChevronDown className={expanded ? "arrival-disclosure is-open" : "arrival-disclosure"} size={15} aria-hidden="true" />}
+                {canExpand && <span className="sr-only">{expanded ? "Hide" : "Show"} stop-by-stop times</span>}
+                </Row>
+                {expanded && runtime.loadTripPath && arrival.tripId != null && <TripPathPanel panelId={panelId} loadTripPath={runtime.loadTripPath} refreshIntervalMs={runtime.refreshIntervalMs} query={{
                   providerId,
                   stationId: station.id,
                   routeId: arrival.routeId,
@@ -153,7 +158,7 @@ const isStale = feedAge > 90;
       )}
 
       <footer className="board-footer">
-        <span>{runtime.feedLabel} age</span>
+        <span>{scheduled ? "Last fetched" : `${runtime.feedLabel} age`}</span>
         <strong>{Number.isFinite(feedAge) ? `${Math.floor(feedAge)} sec` : "—"}</strong>
         <span className="footer-divider" aria-hidden="true" />
         <span>Auto-refresh</span>

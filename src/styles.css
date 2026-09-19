@@ -104,11 +104,15 @@ main {
 .live-status { display: inline-flex; align-items: center; gap: 7px; color: #7de0b7; font-family: "DM Mono", monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
 .live-status svg { animation: pulse 1.7s ease-in-out infinite; }
 .live-status.is-stale { color: #ffad73; }
+.live-status.is-schedule { color: #f9f5ec; }
+.live-status.is-schedule svg { animation: none; }
+.live-status.is-schedule.is-stale { color: #ffad73; }
 
 .arrival-list { list-style: none; margin: 0; padding: 0; flex: 1; }
 .arrival-row { position: relative; width: 100%; min-height: 102px; display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 18px; padding: 15px 34px; border: 0; border-bottom: 1px solid #33322e; background: transparent; color: inherit; text-align: left; }
 .arrival-entry:first-child > .arrival-row { background: #24231f; }
-.arrival-row:hover { background: #292824; }
+.arrival-row:not(.is-static):hover { background: #292824; }
+.arrival-row.is-static { cursor: default; }
 .arrival-row:focus-visible { outline: 2px solid #7de0b7; outline-offset: -3px; }
 .arrival-disclosure { position: absolute; right: 12px; bottom: 9px; color: #8e8b84; transition: transform 140ms ease; }
 .arrival-disclosure.is-open { transform: rotate(180deg); }
@@ -129,6 +133,7 @@ main {
 .arrival-time.delay-noticeable, .delay-label.delay-noticeable { color: #ff7548; }
 .arrival-time.delay-official, .delay-label.delay-official { color: #ff3b35; }
 .arrival-time.delay-undetermined { color: #f9f5ec; }
+.arrival-time.is-scheduled { color: #fff; }
 .delay-label.delay-undetermined { color: #8e8b84; }
 
 .trip-path-panel { min-width: 0; padding: 19px 0 17px; border-bottom: 1px solid #45433e; background: #20201d; }

@@ -2,9 +2,24 @@ import { describe, expect, it } from "vitest";
 import registryFixture from "../../public/providers/index.json";
 import manifestFixture from "../../public/providers/mta-subway.json";
 import mbtaManifestFixture from "../../public/providers/mbta-subway.json";
+import nbrtManifestFixture from "../../public/providers/nbrt-subway.json";
 import { parseProviderCatalog, parseProviderManifest, parseProviderRegistry } from "./registry";
 
 describe("provider configuration", () => {
+  it("registers Ningbo as a partial HTTP schedule with no predictions or line topology", () => {
+    expect(parseProviderRegistry(registryFixture).providers.find((provider) => provider.id === "nbrt-subway")?.cities)
+      .toMatchObject([{ id: "cn-zj-ningbo" }]);
+    expect(parseProviderManifest(nbrtManifestFixture, "nbrt-subway")).toMatchObject({
+      topology: { kind: "station-directory" },
+      schedule: { kind: "proprietary-http", coverage: "partial" },
+      predictions: { kind: "none" },
+    });
+  });
+
+  it("rejects incomplete proprietary HTTP schedule configuration", () => {
+    expect(() => parseProviderManifest({ ...nbrtManifestFixture, schedule: { kind: "proprietary-http" } }, "nbrt-subway"))
+      .toThrow("Invalid provider manifest");
+  });
   it("loads the MTA provider and keeps city as searchable metadata", () => {
     const registry = parseProviderRegistry(registryFixture);
     expect(registry.providers[0]).toMatchObject({

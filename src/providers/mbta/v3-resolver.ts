@@ -227,7 +227,8 @@ export async function fetchMbtaArrivals(
   const unavailableRoutes = routeIds.filter((_, index) => results[index]?.status === "rejected");
   return {
     arrivals: successful.flatMap((snapshot) => snapshot.arrivals).sort((left, right) => left.eventTime - right.eventTime),
-    feedTimestamp: Math.min(...successful.map((snapshot) => snapshot.feedTimestamp)),
+    feedTimestamp: successful.some((snapshot) => snapshot.feedTimestamp == null) ? null :
+      Math.min(...successful.map((snapshot) => snapshot.feedTimestamp!)),
     fetchedAt: Math.max(...successful.map((snapshot) => snapshot.fetchedAt)),
     ...(unavailableRoutes.length > 0 ? { unavailableRoutes } : {}),
   };

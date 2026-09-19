@@ -1,8 +1,8 @@
 import type { Arrival } from "../types";
 
-/** Stable GTFS trip identity; a realtime feed entity ID may rotate on refresh. */
-export function arrivalIdentity(arrival: Pick<Arrival, "routeId" | "direction" | "tripId">) {
-  return `${arrival.routeId}:${arrival.direction}:${arrival.tripId}`;
+/** Prefer a source trip identity, otherwise use the explicitly scoped record ID. */
+export function arrivalIdentity(arrival: Pick<Arrival, "routeId" | "direction" | "tripId" | "id">) {
+  return `${arrival.routeId}:${arrival.direction}:${arrival.tripId ?? arrival.id}`;
 }
 
 export interface VisibleArrival {

@@ -1,0 +1,4532 @@
+{
+  "providerId": "nbrt-subway",
+  "timezone": "Asia/Shanghai",
+  "routes": {
+    "1": {
+      "id": "1",
+      "name": "1号线",
+      "label": "1",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    },
+    "2": {
+      "id": "2",
+      "name": "2号线",
+      "label": "2",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    },
+    "3": {
+      "id": "3",
+      "name": "3号线",
+      "label": "3",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    },
+    "4": {
+      "id": "4",
+      "name": "4号线",
+      "label": "4",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    },
+    "5": {
+      "id": "5",
+      "name": "5号线",
+      "label": "5",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    },
+    "6": {
+      "id": "6",
+      "name": "6号线",
+      "label": "6",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    },
+    "7": {
+      "id": "7",
+      "name": "7号线",
+      "label": "7",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    },
+    "8": {
+      "id": "8",
+      "name": "8号线",
+      "label": "8",
+      "color": "#555555",
+      "textColor": "#ffffff"
+    }
+  },
+  "stations": [
+    {
+      "id": "7",
+      "name": "高桥西",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "name": "高桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "name": "梁祝",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "name": "芦港",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "name": "徐家漕长乐",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "name": "望春桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        },
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "name": "泽民",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        },
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "name": "大卿桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        },
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "name": "西门口",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "name": "鼓楼",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        },
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "name": "东门口（天一广场）",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "name": "江厦桥东",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "19",
+      "name": "舟孟北路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "name": "樱花公园",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        },
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "21",
+      "name": "福明路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "name": "世纪大道",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "23",
+      "name": "海晏北路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "name": "福庆北路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "25",
+      "name": "盛莫路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        },
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "26",
+      "name": "东环南路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "45",
+      "name": "栎社国际机场",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "48",
+      "name": "栎社",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "49",
+      "name": "鄞州大道",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "50",
+      "name": "石碶",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "52",
+      "name": "轻纺城",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "53",
+      "name": "藕池",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "54",
+      "name": "客运中心",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "55",
+      "name": "丽园南路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        },
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "56",
+      "name": "云霞路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "57",
+      "name": "宁波火车站",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        },
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "58",
+      "name": "城隍庙",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "59",
+      "name": "外滩大桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        },
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "60",
+      "name": "正大路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        },
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "62",
+      "name": "倪家堰",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "63",
+      "name": "压赛堰",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "64",
+      "name": "大通桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        },
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "65",
+      "name": "孔浦",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "66",
+      "name": "路林",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "67",
+      "name": "三官堂",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "73",
+      "name": "宁波大学",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "74",
+      "name": "清水浦（东方理工）",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "75",
+      "name": "邱隘东",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "76",
+      "name": "五乡",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "77",
+      "name": "宝幢",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "78",
+      "name": "邬隘",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "79",
+      "name": "大碶",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "80",
+      "name": "松花江路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "81",
+      "name": "中河路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "82",
+      "name": "长江路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "83",
+      "name": "霞浦",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "1",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "霞浦"
+            ],
+            "2": [
+              "高桥西"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "84",
+      "name": "高塘桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "85",
+      "name": "句章路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "86",
+      "name": "鄞州客运总站",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "87",
+      "name": "南部商务区",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "88",
+      "name": "鄞州区政府",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "89",
+      "name": "四明中路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "90",
+      "name": "锦寓路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "91",
+      "name": "钱湖北路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "92",
+      "name": "仇毕",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "93",
+      "name": "儿童公园",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "95",
+      "name": "体育馆",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "96",
+      "name": "明楼",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "97",
+      "name": "中兴大桥南",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "98",
+      "name": "姜山",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "99",
+      "name": "狮山",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "100",
+      "name": "明辉路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "102",
+      "name": "五里牌",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "103",
+      "name": "枫园",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "104",
+      "name": "聪园路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "105",
+      "name": "朝阳",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "106",
+      "name": "方桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "107",
+      "name": "琎琳",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "108",
+      "name": "南渡",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "109",
+      "name": "大成东路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "110",
+      "name": "金海路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "111",
+      "name": "慈城",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "112",
+      "name": "官山河",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "113",
+      "name": "长兴路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "114",
+      "name": "金山路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "115",
+      "name": "奥体中心",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "116",
+      "name": "洪塘中路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "117",
+      "name": "洪大路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        },
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "118",
+      "name": "庄桥火车站",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "119",
+      "name": "丽江路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "120",
+      "name": "双东路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "121",
+      "name": "翠柏里",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        },
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "123",
+      "name": "柳西",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "125",
+      "name": "兴宁桥西",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "126",
+      "name": "兴宁桥东",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "127",
+      "name": "白鹤",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "129",
+      "name": "矮柳",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "130",
+      "name": "潘火路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "131",
+      "name": "嵩江东路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "132",
+      "name": "南高教园区",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "133",
+      "name": "金达南路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "134",
+      "name": "小洋江",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        },
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "135",
+      "name": "东钱湖",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "136",
+      "name": "布政",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "137",
+      "name": "张家潭",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "138",
+      "name": "同德路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "139",
+      "name": "雅渡",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "140",
+      "name": "庙堰",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        },
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "141",
+      "name": "钟公庙",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "142",
+      "name": "钱湖南路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "143",
+      "name": "下应路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "144",
+      "name": "大洋江",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "145",
+      "name": "泗港",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "146",
+      "name": "曹隘",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "147",
+      "name": "柳隘",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "148",
+      "name": "民安东路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        },
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "149",
+      "name": "会展中心",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "150",
+      "name": "院士路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        },
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "151",
+      "name": "盎孟港",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "152",
+      "name": "兴庄路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "153",
+      "name": "招宝山",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "154",
+      "name": "红联",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "2",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "栎社国际机场"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        },
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "155",
+      "name": "兴海南路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "156",
+      "name": "梅堰",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "157",
+      "name": "永茂路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "158",
+      "name": "镇海大道（慈海）",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          }
+        },
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "159",
+      "name": "骆驼桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "3",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "大通桥"
+            ],
+            "2": [
+              "金海路"
+            ]
+          }
+        },
+        {
+          "routeId": "5",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "骆驼桥"
+            ],
+            "2": [
+              "布政"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "160",
+      "name": "慈城西",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "161",
+      "name": "国际会议中心",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "4",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "国际会议中心"
+            ],
+            "2": [
+              "慈城西"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "163",
+      "name": "寒松路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "164",
+      "name": "学府路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "165",
+      "name": "鄞州公园南",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "166",
+      "name": "堇山西路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "167",
+      "name": "段塘",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "168",
+      "name": "南苑",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "169",
+      "name": "联丰",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "170",
+      "name": "市中医院",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        },
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "171",
+      "name": "青林湾",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "172",
+      "name": "榭嘉",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "173",
+      "name": "洪盛路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "174",
+      "name": "洪塘",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "175",
+      "name": "开元路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "8",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "开元路"
+            ],
+            "2": [
+              "寒松路"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "176",
+      "name": "云龙",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "177",
+      "name": "安石路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "178",
+      "name": "回龙",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "179",
+      "name": "尚德路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "180",
+      "name": "邱隘",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "181",
+      "name": "北明程路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "182",
+      "name": "新天路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "183",
+      "name": "福民公园",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "184",
+      "name": "曙光",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "185",
+      "name": "宁波大剧院",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        },
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "186",
+      "name": "湾头",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "187",
+      "name": "云飞路（康桥南）",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "188",
+      "name": "宁慈东路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "189",
+      "name": "应嘉路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "190",
+      "name": "骆兴",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "191",
+      "name": "镇海市民广场",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "192",
+      "name": "贵驷",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "193",
+      "name": "明海北路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "194",
+      "name": "俞范",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "7",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "俞范"
+            ],
+            "2": [
+              "云龙"
+            ]
+          },
+          "originDirections": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "195",
+      "name": "古林",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          },
+          "originDirections": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "196",
+      "name": "云林西路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "197",
+      "name": "集士港",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "198",
+      "name": "汇士路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "199",
+      "name": "卖面桥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "200",
+      "name": "宋家漕",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "201",
+      "name": "新芝路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "202",
+      "name": "庆丰桥东",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "203",
+      "name": "明珠路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "204",
+      "name": "沧海北路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "205",
+      "name": "聚贤路",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "206",
+      "name": "梅墟",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "207",
+      "name": "谢墅",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "208",
+      "name": "小港西",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "209",
+      "name": "衙前",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "6",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {
+            "1": [
+              "红联"
+            ],
+            "2": [
+              "古林"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

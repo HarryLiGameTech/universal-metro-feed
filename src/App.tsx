@@ -140,7 +140,7 @@ function ProviderApp({ descriptor, providers, catalog, manifest, runtime, provid
     void Promise.resolve(context.registerTool({
       name: "select_subway_platform",
       title: "Select subway platform",
-      description: "Select a station, train line, and direction in the visible realtime arrival board.",
+      description: "Select a station, train line, and direction in the visible arrival board.",
       inputSchema: {
         type: "object",
         properties: {
@@ -203,7 +203,7 @@ function ProviderApp({ descriptor, providers, catalog, manifest, runtime, provid
         <ArrivalBoard providerId={catalog.providerId} timezone={manifest.timezone} runtime={runtime} station={station} routeIds={routeIds} direction={direction} />
       </div>
 
-      <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} />
+      {runtime.loadTimetable && <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} />}
 
       <footer className="page-footer">
         <span>Times shown in {descriptor.introduction?.locality ?? manifest.timezone} local time.</span>
