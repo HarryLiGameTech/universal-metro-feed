@@ -32,14 +32,19 @@ disabled TLS verification, or citywide schedule download is required.
 
 ## Shared resolver and provider adapter
 
-`ProprietaryHttpResolver` owns HTTP transport, cancellation, shared station requests,
-source composition, filtering, deduplication, event selection, and schedule-only
-normalization. A protocol adapter only converts an unknown response into separate,
-semantically typed arrival and departure records. Another proprietary API can use
-the same resolver by registering a codec and a URL template.
+`ProprietaryHttpResolver` owns JSON-over-HTTPS transport, cancellation, bounded
+same-origin pagination, and request reuse within a resolution snapshot. Its source
+role independently selects schedule or prediction semantics. MBTA V3 uses this
+same resolver for both its `/schedules` and `/predictions` endpoints.
+
+`PartialScheduleResolver` composes the station directory with the HTTP schedule
+source and owns filtering, deduplication, origin event selection, and the partial
+schedule policy. The restriction to no predictions belongs to this policy, not to
+the shared HTTP resolver. NBRT's codec converts its response into separate,
+semantically typed arrival and departure records.
 
 The NBRT adapter contains its response validation, placeholder rules, and confirmed
-clock policy. Neither the shared resolver nor the UI branches on Ningbo's provider ID.
+clock policy. Neither the shared HTTP resolver nor the UI branches on Ningbo's provider ID.
 
 ## Station directory and deferred topology
 

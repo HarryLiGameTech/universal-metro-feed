@@ -11,6 +11,15 @@
     "catalogUrl": "/providers/mbta-subway/catalog.json",
     "routeTypes": [0, 1]
   },
-  "schedule": { "kind": "mbta-v3" },
-  "predictions": { "kind": "mbta-v3", "adapter": "mbta-v3" }
+  "schedule": {
+    "kind": "proprietary-http",
+    "adapter": "mbta-v3",
+    "urlTemplate": "https://api-v3.mbta.com/schedules",
+    "coverage": "full-day"
+  },
+  "predictions": {
+    "kind": "proprietary-http",
+    "adapter": "mbta-v3",
+    "urlTemplate": "https://api-v3.mbta.com/predictions"
+  }
 }

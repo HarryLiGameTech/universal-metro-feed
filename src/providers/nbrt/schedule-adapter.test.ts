@@ -10,9 +10,11 @@ const payload = (rows: unknown[] = [run()], extra: Record<string, unknown> = {})
   Code: 200, Data: [{ StationId: 164, LineId: 8, Flag: 1, IsShow: 0, StationRunTimes: rows, ...extra }],
 });
 
+const decode = (value: unknown) => nbrtScheduleAdapter.decode(value, context).data;
+
 describe("NBRT wire format", () => {
   it("keeps second-precision planned arrival and departure separately, even with IsShow=0", () => {
-    expect(nbrtScheduleAdapter.decode(payload(), context)).toEqual([{
+    expect(decode(payload())).toEqual([{
       stationId: "164", routeId: "8", directionId: "1",
       arrival: { kind: "exact", resolution: "second", epochSeconds: context.nowSeconds + 250, timezone: "Asia/Shanghai" },
       departure: { kind: "exact", resolution: "second", epochSeconds: context.nowSeconds + 290, timezone: "Asia/Shanghai" },
@@ -20,12 +22,12 @@ describe("NBRT wire format", () => {
   });
 
   it("excludes no-service placeholders instead of turning their clocks into trains", () => {
-    expect(nbrtScheduleAdapter.decode(payload([run()], { StationStatus: 2 }), context)).toEqual([]);
-    expect(nbrtScheduleAdapter.decode(payload([run({ IntimeDura: -60, OutTimeDura: -60 })]), context)).toEqual([]);
+    expect(decode(payload([run()], { StationStatus: 2 }))).toEqual([]);
+    expect(decode(payload([run({ IntimeDura: -60, OutTimeDura: -60 })]))).toEqual([]);
   });
 
   it("does not expose Sequence, Key, or Name as a trip identity", () => {
-    const decoded = nbrtScheduleAdapter.decode(payload([run(), run({ Sequence: 2, IntimeStr: "18:42:06" })]), context);
+    const decoded = decode(payload([run(), run({ Sequence: 2, IntimeStr: "18:42:06" })]));
     expect(decoded).toHaveLength(2);
     expect(decoded[0]).not.toHaveProperty("tripId");
   });
@@ -37,11 +39,11 @@ describe("NBRT wire format", () => {
     payload([run({ OutTimeStr: "48:00:00" })]),
     payload([run({ StationId: 7 })]),
   ])("rejects malformed responses rather than reporting an empty timetable", (value) => {
-    expect(() => nbrtScheduleAdapter.decode(value, context)).toThrow();
+    expect(() => decode(value)).toThrow();
   });
 
   it("preserves missing events and a valid empty response", () => {
-    expect(nbrtScheduleAdapter.decode(payload([run({ IntimeStr: null })]), context)[0]?.arrival).toBeNull();
-    expect(nbrtScheduleAdapter.decode({ Code: 200, Data: [] }, context)).toEqual([]);
+    expect(decode(payload([run({ IntimeStr: null })]))[0]?.arrival).toBeNull();
+    expect(decode({ Code: 200, Data: [] })).toEqual([]);
   });
 });

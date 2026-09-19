@@ -50,6 +50,12 @@ The MTA trip-path view likewise loads generated, bucketed static GTFS trip-stop 
 
 The MBTA integration uses a generated, compact topology catalog from the MBTA's official GTFS ZIP. Its recorded feed version and end date are metadata; refresh the checked-in catalog with `npm run update:mbta-data` when the GTFS feed changes. The official GTFS-RT Trip Updates protobuf is published, but its CDN response does not grant browser cross-origin access. The browser therefore requests only the selected station's predictions, the selected platform's timetable, or one expanded trip's stop times through the MBTA's official CORS-enabled V3 API. This V3 bridge is provider-isolated behind the same resolver contract; it is not a Clockface implementation. It also demonstrates that the second provider was **not** configuration-only: the prior MTA-specific frontend entrypoints and `N/S` direction type had to be generalized. MBTA static schedule seconds have not been semantically verified and are presented only as published minutes; realtime seconds are marked as estimates with the API's uncertainty when supplied. Unreliable schedule/prediction comparisons intentionally remain uncolored rather than asserting on-time service.
 
+MBTA V3 and NBRT now share the `proprietary-http` source kind and generic HTTP resolver.
+Their adapter names identify protocols, while the schedule/prediction role and
+schedule coverage are configured independently. MBTA retains full-day schedules
+and live predictions; NBRT remains a partial schedule source with no trip expansion.
+See [Proprietary HTTP sources](PROPRIETARY_HTTP.md) for the implemented boundaries.
+
 ## 2. Product and Engineering Goals
 
 ### 2.1 Product goals

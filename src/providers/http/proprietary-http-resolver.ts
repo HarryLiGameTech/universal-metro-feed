@@ -1,170 +1,103 @@
-import { CompositeMetroDataResolver, type PlatformQuery, type Resolved, type ResolutionContext, type ResolutionWarning } from "../../domain/resolver";
-import type { StrictTime } from "../../domain/strict-time";
-import type { Arrival, ArrivalLoader, ArrivalSnapshot } from "../../types";
-import { loadProviderCatalog, type ProviderCatalog, type ProviderManifest } from "../registry";
+import type { PlatformQuery, Resolved, ResolutionContext, SourceReference } from "../../domain/resolver";
 
-/** Protocol adapters describe published events, never inferred trips or predictions. */
-export interface HttpScheduleRecord {
-  stationId: string;
-  routeId: string;
-  directionId: string;
-  arrival: StrictTime | null;
-  departure: StrictTime | null;
+export interface HttpRequest {
+  url: string;
+  maxPages?: number;
 }
 
-export interface HttpScheduleAdapter {
-  decode(value: unknown, context: { nowSeconds: number; timezone: string }): HttpScheduleRecord[];
+export interface HttpDecodeContext extends ResolutionContext {
+  timezone: string;
 }
 
-interface HttpScheduleSnapshot {
-  records: HttpScheduleRecord[];
-  fetchedAt: number;
+/** The codec owns wire format and pagination links; the transport owns fetching them. */
+export interface HttpCodec<TPage, TData> {
+  decode(value: unknown, context: HttpDecodeContext): { data: TPage; next?: string | null };
+  combine(pages: TPage[]): TData;
 }
 
-function scheduleEpoch(time: StrictTime): number {
-  if (time.kind === "exact") return time.epochSeconds;
-  if (time.kind === "published-minute") return time.minuteStartEpochSeconds;
-  throw new Error("A published schedule event must have an established time policy.");
+interface HttpSourcePolicy {
+  providerId: string;
+  timezone: string;
+  role: "schedule" | "prediction";
+  validForSeconds?: number;
+  reference?: (request: HttpRequest, fetchedAt: number) => SourceReference;
 }
 
-/** Shared HTTP transport, source composition, event selection, and schedule-only semantics. */
-export class ProprietaryHttpResolver {
+/** Shared JSON-over-HTTP source resolution, independently usable for schedules or predictions. */
+export class ProprietaryHttpResolver<TPage, TData> {
+  // Each context is one snapshot, so cached predictions and AbortSignals cannot
+  // leak into a later refresh or another consumer's request.
+  private readonly snapshots = new WeakMap<ResolutionContext, Map<string, Promise<Resolved<TData>>>>();
+
   constructor(
-    private readonly manifest: ProviderManifest,
-    private readonly adapter: HttpScheduleAdapter,
-    private readonly getCatalog = () => loadProviderCatalog(manifest.topology.catalogUrl, manifest.id),
+    private readonly policy: HttpSourcePolicy,
+    private readonly codec: HttpCodec<TPage, TData>,
     private readonly request: typeof fetch = (...args) => fetch(...args),
-  ) {
-    if (manifest.schedule.kind !== "proprietary-http" || manifest.predictions.kind !== "none") {
-      throw new Error("The HTTP schedule resolver requires a proprietary schedule and no predictions.");
+  ) {}
+
+  async load(request: HttpRequest, context: ResolutionContext): Promise<Resolved<TData>> {
+    context.signal?.throwIfAborted();
+    const key = JSON.stringify([request.url, request.maxPages ?? 1]);
+    let requests = this.snapshots.get(context);
+    if (!requests) {
+      requests = new Map();
+      this.snapshots.set(context, requests);
     }
+    const cached = requests.get(key);
+    if (cached) return cached;
+    const loading = this.read(request, context).catch((error: unknown) => {
+      requests.delete(key);
+      throw error;
+    });
+    requests.set(key, loading);
+    return loading;
   }
 
-  private async loadSchedule(stationId: string, context: ResolutionContext): Promise<Resolved<HttpScheduleSnapshot>> {
-    const schedule = this.manifest.schedule;
-    if (schedule.kind !== "proprietary-http") throw new Error("HTTP schedule is not configured.");
-    const url = schedule.urlTemplate.replaceAll("{stationId}", encodeURIComponent(stationId));
-    const response = await this.request(url, {
-      signal: context.signal,
-      headers: { Accept: "application/json" },
-      cache: "no-store",
-    });
-    if (!response.ok) throw new Error(`Schedule request failed (${response.status}).`);
-    const records = this.adapter.decode(await response.json(), {
-      nowSeconds: context.nowSeconds,
-      timezone: this.manifest.timezone,
-    });
-    context.signal?.throwIfAborted();
+  /** Bind a domain query without making the composite resolver depend on HTTP. */
+  asSource<TQuery extends PlatformQuery>(requestFor: (query: TQuery) => HttpRequest) {
+    return {
+      load: async (query: TQuery, context: ResolutionContext) => {
+        if (query.providerId !== this.policy.providerId) throw new Error(`Unsupported provider: ${query.providerId}`);
+        return this.load(requestFor(query), context);
+      },
+    };
+  }
+
+  private async read(request: HttpRequest, context: ResolutionContext): Promise<Resolved<TData>> {
+    const initial = new URL(request.url);
+    const maxPages = request.maxPages ?? 1;
+    if (initial.protocol !== "https:" || !Number.isInteger(maxPages) || maxPages < 1) {
+      throw new Error("An HTTPS URL and a positive page limit are required.");
+    }
+    const pages: TPage[] = [];
+    const visited = new Set<string>();
+    let next: string | null = initial.href;
+    while (next) {
+      context.signal?.throwIfAborted();
+      const url: URL = new URL(next);
+      if (url.origin !== initial.origin) throw new Error("Unexpected HTTP API page origin.");
+      if (visited.has(url.href)) throw new Error("HTTP API returned a pagination cycle.");
+      if (pages.length >= maxPages) throw new Error("HTTP API returned more pages than this query can safely load.");
+      visited.add(url.href);
+      const response = await this.request(url.href, {
+        cache: "no-store", signal: context.signal, headers: { Accept: "application/json" },
+      });
+      if (!response.ok) throw new Error(`HTTP API request failed (${response.status}).`);
+      const page = this.codec.decode(await response.json(), { ...context, timezone: this.policy.timezone });
+      context.signal?.throwIfAborted();
+      pages.push(page.data);
+      next = page.next ? new URL(page.next, url).href : null;
+    }
     const fetchedAt = Math.floor(Date.now() / 1_000);
     return {
-      data: { records, fetchedAt },
+      data: this.codec.combine(pages),
       generatedAt: fetchedAt,
-      validUntil: fetchedAt + (this.manifest.refreshIntervalMs ?? 30_000) / 1_000,
-      // Polling a schedule does not turn it into a realtime prediction.
-      freshness: "static",
-      sources: [{ providerId: this.manifest.id, sourceId: url }],
+      ...(this.policy.validForSeconds != null ? { validUntil: fetchedAt + this.policy.validForSeconds } : {}),
+      freshness: this.policy.role === "schedule" ? "static" : "live",
+      sources: [this.policy.reference?.(request, fetchedAt) ?? {
+        providerId: this.policy.providerId, sourceId: request.url,
+      }],
       warnings: [],
     };
   }
-
-  private normalize(query: PlatformQuery, catalog: ProviderCatalog, snapshot: HttpScheduleSnapshot): ArrivalSnapshot {
-    const station = catalog.stations.find((item) => item.id === query.stationId)!;
-    const route = station.routes.find((item) => item.routeId === query.routeId)!;
-    const eventKind = route.originDirections?.includes(query.directionId) ? "departure" : "arrival";
-    const directionName = route.headsigns?.[query.directionId]?.join(" / ") ??
-      route.directionNames?.[query.directionId] ?? `Direction ${query.directionId}`;
-    const arrivals = new Map<string, Arrival>();
-    for (const row of snapshot.records) {
-      if (row.stationId !== query.stationId || row.routeId !== query.routeId || row.directionId !== query.directionId) continue;
-      const time = row[eventKind];
-      // A missing arrival cannot be replaced with a departure (or vice versa).
-      if (!time) continue;
-      const eventTime = scheduleEpoch(time);
-      const recordKey = `${query.providerId}:${row.stationId}:${row.routeId}:${row.directionId}:${eventKind}:${eventTime}`;
-      arrivals.set(recordKey, {
-        id: `${recordKey}:${snapshot.fetchedAt}`,
-        tripId: null,
-        identityStability: "snapshot-only",
-        timeSource: "schedule",
-        routeId: row.routeId,
-        stopId: row.stationId,
-        direction: row.directionId,
-        destinationId: null,
-        destinationName: directionName,
-        destinationKind: "direction",
-        eventTime,
-        eventKind,
-        scheduledTime: eventTime,
-        displayTime: time,
-        delaySeconds: null,
-        delayStatus: "undetermined",
-        delayLabel: "",
-      });
-    }
-    return {
-      arrivals: [...arrivals.values()].sort((left, right) => left.eventTime - right.eventTime),
-      feedTimestamp: null,
-      fetchedAt: snapshot.fetchedAt,
-    };
-  }
-
-  async resolveArrivals(
-    stationId: string,
-    routeIds: readonly string[],
-    directionId: string,
-    context: ResolutionContext,
-  ): Promise<Resolved<ArrivalSnapshot>> {
-    context.signal?.throwIfAborted();
-    if (routeIds.length === 0) throw new Error("Select at least one line.");
-    const catalog = await this.getCatalog();
-    const station = catalog.stations.find((item) => item.id === stationId);
-    const selectedRoutes = [...new Set(routeIds)];
-    if (catalog.providerId !== this.manifest.id || !station || selectedRoutes.some((routeId) =>
-      !station.routes.some((route) => route.routeId === routeId && route.directions.includes(directionId)))) {
-      throw new Error("The selected station, line, or direction is not in the provider directory.");
-    }
-    const topology: Resolved<ProviderCatalog> = {
-      data: catalog, generatedAt: context.nowSeconds, freshness: "static",
-      sources: [{ providerId: this.manifest.id, sourceId: this.manifest.topology.catalogUrl }], warnings: [],
-    };
-    // One station response commonly contains several routes and directions.
-    let pending: Promise<Resolved<HttpScheduleSnapshot>> | undefined;
-    const resolver = new CompositeMetroDataResolver<ProviderCatalog, HttpScheduleSnapshot, never, never, ArrivalSnapshot>(
-      { load: async () => topology },
-      { load: async () => pending ??= this.loadSchedule(stationId, context) },
-      null,
-      null,
-      { resolve: ({ query, schedule, warnings }) => {
-        if (!schedule) throw new Error(warnings.find((warning) => warning.source === "schedule")?.message ?? "Schedule unavailable.");
-        return {
-          ...schedule,
-          data: this.normalize(query, catalog, schedule.data),
-          sources: [...topology.sources, ...schedule.sources],
-          warnings,
-        };
-      } },
-    );
-    const results = await Promise.all(selectedRoutes.map((routeId) => resolver.resolveDepartures(
-      { providerId: this.manifest.id, stationId, routeId, directionId }, context,
-    )));
-    context.signal?.throwIfAborted();
-    const first = results[0]!;
-    const warnings: ResolutionWarning[] = results.flatMap((result) => result.warnings);
-    return {
-      ...first,
-      data: {
-        arrivals: results.flatMap((result) => result.data.arrivals)
-          .filter((arrival) => arrival.eventTime >= context.nowSeconds - 5)
-          .sort((left, right) => left.eventTime - right.eventTime),
-        feedTimestamp: null,
-        fetchedAt: first.data.fetchedAt,
-      },
-      warnings,
-    };
-  }
-
-  readonly loadArrivals: ArrivalLoader = async (stationId, routeIds, directionId, signal) =>
-    (await this.resolveArrivals(stationId, routeIds, directionId, {
-      signal, nowSeconds: Math.floor(Date.now() / 1_000),
-    })).data;
 }

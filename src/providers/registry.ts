@@ -14,6 +14,12 @@ export interface ProviderRegistry {
   providers: ProviderDescriptor[];
 }
 
+export interface ProprietaryHttpConfig {
+  kind: "proprietary-http";
+  adapter: string;
+  urlTemplate: string;
+}
+
 export interface ProviderManifest {
   schemaVersion: 1;
   id: string;
@@ -22,13 +28,8 @@ export interface ProviderManifest {
   refreshIntervalMs?: number;
   defaultStationId?: string;
   topology: { kind: "clockface-compat-static" | "gtfs-static" | "station-directory"; catalogUrl: string };
-  schedule: { kind: "gtfs-static" | "mbta-v3" | "none" } | {
-    kind: "proprietary-http";
-    adapter: string;
-    urlTemplate: string;
-    coverage: "partial";
-  };
-  predictions: { kind: "gtfs-realtime" | "mbta-v3" | "none"; adapter?: string };
+  schedule: { kind: "gtfs-static" | "none" } | (ProprietaryHttpConfig & { coverage: "partial" | "full-day" });
+  predictions: { kind: "gtfs-realtime" | "none"; adapter?: string } | ProprietaryHttpConfig;
 }
 
 export interface ProviderCatalog {
@@ -46,6 +47,15 @@ async function fetchJson(url: string): Promise<unknown> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isHttpConfig(value: Record<string, unknown>): boolean {
+  if (typeof value.adapter !== "string" || !value.adapter || typeof value.urlTemplate !== "string") return false;
+  try {
+    return new URL(value.urlTemplate).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export function parseProviderRegistry(value: unknown): ProviderRegistry {
@@ -74,11 +84,11 @@ export function parseProviderManifest(value: unknown, expectedId: string): Provi
       typeof value.timezone !== "string" || !isRecord(value.topology) ||
       !["clockface-compat-static", "gtfs-static", "station-directory"].includes(String(value.topology.kind)) ||
       typeof value.topology.catalogUrl !== "string" ||
-      !isRecord(value.schedule) || !["gtfs-static", "mbta-v3", "proprietary-http", "none"].includes(String(value.schedule.kind)) ||
-      (value.schedule.kind === "proprietary-http" && (typeof value.schedule.adapter !== "string" ||
-        typeof value.schedule.urlTemplate !== "string" || !value.schedule.urlTemplate.includes("{stationId}") ||
-        !value.schedule.urlTemplate.startsWith("https://") || value.schedule.coverage !== "partial")) ||
-      !isRecord(value.predictions) || !["gtfs-realtime", "mbta-v3", "none"].includes(String(value.predictions.kind)) ||
+      !isRecord(value.schedule) || !["gtfs-static", "proprietary-http", "none"].includes(String(value.schedule.kind)) ||
+      (value.schedule.kind === "proprietary-http" && (!isHttpConfig(value.schedule) ||
+        !["partial", "full-day"].includes(String(value.schedule.coverage)))) ||
+      !isRecord(value.predictions) || !["gtfs-realtime", "proprietary-http", "none"].includes(String(value.predictions.kind)) ||
+      (value.predictions.kind === "proprietary-http" && !isHttpConfig(value.predictions)) ||
       (value.sourceUrl !== undefined && typeof value.sourceUrl !== "string") ||
       (value.defaultStationId !== undefined && typeof value.defaultStationId !== "string") ||
       (value.refreshIntervalMs !== undefined && (typeof value.refreshIntervalMs !== "number" || value.refreshIntervalMs < 5_000))) {

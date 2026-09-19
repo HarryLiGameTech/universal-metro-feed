@@ -1,6 +1,6 @@
 import { exactTime } from "../../domain/strict-time";
 import { localClockEpoch } from "../http/local-clock";
-import type { HttpScheduleAdapter, HttpScheduleRecord } from "../http/proprietary-http-resolver";
+import type { HttpScheduleAdapter, HttpScheduleRecord } from "../http/partial-schedule-resolver";
 
 function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid schedule response object.");
@@ -43,6 +43,7 @@ export const nbrtScheduleAdapter: HttpScheduleAdapter = {
       }
     }
     // IsShow=0 also occurs on valid rows. Sequence, Key, and Name are not trip IDs.
-    return records;
+    return { data: records };
   },
+  combine: (pages) => pages.flat(),
 };

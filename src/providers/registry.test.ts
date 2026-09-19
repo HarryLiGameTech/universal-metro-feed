@@ -20,6 +20,18 @@ describe("provider configuration", () => {
     expect(() => parseProviderManifest({ ...nbrtManifestFixture, schedule: { kind: "proprietary-http" } }, "nbrt-subway"))
       .toThrow("Invalid provider manifest");
   });
+
+  it("validates HTTP predictions independently and rejects the old provider-specific kind", () => {
+    for (const predictions of [
+      { kind: "proprietary-http", adapter: "mbta-v3" },
+      { kind: "proprietary-http", adapter: "mbta-v3", urlTemplate: "http://api.example/predictions" },
+      { kind: "mbta-v3", adapter: "mbta-v3" },
+    ]) {
+      expect(() => parseProviderManifest({ ...mbtaManifestFixture, predictions }, "mbta-subway")).toThrow("Invalid provider manifest");
+    }
+    expect(() => parseProviderManifest({ ...mbtaManifestFixture, schedule: { kind: "mbta-v3" } }, "mbta-subway"))
+      .toThrow("Invalid provider manifest");
+  });
   it("loads the MTA provider and keeps city as searchable metadata", () => {
     const registry = parseProviderRegistry(registryFixture);
     expect(registry.providers[0]).toMatchObject({
@@ -36,6 +48,8 @@ describe("provider configuration", () => {
       .toMatchObject([{ id: "us-ma-boston" }]);
     const manifest = parseProviderManifest(mbtaManifestFixture, "mbta-subway");
     expect(manifest.topology.kind).toBe("gtfs-static");
+    expect(manifest.schedule).toMatchObject({ kind: "proprietary-http", adapter: "mbta-v3", coverage: "full-day" });
+    expect(manifest.predictions.kind).toBe("proprietary-http");
     expect(manifest.predictions.adapter).toBe("mbta-v3");
   });
 

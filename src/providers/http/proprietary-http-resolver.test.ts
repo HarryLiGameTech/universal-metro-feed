@@ -1,113 +1,125 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import manifestFixture from "../../../public/providers/nbrt-subway.json";
-import catalogFixture from "../../../public/providers/nbrt-subway/catalog.json";
-import { exactTime } from "../../domain/strict-time";
-import { parseProviderManifest, type ProviderCatalog } from "../registry";
-import { runtimeForProvider } from "../runtime";
-import { nbrtScheduleAdapter } from "../nbrt/schedule-adapter";
-import { ProprietaryHttpResolver } from "./proprietary-http-resolver";
-import { localClockEpoch } from "./local-clock";
+import { describe, expect, it, vi } from "vitest";
+import { CompositeMetroDataResolver, type PlatformQuery, type Resolved } from "../../domain/resolver";
+import { mbtaV3Codec } from "../mbta/v3-codec";
+import { ProprietaryHttpResolver, type HttpCodec } from "./proprietary-http-resolver";
 
-const manifest = parseProviderManifest(manifestFixture, "nbrt-subway");
-const now = Date.parse("2026-09-19T10:30:00Z") / 1_000;
-const context = { nowSeconds: now };
-const catalog = catalogFixture as ProviderCatalog;
-function group(station: number, line: number, flag: number, arrival = "18:34:10", departure: string | null = "18:34:50") {
-  return { StationId: station, LineId: line, Flag: flag, StationRunTimes: [
-    { StationId: station, LineId: line, Flag: flag, IntimeStr: arrival, OutTimeStr: departure },
-  ] };
+const url = "https://transit.example/schedules";
+const context = () => ({ nowSeconds: 1_000 });
+const codec: HttpCodec<number[], number[]> = {
+  decode: (value) => value as { data: number[]; next?: string },
+  combine: (pages) => pages.flat(),
+};
+function resolver(request: typeof fetch, role: "schedule" | "prediction" = "schedule") {
+  return new ProprietaryHttpResolver({ providerId: "test", timezone: "UTC", role, validForSeconds: 45 }, codec, request);
 }
-function setup(groups: unknown[]) {
-  const request = vi.fn(async () => new Response(JSON.stringify({ Code: 200, Data: groups })));
-  return { request, resolver: new ProprietaryHttpResolver(manifest, nbrtScheduleAdapter, async () => catalog, request) };
-}
-
-afterEach(() => vi.useRealTimers());
+const response = (data: unknown) => new Response(JSON.stringify(data));
 
 describe("ProprietaryHttpResolver", () => {
-  it("loads one station once, filters all groups, deduplicates rows, and returns schedules without delays or trips", async () => {
-    const one = group(16, 1, 1);
-    const { request, resolver } = setup([one, one, group(16, 2, 1, "18:35:01"), group(16, 1, 2), group(17, 1, 1)]);
-    const signal = new AbortController().signal;
-    const result = await resolver.resolveArrivals("16", ["1", "2"], "1", { ...context, signal });
-    expect(request).toHaveBeenCalledExactlyOnceWith(
-      "https://metroinfo.ditiego.net/Api/Stations/ScheduleTime/16?DeviceType=6",
-      { signal, headers: { Accept: "application/json" }, cache: "no-store" },
+  it("composes HTTP schedules and predictions as independent semantic sources", async () => {
+    const request = vi.fn(async (input: string | URL | Request) => response({ data: [String(input).endsWith("schedules") ? 10 : 20] }));
+    const schedule = resolver(request, "schedule").asSource<PlatformQuery>(() => ({ url }));
+    const prediction = resolver(request, "prediction").asSource<PlatformQuery>(() => ({ url: "https://transit.example/predictions" }));
+    const query = { providerId: "test", stationId: "a", routeId: "r", directionId: "up" };
+    const empty: Resolved<null> = { data: null, generatedAt: 1_000, freshness: "static", sources: [], warnings: [] };
+    const composite = new CompositeMetroDataResolver<null, number[], number[], never, number[]>(
+      { load: async () => empty }, schedule, prediction, null,
+      { resolve: (input) => {
+        expect(input.schedule?.freshness).toBe("static");
+        expect(input.prediction?.freshness).toBe("live");
+        expect(input.schedule?.data).toEqual([10]);
+        expect(input.prediction?.data).toEqual([20]);
+        return { ...input.prediction!, data: [...input.schedule!.data, ...input.prediction!.data] };
+      } },
     );
-    expect(result.freshness).toBe("static");
-    expect(result.sources).toHaveLength(2);
-    expect(result.sources.every((source) => source.observedAt == null)).toBe(true);
-    expect(result.data.feedTimestamp).toBeNull();
-    expect(result.data.arrivals).toHaveLength(2);
-    expect(result.data.arrivals[0]).toMatchObject({
-      routeId: "1", stopId: "16", eventKind: "arrival", eventTime: now + 250, scheduledTime: now + 250,
-      tripId: null, identityStability: "snapshot-only", timeSource: "schedule",
-      destinationKind: "direction", destinationId: null, destinationName: "霞浦",
-      delaySeconds: null, delayStatus: "undetermined", delayLabel: "",
-      displayTime: { kind: "exact", resolution: "second" },
+    expect((await composite.resolveDepartures(query, context())).data).toEqual([10, 20]);
+    expect(request).toHaveBeenCalledTimes(2);
+  });
+
+  it("reuses a request within one snapshot but fetches again on the next refresh", async () => {
+    const request = vi.fn(async () => response({ data: [10] }));
+    const http = resolver(request, "prediction");
+    const snapshot = context();
+    const [first, second] = await Promise.all([http.load({ url }, snapshot), http.load({ url }, snapshot)]);
+    expect(first).toEqual(second);
+    await http.load({ url }, snapshot);
+    expect(request).toHaveBeenCalledTimes(1);
+    await http.load({ url }, context());
+    expect(request).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not cache failed requests", async () => {
+    const request = vi.fn().mockResolvedValueOnce(new Response("Unavailable", { status: 503 }))
+      .mockResolvedValueOnce(response({ data: [20] }));
+    const http = resolver(request);
+    const snapshot = context();
+    await expect(http.load({ url }, snapshot)).rejects.toThrow("503");
+    expect((await http.load({ url }, snapshot)).data).toEqual([20]);
+    expect(request).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps independent consumers' cancellation signals separate", async () => {
+    const first = new AbortController();
+    const second = new AbortController();
+    const request = vi.fn(async (_url, init?: RequestInit) => {
+      if (init?.signal === first.signal) return new Promise<Response>((_resolve, reject) => {
+        first.signal.addEventListener("abort", () => reject(first.signal.reason), { once: true });
+      });
+      return response({ data: [20] });
     });
+    const http = resolver(request);
+    const loading = http.load({ url }, { ...context(), signal: first.signal });
+    const independent = http.load({ url }, { ...context(), signal: second.signal });
+    first.abort();
+    await expect(loading).rejects.toMatchObject({ name: "AbortError" });
+    expect((await independent).data).toEqual([20]);
+    expect(request).toHaveBeenCalledTimes(2);
   });
 
-  it("uses departure at an explicitly configured origin and arrival in the opposite direction", async () => {
-    const { resolver } = setup([group(7, 1, 1), group(7, 1, 2)]);
-    const origin = await resolver.resolveArrivals("7", ["1"], "1", context);
-    const terminus = await resolver.resolveArrivals("7", ["1"], "2", context);
-    expect(origin.data.arrivals[0]).toMatchObject({ eventKind: "departure", eventTime: now + 290 });
-    expect(terminus.data.arrivals[0]).toMatchObject({ eventKind: "arrival", eventTime: now + 250 });
-  });
-
-  it("does not fill a missing departure with an arrival", async () => {
-    const { resolver } = setup([group(7, 1, 1, "18:34:10", null)]);
-    expect((await resolver.resolveArrivals("7", ["1"], "1", context)).data.arrivals).toEqual([]);
-  });
-
-  it("filters past events without declaring the end of service", async () => {
-    const { resolver } = setup([group(164, 8, 1, "18:29:00")]);
-    expect((await resolver.resolveArrivals("164", ["8"], "1", context)).data.arrivals).toEqual([]);
-  });
-
-  it("rejects invalid selections before requesting the endpoint", async () => {
-    const { resolver, request } = setup([]);
-    await expect(resolver.resolveArrivals("missing", ["8"], "1", context)).rejects.toThrow("directory");
-    await expect(resolver.resolveArrivals("164", ["8"], "N", context)).rejects.toThrow("directory");
-    await expect(resolver.resolveArrivals("164", [], "1", context)).rejects.toThrow("Select");
-    expect(request).not.toHaveBeenCalled();
-  });
-
-  it("propagates HTTP failure and cancellation instead of returning empty success", async () => {
-    const request = vi.fn(async () => new Response("Unavailable", { status: 503 }));
-    const resolver = new ProprietaryHttpResolver(manifest, nbrtScheduleAdapter, async () => catalog, request);
-    await expect(resolver.resolveArrivals("164", ["8"], "1", context)).rejects.toThrow("503");
+  it("stops pagination after cancellation even if the response body completes", async () => {
     const controller = new AbortController();
-    controller.abort();
-    await expect(resolver.resolveArrivals("164", ["8"], "1", { ...context, signal: controller.signal })).rejects.toMatchObject({ name: "AbortError" });
+    const request = vi.fn(async () => ({
+      ok: true, json: async () => {
+        controller.abort();
+        return { data: [10], next: "?page=2" };
+      },
+    } as Response));
+    await expect(resolver(request).load({ url, maxPages: 2 }, { ...context(), signal: controller.signal }))
+      .rejects.toMatchObject({ name: "AbortError" });
     expect(request).toHaveBeenCalledTimes(1);
   });
 
-  it("accepts another HTTP protocol without adding provider logic to the resolver", async () => {
-    const other = { ...manifest, id: "other-system" };
-    const resolver = new ProprietaryHttpResolver(other, {
-      decode: () => [{ stationId: "a", routeId: "r", directionId: "east", arrival: exactTime(now + 100, "UTC"), departure: null }],
-    }, async () => ({
-      providerId: "other-system", timezone: "UTC", routes: {},
-      stations: [{ id: "a", name: "A", latitude: null, longitude: null, routes: [{ routeId: "r", directions: ["east"] }] }],
-    }), async () => new Response("{}"));
-    expect((await resolver.resolveArrivals("a", ["r"], "east", context)).data.arrivals[0])
-      .toMatchObject({ stopId: "a", direction: "east", eventTime: now + 100 });
+  it("combines JSON:API pages and resolves relative pagination links", async () => {
+    const request = vi.fn().mockResolvedValueOnce(response({
+      data: [{ type: "prediction", id: "p", attributes: {} }], links: { next: "?page=2" },
+    })).mockResolvedValueOnce(response({
+      data: [], included: [{ type: "trip", id: "t", attributes: { headsign: "Terminus" } }], links: { next: null },
+    }));
+    const http = new ProprietaryHttpResolver({ providerId: "test", timezone: "UTC", role: "prediction" }, mbtaV3Codec, request);
+    const result = await http.load({ url, maxPages: 2 }, context());
+    expect(result.data.data[0]?.id).toBe("p");
+    expect(result.data.included.get("trip:t")?.attributes.headsign).toBe("Terminus");
+    expect(request.mock.calls.map(([input]) => input)).toEqual([url, `${url}?page=2`]);
   });
 
-  it("disables full-day schedules and trip expansion at the runtime boundary", async () => {
-    const runtime = await runtimeForProvider(manifest);
-    expect(runtime).toMatchObject({ loadTripPath: null, loadTimetable: null, arrivalSource: "schedule", refreshIntervalMs: 30_000 });
-  });
-});
-
-describe("rolling local clocks", () => {
   it.each([
-    ["2026-09-19T15:59:50Z", "00:00:30", "2026-09-19T16:00:30Z"],
-    ["2026-09-19T16:00:20Z", "23:59:50", "2026-09-19T15:59:50Z"],
-    ["2026-09-19T15:59:50Z", "24:00:30", "2026-09-19T16:00:30Z"],
-  ])("resolves %s + %s across midnight without promoting old rows to tomorrow", (reference, clock, expected) => {
-    expect(localClockEpoch(clock, Date.parse(reference) / 1_000, 8 * 3_600)).toBe(Date.parse(expected) / 1_000);
+    ["https://other.example/next", 5, "origin"],
+    [url, 5, "cycle"],
+    ["?page=2", 1, "more pages"],
+  ])("rejects unsafe or incomplete pagination: %s", async (next, maxPages, error) => {
+    const request = vi.fn(async () => response({ data: [10], next }));
+    await expect(resolver(request).load({ url, maxPages: Number(maxPages) }, context())).rejects.toThrow(String(error));
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it("propagates JSON errors and refuses invalid source requests before fetching", async () => {
+    const request = vi.fn(async () => new Response("Not JSON"));
+    const http = resolver(request);
+    await expect(http.load({ url }, context())).rejects.toThrow();
+    await expect(http.load({ url, maxPages: 0 }, context())).rejects.toThrow("page limit");
+    await expect(http.load({ url: "http://transit.example" }, context())).rejects.toThrow("HTTPS");
+    await expect(http.asSource<PlatformQuery>(() => ({ url })).load({
+      providerId: "wrong", stationId: "a", routeId: "r", directionId: "up",
+    }, context())).rejects.toThrow("Unsupported provider");
+    expect(request).toHaveBeenCalledTimes(1);
   });
 });

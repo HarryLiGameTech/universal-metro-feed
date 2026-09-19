@@ -30,29 +30,9 @@ export async function runtimeForProvider(manifest: ProviderManifest): Promise<Pr
       refreshIntervalMs: manifest.refreshIntervalMs ?? 5_000,
     };
   }
-  if (manifest.predictions.adapter === "mbta-v3" && manifest.schedule.kind === "mbta-v3") {
-    const { fetchMbtaArrivals, fetchMbtaTimetable, fetchMbtaTripPath } = await import("./mbta/v3-resolver");
-    return {
-      loadArrivals: fetchMbtaArrivals,
-      loadTripPath: fetchMbtaTripPath,
-      loadTimetable: fetchMbtaTimetable,
-      arrivalSource: "prediction",
-      feedLabel: "MBTA predictions",
-      refreshIntervalMs: manifest.refreshIntervalMs ?? 20_000,
-    };
-  }
-  if (manifest.schedule.kind === "proprietary-http" && manifest.predictions.kind === "none") {
-    const { ProprietaryHttpResolver } = await import("./http/proprietary-http-resolver");
-    const { scheduleAdapter } = await import("./http/adapters");
-    const resolver = new ProprietaryHttpResolver(manifest, scheduleAdapter(manifest.schedule.adapter));
-    return {
-      loadArrivals: resolver.loadArrivals,
-      loadTripPath: null,
-      loadTimetable: null,
-      arrivalSource: "schedule",
-      feedLabel: "Partial timetable",
-      refreshIntervalMs: manifest.refreshIntervalMs ?? 30_000,
-    };
+  if (manifest.schedule.kind === "proprietary-http" || manifest.predictions.kind === "proprietary-http") {
+    const { proprietaryHttpRuntime } = await import("./http/adapters");
+    return proprietaryHttpRuntime(manifest);
   }
   throw new Error(`No frontend adapter is available for ${manifest.id}.`);
 }
