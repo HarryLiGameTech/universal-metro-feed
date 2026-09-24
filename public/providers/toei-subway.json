@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "toei-subway",
+  "timezone": "Asia/Tokyo",
+  "sourceUrl": "https://ckan.odpt.org/dataset/r_train_gtfs_rt-odpt_train-toei",
+  "refreshIntervalMs": 10000,
+  "topology": { "kind": "none" },
+  "schedule": { "kind": "none" },
+  "predictions": {
+    "kind": "gtfs-realtime",
+    "adapter": "toei",
+    "urlTemplate": "https://api-public.odpt.org/api/v4/gtfs/realtime/toei_odpt_train_trip_update"
+  },
+  "observations": {
+    "kind": "gtfs-realtime",
+    "urlTemplate": "https://api-public.odpt.org/api/v4/gtfs/realtime/toei_odpt_train_vehicle"
+  },
+  "alerts": {
+    "kind": "gtfs-realtime",
+    "urlTemplate": "https://api-public.odpt.org/api/v4/gtfs/realtime/toei_odpt_train_alert"
+  }
+}

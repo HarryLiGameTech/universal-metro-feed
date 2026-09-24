@@ -56,6 +56,7 @@ main {
 .section-kicker { color: var(--signal); font-family: "DM Mono", monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; }
 
 .workspace { display: grid; grid-template-columns: 360px 1fr; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 18px 50px rgba(52, 43, 30, 0.08); }
+.dynamic-only-workspace { grid-template-columns: minmax(0, 1fr); }
 .selector-panel { padding: 30px; border-right: 1px solid var(--line); }
 .selector-panel h2 { margin: 8px 0 30px; font-size: 24px; letter-spacing: -0.04em; }
 .field-group { border: 0; padding: 0; margin: 0 0 26px; }

@@ -49,6 +49,29 @@
         { "id": "cn-zj-ningbo", "names": { "en": "Ningbo", "zh-CN": "宁波" } }
       ],
       "manifest": "/providers/nbrt-subway.json"
+    },
+    {
+      "id": "toei-subway",
+      "names": {
+        "en": "Toei Subway · 都営地下鉄",
+        "ja": "都営地下鉄"
+      },
+      "introduction": {
+        "kicker": "Tokyo subway · GTFS-Realtime",
+        "description": "Live arrival estimates from Toei. Station and line names are not yet available.",
+        "locality": "Tokyo",
+        "attribution": "the Bureau of Transportation, Tokyo Metropolitan Government and ODPT"
+      },
+      "cities": [
+        {
+          "id": "jp-13-tokyo",
+          "names": {
+            "en": "Tokyo",
+            "ja": "東京"
+          }
+        }
+      ],
+      "manifest": "/providers/toei-subway.json"
     }
   ]
 }

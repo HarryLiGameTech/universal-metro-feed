@@ -1,7 +1,7 @@
 import { CompositeMetroDataResolver, type PlatformQuery, type Resolved, type ResolutionContext, type ResolutionWarning } from "../../domain/resolver";
 import type { StrictTime } from "../../domain/strict-time";
 import type { Arrival, ArrivalLoader, ArrivalSnapshot } from "../../types";
-import { loadProviderCatalog, type ProviderCatalog, type ProviderManifest } from "../registry";
+import { catalogUrlForProvider, loadProviderCatalog, type ProviderCatalog, type ProviderManifest } from "../registry";
 import { ProprietaryHttpResolver, type HttpCodec } from "./proprietary-http-resolver";
 
 /** Protocol adapters describe published events, never inferred trips or predictions. */
@@ -32,7 +32,7 @@ export class PartialScheduleResolver {
   constructor(
     private readonly manifest: ProviderManifest,
     adapter: HttpScheduleAdapter,
-    private readonly getCatalog = () => loadProviderCatalog(manifest.topology.catalogUrl, manifest.id),
+    private readonly getCatalog = () => loadProviderCatalog(catalogUrlForProvider(manifest), manifest.id),
     request: typeof fetch = (...args) => fetch(...args),
   ) {
     if (manifest.schedule.kind !== "proprietary-http" || manifest.schedule.coverage !== "partial" ||
@@ -113,7 +113,7 @@ export class PartialScheduleResolver {
     }
     const topology: Resolved<ProviderCatalog> = {
       data: catalog, generatedAt: context.nowSeconds, freshness: "static",
-      sources: [{ providerId: this.manifest.id, sourceId: this.manifest.topology.catalogUrl }], warnings: [],
+      sources: [{ providerId: this.manifest.id, sourceId: catalogUrlForProvider(this.manifest) }], warnings: [],
     };
     // One station response commonly contains several routes and directions.
     const resolver = new CompositeMetroDataResolver<ProviderCatalog, HttpScheduleSnapshot, never, never, ArrivalSnapshot>(

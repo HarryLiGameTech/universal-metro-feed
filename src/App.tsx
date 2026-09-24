@@ -25,8 +25,13 @@ export default function App() {
     queryFn: async () => {
       if (!descriptor) throw new Error(`Provider ${providerId} is not configured.`);
       const manifest = await loadProviderManifest(descriptor);
+      const runtime = await runtimeForProvider(manifest);
+      if (manifest.topology.kind === "none") {
+        if (runtime.arrivalScope !== "feed") throw new Error("This provider requires a station catalog.");
+        return { catalog: null, manifest, runtime };
+      }
       const catalog = await loadProviderCatalog(manifest.topology.catalogUrl, descriptor.id);
-      return { catalog, manifest, runtime: await runtimeForProvider(manifest) };
+      return { catalog, manifest, runtime };
     },
     enabled: descriptor != null,
     staleTime: Infinity,
@@ -51,30 +56,54 @@ export default function App() {
     </main>;
   }
 
-  return (
-    <CatalogContext.Provider value={selectedProvider.data.catalog}>
-      <ProviderApp
+  const { catalog, manifest, runtime } = selectedProvider.data;
+  return <main>
+    <nav className="topbar" aria-label="Primary">
+      <a className="brand" href={import.meta.env.BASE_URL}>
+        <Activity aria-hidden="true" />
+        <span>On The Platform</span>
+      </a>
+      <div className="topbar-actions">
+        <ProviderSelect providers={registry.data.providers} providerId={providerId} onProviderChange={setProviderId} />
+        {manifest.sourceUrl && <a className="source-link" href={manifest.sourceUrl} target="_blank" rel="noreferrer">
+          <ExternalLink aria-hidden="true" size={16} />
+          Data source
+        </a>}
+      </div>
+    </nav>
+
+    <header className="intro">
+      <p className="section-kicker">{descriptor.introduction?.kicker ?? `${descriptor.names.en ?? descriptor.id} · direct from the source`}</p>
+      <h1>The next train,<br /><em>without the wait.</em></h1>
+      <p>{descriptor.introduction?.description ?? "Live arrival estimates and scheduled service."}</p>
+    </header>
+
+    {catalog ? <CatalogContext.Provider value={catalog}>
+      <PlatformView
         key={providerId}
         descriptor={descriptor}
-        providers={registry.data.providers}
-        catalog={selectedProvider.data.catalog}
-        manifest={selectedProvider.data.manifest}
-        runtime={selectedProvider.data.runtime}
+        catalog={catalog}
+        manifest={manifest}
+        runtime={runtime}
         providerId={providerId}
-        onProviderChange={setProviderId}
       />
-    </CatalogContext.Provider>
-  );
+    </CatalogContext.Provider> : <div className="workspace dynamic-only-workspace">
+      <ArrivalBoard key={providerId} providerId={providerId} timezone={manifest.timezone} runtime={runtime} />
+    </div>}
+
+    <footer className="page-footer">
+      <span>Times shown in {descriptor.introduction?.locality ?? manifest.timezone} local time.</span>
+      <span>Not affiliated with {descriptor.introduction?.attribution ?? descriptor.names.en ?? descriptor.id}.</span>
+    </footer>
+  </main>;
 }
 
-function ProviderApp({ descriptor, providers, catalog, manifest, runtime, providerId, onProviderChange }: {
+function PlatformView({ descriptor, catalog, manifest, runtime, providerId }: {
   descriptor: ProviderDescriptor;
-  providers: ProviderDescriptor[];
   catalog: ProviderCatalog;
   manifest: ProviderManifest;
   runtime: ProviderRuntime;
   providerId: string;
-  onProviderChange(id: string): void;
 }) {
   const stations = catalog.stations;
   const firstStation = stations[0] ?? (() => {
@@ -168,27 +197,7 @@ function ProviderApp({ descriptor, providers, catalog, manifest, runtime, provid
   }, [selectPlatform]);
 
   return (
-    <main>
-      <nav className="topbar" aria-label="Primary">
-        <a className="brand" href={import.meta.env.BASE_URL}>
-          <Activity aria-hidden="true" />
-          <span>On The Platform</span>
-        </a>
-        <div className="topbar-actions">
-          <ProviderSelect providers={providers} providerId={providerId} onProviderChange={onProviderChange} />
-          {manifest.sourceUrl && <a className="source-link" href={manifest.sourceUrl} target="_blank" rel="noreferrer">
-            <ExternalLink aria-hidden="true" size={16} />
-            Data source
-          </a>}
-        </div>
-      </nav>
-
-      <header className="intro">
-        <p className="section-kicker">{descriptor.introduction?.kicker ?? `${descriptor.names.en ?? descriptor.id} · direct from the source`}</p>
-        <h1>The next train,<br /><em>without the wait.</em></h1>
-        <p>{descriptor.introduction?.description ?? "Live arrival estimates and scheduled service."}</p>
-      </header>
-
+    <>
       <div className="workspace">
         <SelectorPanel
           idPrefix="realtime"
@@ -205,11 +214,7 @@ function ProviderApp({ descriptor, providers, catalog, manifest, runtime, provid
 
       {runtime.loadTimetable && <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} />}
 
-      <footer className="page-footer">
-        <span>Times shown in {descriptor.introduction?.locality ?? manifest.timezone} local time.</span>
-        <span>Not affiliated with {descriptor.introduction?.attribution ?? descriptor.names.en ?? descriptor.id}.</span>
-      </footer>
-    </main>
+    </>
   );
 }
 

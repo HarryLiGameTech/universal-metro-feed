@@ -3,6 +3,7 @@ import registryFixture from "../../public/providers/index.json";
 import manifestFixture from "../../public/providers/mta-subway.json";
 import mbtaManifestFixture from "../../public/providers/mbta-subway.json";
 import nbrtManifestFixture from "../../public/providers/nbrt-subway.json";
+import toeiManifestFixture from "../../public/providers/toei-subway.json";
 import { parseProviderCatalog, parseProviderManifest, parseProviderRegistry } from "./registry";
 
 describe("provider configuration", () => {
@@ -38,7 +39,8 @@ describe("provider configuration", () => {
       id: "mta-subway",
       cities: [{ id: "us-ny-new-york" }],
     });
-    expect(parseProviderManifest(manifestFixture, "mta-subway").topology.catalogUrl)
+    const topology = parseProviderManifest(manifestFixture, "mta-subway").topology;
+    expect(topology.kind === "none" ? null : topology.catalogUrl)
       .toBe("/providers/mta-subway/catalog.json");
   });
 
@@ -50,7 +52,41 @@ describe("provider configuration", () => {
     expect(manifest.topology.kind).toBe("gtfs-static");
     expect(manifest.schedule).toMatchObject({ kind: "proprietary-http", adapter: "mbta-v3", coverage: "full-day" });
     expect(manifest.predictions.kind).toBe("proprietary-http");
-    expect(manifest.predictions.adapter).toBe("mbta-v3");
+    expect(manifest.predictions.kind === "proprietary-http" ? manifest.predictions.adapter : null).toBe("mbta-v3");
+  });
+
+  it("stages Toei's standard dynamic feeds without inventing unavailable static data", () => {
+    expect(parseProviderRegistry(registryFixture).providers.find((provider) => provider.id === "toei-subway"))
+      .toMatchObject({
+        names: { en: "Toei Subway · 都営地下鉄" },
+        cities: [{ id: "jp-13-tokyo" }],
+        manifest: "/providers/toei-subway.json",
+      });
+    const manifest = parseProviderManifest(toeiManifestFixture, "toei-subway");
+    expect(manifest).toMatchObject({
+      topology: { kind: "none" },
+      schedule: { kind: "none" },
+      predictions: {
+        kind: "gtfs-realtime",
+        adapter: "toei",
+        urlTemplate: "https://api-public.odpt.org/api/v4/gtfs/realtime/toei_odpt_train_trip_update",
+      },
+      observations: {
+        kind: "gtfs-realtime",
+        urlTemplate: "https://api-public.odpt.org/api/v4/gtfs/realtime/toei_odpt_train_vehicle",
+      },
+      alerts: {
+        kind: "gtfs-realtime",
+        urlTemplate: "https://api-public.odpt.org/api/v4/gtfs/realtime/toei_odpt_train_alert",
+      },
+    });
+  });
+
+  it("rejects insecure generic GTFS-Realtime endpoints", () => {
+    expect(() => parseProviderManifest({
+      ...toeiManifestFixture,
+      predictions: { kind: "gtfs-realtime", urlTemplate: "http://example.test/trip-updates" },
+    }, "toei-subway")).toThrow("Invalid provider manifest");
   });
 
   it("accepts one provider associated with multiple cities", () => {

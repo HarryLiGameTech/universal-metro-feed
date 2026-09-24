@@ -62,7 +62,11 @@ line 3 memberships for several northern line 5 stations. Per the owner's decisio
 topology reconciliation is deferred: the directory's source memberships are
 preserved, no adjacency or shared-track groups are inferred, and unavailable
 station/line schedule combinations simply yield no upcoming records. The old
-10/12 line aliases do not supply corresponding topology or station records.
+10/12 line aliases do not supply corresponding topology or station records in that
+original snapshot. On 2026-09-23, the owner supplied line 12 stations 210–218 and
+added line 12 membership to 小洋江 (134); these are now included in this directory.
+Line 12's direction-to-terminal mapping is not yet specified, so its direction
+labels remain numeric and no origin directions or line topology are inferred.
 
 Coordinates and official line colors were not supplied. Coordinates remain null
 and route bullets use neutral styling. Direction terminal labels are presented as

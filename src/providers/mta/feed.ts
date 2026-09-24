@@ -1,6 +1,7 @@
-import GtfsRealtimeBindings, { type transit_realtime } from "gtfs-realtime-bindings";
+import type { transit_realtime } from "gtfs-realtime-bindings";
 import { fetchTimetableSource, findScheduledEventTime, type TimetableSource } from "../../lib/timetable";
 import type { Arrival, ArrivalSnapshot, DelayStatus, Direction } from "../../types";
+import { fetchGtfsRealtimeFeed } from "../gtfs-realtime/source";
 
 const BASE_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/";
 
@@ -150,17 +151,5 @@ export async function fetchArrivals(
 
 export async function fetchMtaFeed(routeId: string, signal?: AbortSignal) {
   const feedName = feedNameForRoute(routeId);
-
-  const response = await fetch(`${BASE_URL}${feedName}`, {
-    cache: "no-store",
-    headers: { Accept: "application/x-protobuf, application/octet-stream" },
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`MTA returned ${response.status} ${response.statusText}`);
-  }
-
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  return GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
+  return fetchGtfsRealtimeFeed(`${BASE_URL}${feedName}`, signal);
 }

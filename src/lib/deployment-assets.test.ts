@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import registryFixture from "../../public/providers/index.json";
 import manifestFixture from "../../public/providers/mta-subway.json";
-import { loadProviderCatalog, loadProviderManifest, loadProviderRegistry } from "../providers/registry";
+import { catalogUrlForProvider, loadProviderCatalog, loadProviderManifest, loadProviderRegistry } from "../providers/registry";
 import { fetchTimetableSource } from "./timetable";
 
 afterEach(() => {
@@ -29,7 +29,7 @@ it.each(["/", "/universal-metro-feed/"])("loads provider and timetable data when
   const manifest = await loadProviderManifest(registry.providers[0]!);
   // Reload the registry module to avoid sharing its catalog cache between deployments.
   const { loadProviderCatalog: loadCatalog } = await import("../providers/registry");
-  expect(await loadCatalog(manifest.topology.catalogUrl, manifest.id)).toEqual(catalog);
+  expect(await loadCatalog(catalogUrlForProvider(manifest), manifest.id)).toEqual(catalog);
   expect(await fetchTimetableSource("127", "1", "N")).toEqual({
     shard: { services: {} },
     calendar: { calendar: [], exceptions: [] },

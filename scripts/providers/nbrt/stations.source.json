@@ -94,7 +94,7 @@
   { "id": 131, "name": "嵩江东路", "aliases": [], "lineIds": [4] },
   { "id": 132, "name": "南高教园区", "aliases": [], "lineIds": [4, 5] },
   { "id": 133, "name": "金达南路", "aliases": [], "lineIds": [4] },
-  { "id": 134, "name": "小洋江", "aliases": [], "lineIds": [4, 7] },
+  { "id": 134, "name": "小洋江", "aliases": [], "lineIds": [4, 7, 12] },
   { "id": 135, "name": "东钱湖", "aliases": [], "lineIds": [4] },
   { "id": 136, "name": "布政", "aliases": [], "lineIds": [5] },
   { "id": 137, "name": "张家潭", "aliases": [], "lineIds": [5] },
@@ -168,5 +168,14 @@
   { "id": 206, "name": "梅墟", "aliases": [], "lineIds": [6] },
   { "id": 207, "name": "谢墅", "aliases": [], "lineIds": [6] },
   { "id": 208, "name": "小港西", "aliases": [], "lineIds": [6] },
-  { "id": 209, "name": "衙前", "aliases": [], "lineIds": [6] }
+  { "id": 209, "name": "衙前", "aliases": [], "lineIds": [6] },
+  { "id": 210, "name": "云龙火车站", "aliases": [], "lineIds": [12] },
+  { "id": 211, "name": "横溪", "aliases": [], "lineIds": [12] },
+  { "id": 212, "name": "塘溪", "aliases": [], "lineIds": [12] },
+  { "id": 213, "name": "鄞州咸祥", "aliases": [], "lineIds": [12] },
+  { "id": 214, "name": "象山贤庠", "aliases": [], "lineIds": [12] },
+  { "id": 215, "name": "大徐", "aliases": [], "lineIds": [12] },
+  { "id": 216, "name": "丹城", "aliases": [], "lineIds": [12] },
+  { "id": 217, "name": "滨海大道", "aliases": [], "lineIds": [12] },
+  { "id": 218, "name": "大目湾", "aliases": [], "lineIds": [12] }
 ]

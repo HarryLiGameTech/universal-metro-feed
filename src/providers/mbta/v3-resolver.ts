@@ -9,9 +9,8 @@ import {
   type TopologySource,
 } from "../../domain/resolver";
 import { shiftDateKey, timetableDayTypeForDate } from "../../lib/service-date";
-import { loadProviderCatalog } from "../registry";
+import { catalogUrlForProvider, loadProviderCatalog, type ProviderCatalog, type ProviderManifest } from "../registry";
 import type { Arrival, ArrivalSnapshot, Direction, TimetableDayType, TimetableEvent, TimetableResult } from "../../types";
-import type { ProviderCatalog, ProviderManifest } from "../registry";
 import type { ProviderRuntime } from "../runtime";
 import { ProprietaryHttpResolver, type HttpRequest } from "../http/proprietary-http-resolver";
 import { mbtaV3Codec, relatedId, type ApiBatch } from "./v3-codec";
@@ -24,7 +23,7 @@ export function createMbtaRuntime(manifest: ProviderManifest): ProviderRuntime {
     throw new Error("MBTA V3 requires full-day HTTP schedules and HTTP predictions.");
   }
   const PROVIDER_ID = manifest.id;
-  const CATALOG_URL = manifest.topology.catalogUrl;
+  const CATALOG_URL = catalogUrlForProvider(manifest);
   const TIMEZONE = manifest.timezone;
   const scheduleUrl = manifest.schedule.urlTemplate;
   const predictionUrl = manifest.predictions.urlTemplate;

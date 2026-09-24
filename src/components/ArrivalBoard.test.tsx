@@ -60,3 +60,34 @@ describe("schedule-only arrival board", () => {
     expect(html).not.toMatch(/No more trains today|live feed|Live/);
   });
 });
+
+it("uses the shared board without a catalog, preserving multiple stop predictions and missing labels", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(now * 1_000);
+  const client = new QueryClient();
+  const first: Arrival = {
+    ...arrival, id: "trip-stop-6", tripId: "100829H0", timeSource: "prediction",
+    routeId: null, stopId: null, direction: null, stopSequence: 6, destinationName: null,
+    scheduledTime: null,
+    displayTime: { kind: "estimate", epochSeconds: now + 250, timezone: "Asia/Tokyo", resolution: "second", toleranceSeconds: 60 },
+  };
+  const snapshot: ArrivalSnapshot = {
+    arrivals: [first, { ...first, id: "trip-stop-7", stopSequence: 7, eventTime: now + 300 }],
+    fetchedAt: now, feedTimestamp: now,
+  };
+  client.setQueryData(["arrivals", "toei-subway", "", [], ""], snapshot);
+  const html = renderToStaticMarkup(
+    <QueryClientProvider client={client}>
+      <ArrivalBoard providerId="toei-subway" timezone="Asia/Tokyo" runtime={{
+        ...runtime, arrivalScope: "feed", arrivalSource: "prediction", feedLabel: "Toei feed",
+      }} />
+    </QueryClientProvider>,
+  );
+  expect(html).toContain("Upcoming predictions");
+  expect(html).toContain("Stop sequence 6");
+  expect(html).toContain("Stop sequence 7");
+  expect(html).toContain("19:34:10");
+  expect(html).toContain("±1 min estimate");
+  expect(html).not.toMatch(/Direction 0|Route null|Toward|Scheduled arrival|Schedule comparison|aria-expanded/);
+  client.clear();
+});

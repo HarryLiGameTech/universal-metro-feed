@@ -11,6 +11,8 @@ export type TimetableLoader = (
 ) => Promise<TimetableResult>;
 
 export interface ProviderRuntime {
+  /** Feed scope uses the same loader without a station/route/direction selection. */
+  arrivalScope?: "platform" | "feed";
   loadArrivals: ArrivalLoader;
   loadTripPath: TripPathLoader | null;
   loadTimetable: TimetableLoader | null;
@@ -21,7 +23,12 @@ export interface ProviderRuntime {
 
 /** The registry selects one adapter; the UI only consumes the shared contracts. */
 export async function runtimeForProvider(manifest: ProviderManifest): Promise<ProviderRuntime> {
-  if (manifest.predictions.adapter === "mta" && manifest.schedule.kind === "gtfs-static") {
+  if (manifest.predictions.kind === "gtfs-realtime" && manifest.predictions.adapter === "toei") {
+    const { createToeiRuntime } = await import("./toei/realtime-adapter");
+    return createToeiRuntime(manifest);
+  }
+  if (manifest.predictions.kind === "gtfs-realtime" && manifest.predictions.adapter === "mta" &&
+      manifest.schedule.kind === "gtfs-static") {
     const { mtaLoaders } = await import("./mta/runtime");
     return {
       ...mtaLoaders,

@@ -44,11 +44,12 @@ export interface Arrival {
   timeSource?: "schedule" | "prediction";
   /** A direction label must not claim to be this particular train's destination. */
   destinationKind?: "destination" | "direction";
-  routeId: string;
-  stopId: string;
-  direction: Direction;
+  routeId: string | null;
+  stopId: string | null;
+  stopSequence?: number | null;
+  direction: Direction | null;
   destinationId: string | null;
-  destinationName: string;
+  destinationName: string | null;
   eventTime: number;
   eventKind: "arrival" | "departure";
   scheduledTime: number | null;

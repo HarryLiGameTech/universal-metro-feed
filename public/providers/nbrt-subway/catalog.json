@@ -57,6 +57,13 @@
       "label": "8",
       "color": "#555555",
       "textColor": "#ffffff"
+    },
+    "12": {
+      "id": "12",
+      "name": "12号线",
+      "label": "12",
+      "color": "#555555",
+      "textColor": "#ffffff"
     }
   },
   "stations": [
@@ -2625,6 +2632,14 @@
               "云龙"
             ]
           }
+        },
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
         }
       ]
     },
@@ -4525,6 +4540,150 @@
               "古林"
             ]
           }
+        }
+      ]
+    },
+    {
+      "id": "210",
+      "name": "云龙火车站",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "211",
+      "name": "横溪",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "212",
+      "name": "塘溪",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "213",
+      "name": "鄞州咸祥",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "214",
+      "name": "象山贤庠",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "215",
+      "name": "大徐",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "216",
+      "name": "丹城",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "217",
+      "name": "滨海大道",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
+        }
+      ]
+    },
+    {
+      "id": "218",
+      "name": "大目湾",
+      "latitude": null,
+      "longitude": null,
+      "routes": [
+        {
+          "routeId": "12",
+          "directions": [
+            "1",
+            "2"
+          ],
+          "headsigns": {}
         }
       ]
     }

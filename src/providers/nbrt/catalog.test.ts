@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
-import catalog from "../../../public/providers/nbrt-subway/catalog.json";
+import catalogFixture from "../../../public/providers/nbrt-subway/catalog.json";
+import type { ProviderCatalog } from "../registry";
 import { sharedLineGroups } from "../../lib/platform-selection";
 import type { Station } from "../../types";
 
+const catalog: ProviderCatalog = catalogFixture;
+
 describe("NBRT station directory", () => {
   it("contains the supplied station directory without inventing coordinates or line adjacency", () => {
-    expect(catalog.stations).toHaveLength(170);
-    expect(Object.keys(catalog.routes)).toHaveLength(8);
+    expect(catalog.stations).toHaveLength(179);
+    expect(Object.keys(catalog.routes)).toHaveLength(9);
     for (const station of catalog.stations) {
       expect(station.latitude).toBeNull();
       expect(station.longitude).toBeNull();

@@ -20,6 +20,19 @@ export interface ProprietaryHttpConfig {
   urlTemplate: string;
 }
 
+export interface GtfsRealtimeConfig {
+  kind: "gtfs-realtime";
+  /** Omitted only for legacy adapters that resolve their own endpoint, such as MTA. */
+  urlTemplate?: string;
+  adapter?: string;
+}
+
+export type OptionalGtfsRealtimeConfig = GtfsRealtimeConfig | { kind: "none" };
+
+export type TopologyConfig =
+  | { kind: "clockface-compat-static" | "gtfs-static" | "station-directory"; catalogUrl: string }
+  | { kind: "none" };
+
 export interface ProviderManifest {
   schemaVersion: 1;
   id: string;
@@ -27,9 +40,11 @@ export interface ProviderManifest {
   sourceUrl?: string;
   refreshIntervalMs?: number;
   defaultStationId?: string;
-  topology: { kind: "clockface-compat-static" | "gtfs-static" | "station-directory"; catalogUrl: string };
+  topology: TopologyConfig;
   schedule: { kind: "gtfs-static" | "none" } | (ProprietaryHttpConfig & { coverage: "partial" | "full-day" });
-  predictions: { kind: "gtfs-realtime" | "none"; adapter?: string } | ProprietaryHttpConfig;
+  predictions: OptionalGtfsRealtimeConfig | ProprietaryHttpConfig;
+  observations?: OptionalGtfsRealtimeConfig;
+  alerts?: OptionalGtfsRealtimeConfig;
 }
 
 export interface ProviderCatalog {
@@ -58,6 +73,26 @@ function isHttpConfig(value: Record<string, unknown>): boolean {
   }
 }
 
+function isHttpsUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isGtfsRealtimeConfig(value: unknown, allowAdapterEndpoint = false): value is GtfsRealtimeConfig {
+  if (!isRecord(value) || value.kind !== "gtfs-realtime" ||
+      (value.adapter !== undefined && (typeof value.adapter !== "string" || !value.adapter))) return false;
+  if (value.urlTemplate !== undefined && !isHttpsUrl(value.urlTemplate)) return false;
+  return isHttpsUrl(value.urlTemplate) || (allowAdapterEndpoint && typeof value.adapter === "string");
+}
+
+function isOptionalGtfsRealtimeConfig(value: unknown) {
+  return isRecord(value) && (value.kind === "none" || isGtfsRealtimeConfig(value));
+}
+
 export function parseProviderRegistry(value: unknown): ProviderRegistry {
   if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.providers)) {
     throw new Error("Unsupported provider registry schema.");
@@ -82,13 +117,16 @@ export function parseProviderRegistry(value: unknown): ProviderRegistry {
 export function parseProviderManifest(value: unknown, expectedId: string): ProviderManifest {
   if (!isRecord(value) || value.schemaVersion !== 1 || value.id !== expectedId ||
       typeof value.timezone !== "string" || !isRecord(value.topology) ||
-      !["clockface-compat-static", "gtfs-static", "station-directory"].includes(String(value.topology.kind)) ||
-      typeof value.topology.catalogUrl !== "string" ||
+      !["clockface-compat-static", "gtfs-static", "station-directory", "none"].includes(String(value.topology.kind)) ||
+      (value.topology.kind !== "none" && typeof value.topology.catalogUrl !== "string") ||
       !isRecord(value.schedule) || !["gtfs-static", "proprietary-http", "none"].includes(String(value.schedule.kind)) ||
       (value.schedule.kind === "proprietary-http" && (!isHttpConfig(value.schedule) ||
         !["partial", "full-day"].includes(String(value.schedule.coverage)))) ||
       !isRecord(value.predictions) || !["gtfs-realtime", "proprietary-http", "none"].includes(String(value.predictions.kind)) ||
+      (value.predictions.kind === "gtfs-realtime" && !isGtfsRealtimeConfig(value.predictions, true)) ||
       (value.predictions.kind === "proprietary-http" && !isHttpConfig(value.predictions)) ||
+      (value.observations !== undefined && !isOptionalGtfsRealtimeConfig(value.observations)) ||
+      (value.alerts !== undefined && !isOptionalGtfsRealtimeConfig(value.alerts)) ||
       (value.sourceUrl !== undefined && typeof value.sourceUrl !== "string") ||
       (value.defaultStationId !== undefined && typeof value.defaultStationId !== "string") ||
       (value.refreshIntervalMs !== undefined && (typeof value.refreshIntervalMs !== "number" || value.refreshIntervalMs < 5_000))) {
@@ -111,6 +149,11 @@ export async function loadProviderRegistry() {
 
 export async function loadProviderManifest(descriptor: ProviderDescriptor) {
   return parseProviderManifest(await fetchJson(descriptor.manifest), descriptor.id);
+}
+
+export function catalogUrlForProvider(manifest: ProviderManifest) {
+  if (manifest.topology.kind === "none") throw new Error(`Provider ${manifest.id} has no topology source.`);
+  return manifest.topology.catalogUrl;
 }
 
 const catalogCache = new Map<string, Promise<ProviderCatalog>>();

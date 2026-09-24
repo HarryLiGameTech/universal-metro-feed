@@ -11,32 +11,35 @@ import type { Arrival, Direction, Station } from "../types";
 import { RouteBullet } from "./RouteBullet";
 import { TripPathPanel } from "./TripPathPanel";
 
-interface ArrivalBoardProps {
+type ArrivalBoardProps = {
   providerId: string;
   timezone: string;
   runtime: ProviderRuntime;
+} & ({
   station: Station;
   routeIds: readonly string[];
   direction: Direction;
-}
+} | { station?: never; routeIds?: never; direction?: never });
 
-export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds, direction }: ArrivalBoardProps) {
+export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds = [], direction = "" }: ArrivalBoardProps) {
+  const feedScope = runtime.arrivalScope === "feed";
+  if (!station && !feedScope) throw new Error("Select a station for this provider.");
   const [expandedTrip, setExpandedTrip] = useState<{ platformKey: string; arrival: Arrival } | null>(null);
   const now = useClock();
-  const query = useArrivals(providerId, station.id, routeIds, direction, runtime.loadArrivals, runtime.refreshIntervalMs);
+  const query = useArrivals(providerId, station?.id ?? "", routeIds, direction, runtime.loadArrivals, runtime.refreshIntervalMs);
   const timeFormatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
   });
-  const heading = directionDisplay(station, routeIds, direction);
+  const heading = station ? directionDisplay(station, routeIds, direction) : { short: "All active trips", full: "All active trips" };
   const nowSeconds = now / 1_000;
   const scheduled = runtime.arrivalSource === "schedule";
-  const platformKey = `${providerId}:${station.id}:${direction}:${routeIds.join(",")}`;
+  const platformKey = `${providerId}:${station?.id ?? ""}:${direction}:${routeIds.join(",")}`;
   useEffect(() => setExpandedTrip(null), [platformKey]);
   const selectedArrival = runtime.loadTripPath && expandedTrip?.platformKey === platformKey ? expandedTrip.arrival : null;
-  const arrivals = visibleArrivals(query.data?.arrivals ?? [], nowSeconds, selectedArrival);
+  const arrivals = visibleArrivals(query.data?.arrivals ?? [], nowSeconds, selectedArrival, feedScope ? 12 : 4);
   const ageTimestamp = query.data ? scheduled ? query.data.fetchedAt : query.data.feedTimestamp : null;
   const feedAge = ageTimestamp != null ? Math.max(0, nowSeconds - ageTimestamp) : Infinity;
-  const isStale = feedAge > Math.max(90, runtime.refreshIntervalMs / 1_000 * 3);
+  const isStale = ageTimestamp != null && feedAge > Math.max(90, runtime.refreshIntervalMs / 1_000 * 3);
 
   const uncertaintyLabel = (seconds: number) => seconds >= 60 && seconds % 60 === 0
     ? `±${seconds / 60} min estimate` : `±${seconds} sec estimate`;
@@ -46,12 +49,12 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds,
       <header className="board-header">
         <div>
           <div className="board-eyebrow">
-            <div className="route-bullet-group">
+            {station && <div className="route-bullet-group">
               {routeIds.map((routeId) => <RouteBullet key={routeId} routeId={routeId} size={routeIds.length > 1 ? "small" : "large"} />)}
-            </div>
+            </div>}
             <span title={heading.full}>{heading.short}</span>
           </div>
-          <h2 id="arrivals-title">{station.name}</h2>
+          <h2 id="arrivals-title">{station?.name ?? "Upcoming predictions"}</h2>
         </div>
 
         <div className={`live-status${scheduled ? " is-schedule" : ""}${isStale && query.data ? " is-stale" : ""}`}>
@@ -74,7 +77,7 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds,
         <div className="board-message">
           <RefreshCw className="spin" aria-hidden="true" />
           <strong>Reading {runtime.feedLabel}…</strong>
-          <span>{scheduled ? "Loading published times for this station." : "Decoding the latest train positions."}</span>
+          <span>{scheduled ? "Loading published times for this station." : "Loading the latest arrival estimates."}</span>
         </div>
       ) : query.isError && !query.data ? (
         <div className="board-message board-message--error">
@@ -95,12 +98,17 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds,
             const minutesAway = Math.floor(secondsAway / 60);
             const proximity = !fromFeed ? "Last seen" : arrival.eventTime < nowSeconds - 5 ? "Passed" :
               index === 0 ? "Next" : minutesAway < 1 ? "Due" : `${minutesAway} min`;
-            const tripKey = arrivalIdentity(arrival);
+            const tripKey = feedScope ? arrival.id : arrivalIdentity(arrival);
             const expanded = selectedArrival != null && arrivalIdentity(selectedArrival) === tripKey;
-            const panelId = `trip-path-${station.id}-${index}`;
+            const panelId = `trip-path-${station?.id ?? providerId}-${index}`;
             const semantic = arrival.displayTime?.kind === "uninterpreted" ? null : arrival.displayTime;
             const presented = semantic ? presentStrictTime(semantic) : null;
-            const canExpand = runtime.loadTripPath != null && arrival.tripId != null;
+            const tripQuery = station && arrival.tripId != null && arrival.routeId != null ? {
+              providerId, stationId: station.id, routeId: arrival.routeId, directionId: direction,
+              tripId: arrival.tripId, entityId: arrival.id,
+              anchorEventTime: arrival.eventTime, anchorEventKind: arrival.eventKind,
+            } : null;
+            const canExpand = runtime.loadTripPath != null && tripQuery != null;
             const Row = canExpand ? "button" : "div";
             const isSchedule = arrival.timeSource === "schedule" || scheduled;
 
@@ -116,10 +124,13 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds,
                 <div className="arrival-order">{String(index + 1).padStart(2, "0")}</div>
                 <div className="arrival-destination">
                   <div className="arrival-destination-meta">
-                    {routeIds.length > 1 && <RouteBullet routeId={arrival.routeId} size="small" />}
-                    <small>{arrival.destinationKind === "direction" ? "Toward" : "To"}</small>
+                    {routeIds.length > 1 && arrival.routeId != null && <RouteBullet routeId={arrival.routeId} size="small" />}
+                    {feedScope && arrival.routeId != null && <small>Route {arrival.routeId}</small>}
+                    {feedScope && arrival.direction != null && <small>Direction {arrival.direction}</small>}
+                    {arrival.destinationName != null && <small>{arrival.destinationKind === "direction" ? "Toward" : "To"}</small>}
                   </div>
-                  <strong>{arrival.destinationName}</strong>
+                  <strong>{arrival.destinationName ?? (feedScope ? arrival.stopId ??
+                    (arrival.stopSequence == null ? null : `Stop sequence ${arrival.stopSequence}`) : null)}</strong>
                   {arrival.tripId != null && <small className="arrival-trip" title={`Full source ID: ${arrival.tripId}`}>
                     {arrival.tripId === arrival.id ? "Feed ID" : "Trip ID"} {compactTripId(arrival.tripId)}
                   </small>}
@@ -141,16 +152,7 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds,
                 {canExpand && <ChevronDown className={expanded ? "arrival-disclosure is-open" : "arrival-disclosure"} size={15} aria-hidden="true" />}
                 {canExpand && <span className="sr-only">{expanded ? "Hide" : "Show"} stop-by-stop times</span>}
                 </Row>
-                {expanded && runtime.loadTripPath && arrival.tripId != null && <TripPathPanel panelId={panelId} loadTripPath={runtime.loadTripPath} refreshIntervalMs={runtime.refreshIntervalMs} query={{
-                  providerId,
-                  stationId: station.id,
-                  routeId: arrival.routeId,
-                  directionId: direction,
-                  tripId: arrival.tripId,
-                  entityId: arrival.id,
-                  anchorEventTime: arrival.eventTime,
-                  anchorEventKind: arrival.eventKind,
-                }} />}
+                {expanded && runtime.loadTripPath && tripQuery && <TripPathPanel panelId={panelId} loadTripPath={runtime.loadTripPath} refreshIntervalMs={runtime.refreshIntervalMs} query={tripQuery} />}
               </li>
             );
           })}
