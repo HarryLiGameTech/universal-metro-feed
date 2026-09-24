@@ -30,6 +30,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Update Toei Topology
+        run: npm run update:toei-data
       - name: Run tests
         run: npm test
       - name: Build website for the repository URL
