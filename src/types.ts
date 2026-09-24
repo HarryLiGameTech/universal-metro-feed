@@ -66,6 +66,7 @@ export interface ArrivalSnapshot {
   feedTimestamp: number | null;
   fetchedAt: number;
   unavailableRoutes?: string[];
+  warnings?: string[];
 }
 
 export type ArrivalLoader = (

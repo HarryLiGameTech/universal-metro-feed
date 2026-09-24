@@ -30,7 +30,7 @@ export interface GtfsRealtimeConfig {
 export type OptionalGtfsRealtimeConfig = GtfsRealtimeConfig | { kind: "none" };
 
 export type TopologyConfig =
-  | { kind: "clockface-compat-static" | "gtfs-static" | "station-directory"; catalogUrl: string }
+  | { kind: "clockface-compat-static" | "gtfs-static" | "station-directory"; catalogUrl: string; tripMapUrl?: string }
   | { kind: "none" };
 
 export interface ProviderManifest {
@@ -119,6 +119,7 @@ export function parseProviderManifest(value: unknown, expectedId: string): Provi
       typeof value.timezone !== "string" || !isRecord(value.topology) ||
       !["clockface-compat-static", "gtfs-static", "station-directory", "none"].includes(String(value.topology.kind)) ||
       (value.topology.kind !== "none" && typeof value.topology.catalogUrl !== "string") ||
+      (value.topology.tripMapUrl !== undefined && (typeof value.topology.tripMapUrl !== "string" || !value.topology.tripMapUrl)) ||
       !isRecord(value.schedule) || !["gtfs-static", "proprietary-http", "none"].includes(String(value.schedule.kind)) ||
       (value.schedule.kind === "proprietary-http" && (!isHttpConfig(value.schedule) ||
         !["partial", "full-day"].includes(String(value.schedule.coverage)))) ||

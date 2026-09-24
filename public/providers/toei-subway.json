@@ -4,7 +4,13 @@
   "timezone": "Asia/Tokyo",
   "sourceUrl": "https://ckan.odpt.org/dataset/r_train_gtfs_rt-odpt_train-toei",
   "refreshIntervalMs": 10000,
-  "topology": { "kind": "none" },
+  "topology": {
+    "kind": "gtfs-static",
+    "sourceUrl": "https://api-public.odpt.org/api/v4/files/Toei/data/Toei-Train-GTFS.zip",
+    "catalogUrl": "/providers/toei-subway/catalog.json",
+    "tripMapUrl": "/providers/toei-subway/trip-map.json",
+    "routeTypes": [1]
+  },
   "schedule": { "kind": "none" },
   "predictions": {
     "kind": "gtfs-realtime",

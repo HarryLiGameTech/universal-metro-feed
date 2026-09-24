@@ -58,7 +58,7 @@
       },
       "introduction": {
         "kicker": "Tokyo subway · GTFS-Realtime",
-        "description": "Live arrival estimates from Toei. Station and line names are not yet available.",
+        "description": "Live arrival estimates for the Asakusa, Mita, Shinjuku, and Oedo lines, with station and trip information from Toei.",
         "locality": "Tokyo",
         "attribution": "the Bureau of Transportation, Tokyo Metropolitan Government and ODPT"
       },

@@ -1,8 +1,10 @@
 import type { Arrival } from "../types";
 
 /** Prefer a source trip identity, otherwise use the explicitly scoped record ID. */
-export function arrivalIdentity(arrival: Pick<Arrival, "routeId" | "direction" | "tripId" | "id">) {
-  return `${arrival.routeId}:${arrival.direction}:${arrival.tripId ?? arrival.id}`;
+export function arrivalIdentity(arrival: Pick<Arrival, "routeId" | "direction" | "tripId" | "id" | "stopSequence">) {
+  const trip = `${arrival.routeId}:${arrival.direction}:${arrival.tripId ?? arrival.id}`;
+  // Loop services can visit the selected station twice on the same trip.
+  return arrival.stopSequence == null ? trip : `${trip}:${arrival.stopSequence}`;
 }
 
 export interface VisibleArrival {

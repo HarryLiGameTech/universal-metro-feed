@@ -73,6 +73,10 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds 
         <div className="partial-feed-warning" role="status">Refresh failed; showing the last available feed.</div>
       ) : null}
 
+      {query.data?.warnings?.map((warning) => (
+        <div key={warning} className="partial-feed-warning" role="status">{warning}</div>
+      ))}
+
       {query.isPending ? (
         <div className="board-message">
           <RefreshCw className="spin" aria-hidden="true" />

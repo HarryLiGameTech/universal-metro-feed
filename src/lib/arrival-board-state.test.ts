@@ -12,6 +12,12 @@ function arrival(tripId: string, id: string, eventTime: number): Arrival {
 }
 
 describe("expanded arrival continuity", () => {
+  it("distinguishes repeated visits to one station on a loop trip", () => {
+    const first = { ...arrival("loop", "first", 1_200), stopSequence: 1 };
+    const second = { ...first, id: "second", stopSequence: 29, eventTime: 4_000 };
+    expect(arrivalIdentity(first)).not.toBe(arrivalIdentity(second));
+    expect(arrivalIdentity(first)).toBe(arrivalIdentity({ ...first, id: "new-entity" }));
+  });
   it("keeps separate record identities when the provider has no trip IDs", () => {
     const first = { ...arrival("unused", "row-a", 1_200), tripId: null };
     const second = { ...first, id: "row-b" };

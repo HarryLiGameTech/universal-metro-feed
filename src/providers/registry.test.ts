@@ -55,7 +55,7 @@ describe("provider configuration", () => {
     expect(manifest.predictions.kind === "proprietary-http" ? manifest.predictions.adapter : null).toBe("mbta-v3");
   });
 
-  it("stages Toei's standard dynamic feeds without inventing unavailable static data", () => {
+  it("pairs Toei's dynamic feeds with local references without enabling static schedules", () => {
     expect(parseProviderRegistry(registryFixture).providers.find((provider) => provider.id === "toei-subway"))
       .toMatchObject({
         names: { en: "Toei Subway · 都営地下鉄" },
@@ -64,7 +64,11 @@ describe("provider configuration", () => {
       });
     const manifest = parseProviderManifest(toeiManifestFixture, "toei-subway");
     expect(manifest).toMatchObject({
-      topology: { kind: "none" },
+      topology: {
+        kind: "gtfs-static",
+        catalogUrl: "/providers/toei-subway/catalog.json",
+        tripMapUrl: "/providers/toei-subway/trip-map.json",
+      },
       schedule: { kind: "none" },
       predictions: {
         kind: "gtfs-realtime",

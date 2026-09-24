@@ -55,7 +55,7 @@ async function forEachCsvRow(fileName, callback) {
     if (quoteCount % 2 !== 0) continue;
     const values = parseCsvLine(record.replace(/\r$/, ""));
     record = "";
-    if (!headers) { headers = values; continue; }
+    if (!headers) { headers = values.map((value) => value.replace(/^\uFEFF/, "")); continue; }
     callback(Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""])));
   }
   const exitCode = await completion;
@@ -92,10 +92,12 @@ try {
   }
 
   let feedVersion = null;
+  let feedStartDate = null;
   let feedEndDate = null;
   try {
     await forEachCsvRow("feed_info.txt", (row) => {
       feedVersion = row.feed_version || null;
+      feedStartDate = row.feed_start_date || null;
       feedEndDate = row.feed_end_date || null;
     });
   } catch (error) {
@@ -116,8 +118,13 @@ try {
   });
 
   const trips = new Map();
+  const tripPatternIds = Object.create(null);
   await forEachCsvRow("trips.txt", (row) => {
-    if (!routes.has(row.route_id)) return;
+    if (!routes.has(row.route_id)) {
+      // Distinguish out-of-scope trips (e.g. trams) from unknown realtime trip IDs.
+      if (manifest.topology.tripMapUrl) tripPatternIds[row.trip_id] = null;
+      return;
+    }
     trips.set(row.trip_id, {
       routeId: row.route_id,
       direction: row.direction_id,
@@ -191,12 +198,41 @@ try {
     };
   }).sort((left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id));
   const cleanRoutes = Object.fromEntries([...routes].map(([id, { sortOrder: _sortOrder, ...route }]) => [id, route]));
+  const source = { url: manifest.topology.sourceUrl, feedVersion, feedStartDate, feedEndDate };
+  if (manifest.topology.tripMapUrl) {
+    // Many trips share a stopping pattern. Store each pattern once, without clock times.
+    const patterns = [];
+    const patternIds = new Map();
+    for (const [tripId, sequence] of [...tripStops].sort(([left], [right]) => left.localeCompare(right))) {
+      const trip = trips.get(tripId);
+      const pattern = {
+        routeId: trip.routeId,
+        direction: trip.direction || null,
+        headsign: trip.headsign || null,
+        stops: Object.fromEntries(sequence.map((stop) => [stop.sequence, stop.stopId])),
+      };
+      const key = JSON.stringify(pattern);
+      let id = patternIds.get(key);
+      if (id === undefined) {
+        id = patterns.length;
+        patterns.push(pattern);
+        patternIds.set(key, id);
+      }
+      tripPatternIds[tripId] = id;
+    }
+    const mapOutput = resolve("public", manifest.topology.tripMapUrl.replace(/^\/+/, ""));
+    await mkdir(dirname(mapOutput), { recursive: true });
+    await writeFile(mapOutput, JSON.stringify({
+      schemaVersion: 1, providerId: manifest.id, source, patterns, trips: tripPatternIds,
+    }));
+    console.log(`Trip map: ${tripStops.size} trips share ${patterns.length} stopping patterns.`);
+  }
   const output = resolve("public", manifest.topology.catalogUrl.replace(/^\/+/, ""));
   await mkdir(dirname(output), { recursive: true });
   await writeFile(output, JSON.stringify({
     providerId: manifest.id,
     timezone: manifest.timezone,
-    source: { url: manifest.topology.sourceUrl, feedVersion, feedEndDate },
+    source,
     routes: cleanRoutes,
     stations,
   }));
