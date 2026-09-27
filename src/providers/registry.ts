@@ -41,7 +41,9 @@ export interface ProviderManifest {
   refreshIntervalMs?: number;
   defaultStationId?: string;
   topology: TopologyConfig;
-  schedule: { kind: "gtfs-static" | "none" } | (ProprietaryHttpConfig & { coverage: "partial" | "full-day" });
+  schedule: { kind: "gtfs-static" | "none" } |
+    { kind: "clockface"; baseUrl: string; runId: string } |
+    (ProprietaryHttpConfig & { coverage: "partial" | "full-day" });
   predictions: OptionalGtfsRealtimeConfig | ProprietaryHttpConfig;
   observations?: OptionalGtfsRealtimeConfig;
   alerts?: OptionalGtfsRealtimeConfig;
@@ -77,6 +79,18 @@ function isHttpsUrl(value: unknown): value is string {
   if (typeof value !== "string") return false;
   try {
     return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isClockfaceBaseUrl(value: unknown): value is string {
+  if (typeof value !== "string" || !value || value.includes("?") || value.includes("#")) return false;
+  if (value.startsWith("/") && !value.startsWith("//")) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ||
+      (url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname));
   } catch {
     return false;
   }
@@ -120,7 +134,11 @@ export function parseProviderManifest(value: unknown, expectedId: string): Provi
       !["clockface-compat-static", "gtfs-static", "station-directory", "none"].includes(String(value.topology.kind)) ||
       (value.topology.kind !== "none" && typeof value.topology.catalogUrl !== "string") ||
       (value.topology.tripMapUrl !== undefined && (typeof value.topology.tripMapUrl !== "string" || !value.topology.tripMapUrl)) ||
-      !isRecord(value.schedule) || !["gtfs-static", "proprietary-http", "none"].includes(String(value.schedule.kind)) ||
+      !isRecord(value.schedule) || !["gtfs-static", "clockface", "proprietary-http", "none"].includes(String(value.schedule.kind)) ||
+      (value.schedule.kind === "clockface" && (
+        typeof value.schedule.baseUrl !== "string" || typeof value.schedule.runId !== "string" ||
+        ((value.schedule.baseUrl !== "" || value.schedule.runId !== "") &&
+          (!isClockfaceBaseUrl(value.schedule.baseUrl) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.schedule.runId))))) ||
       (value.schedule.kind === "proprietary-http" && (!isHttpConfig(value.schedule) ||
         !["partial", "full-day"].includes(String(value.schedule.coverage)))) ||
       !isRecord(value.predictions) || !["gtfs-realtime", "proprietary-http", "none"].includes(String(value.predictions.kind)) ||

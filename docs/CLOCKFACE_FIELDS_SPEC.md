@@ -8,6 +8,8 @@ Current-stage assumption: each source supplies data for only one provider; cross
 
 Service boundary: ClockFace stores and serves static topology, reference data, and planned schedules, with a read-heavy workload. Live predictions, vehicle positions, and realtime update storage are outside this service's scope. The confirmed hybrid storage responsibilities are recorded in section 10.4 and backend section 7; normalized JSON contracts also require explicit agreement.
 
+**Confirmed product focus — 2026-09-26:** topology and reference fields must support identifying, organizing or interpreting static timetables. Pathways/transfers are limited to obtaining or estimating transfer times. Full GTFS coverage, cartographic geometry, indoor/street navigation, accessibility routing and fare calculation are not automatic requirements. Section 15 records the confirmed reduced field set and remaining behavior-contract deferrals.
+
 Database: PostgreSQL; data access and migrations: Drizzle
 
 ## 1. Agreement process
@@ -17,6 +19,7 @@ This document records fields explicitly agreed with the project owner. It is not
 - Discuss and confirm each field before adding it to a schema or migration.
 - For association tables, present the whole table in one proposal: table name, columns, types, nullability, defaults, keys, foreign-key actions, and any proposed indexes. Discuss adjustments to that proposal together rather than requiring a separate round for each routine column.
 - For paired start/end timestamps or validity boundaries, present both fields and their cross-field rules together for agreement rather than requiring separate turns for each endpoint.
+- At the owner's request, review remaining topology fields in batches (section 15). The 2026-09-26 review accepted unmentioned items, and the subsequent approval confirmed the reduced scope and direct localized name maps. Track retained and withdrawn fields explicitly; behavioral deferrals are not implicitly resolved.
 - Record its meaning, API name, database column name, type, nullability, default, source or assignment rule, constraints, and update behavior.
 - Unspecified details remain undecided. Examples and existing frontend types do not establish additional database requirements.
 - Do not introduce implicit fields, including an additional `id`, `created_at`, or `updated_at`, without agreement.
@@ -443,7 +446,7 @@ All items below are explicitly **Deferred** unless marked **In discussion** or *
 | F01 | Identifier grammar, length, normalization, and remaining city-ID suffix conventions; the confirmed `cn-` rule remains in force. | The identifier-validation review, before input validation, format constraints, and seed identifiers are implemented. |
 | F02 | How the agreed Provider `names` default is populated. | The creation/write contract is defined; choose the implementation before writing the create path. |
 | F03 | **Confirmed:** agency `names` representation, language requirements, and freely specified names without resolver extraction/source-evidence requirements (section 12.3). **Deferred:** language selection, display fallback, and the detailed validation/search rules listed there. | Resolve language selection, fallback, and search behavior at the localized API/display contract review using the agreed name/alias structures. |
-| F04 | **Confirmed:** `providers.timezone` governs interpretation of all associated timetables and remains the default display timezone. Source timezone declarations do not override it; the agency timezone field is withdrawn (sections 2.3 and 12.4). **Confirmed:** backend StrictTime semantics and precision preservation (section 13.8; backend section 8). **Deferred:** detailed StrictTime arithmetic/comparison contracts (including `+`, `-`, ordering operators and mixed minute/second precision), operator/API realization, field encoding and service-day-relative versus dated-time representation, execution/provider binding and timezone capture, configuration-change/reprocessing behavior, retained-output preservation, calendar/service-day semantics, and validation/recovery details. | Resolve execution/configuration behavior at the resolver/calendar review and historical representation at the artifact/serving review before implementation. The timezone authority itself is settled. |
+| F04 | **Confirmed:** `providers.timezone` governs interpretation of all associated timetables and remains the default display timezone. Source timezone declarations do not override it; the agency timezone field is withdrawn (sections 2.3 and 12.4). **Confirmed:** initial backend StrictTime distinguishes the three known-seconds/withheld-seconds/minute-only forms (section 13.8; backend section 8); arithmetic/comparison and broader variants are explicitly deferred. **Deferred:** detailed StrictTime arithmetic/comparison contracts (including `+`, `-`, ordering operators and mixed minute/second precision), operator/API realization, field encoding and service-day-relative versus dated-time representation, execution/provider binding and timezone capture, configuration-change/reprocessing behavior, retained-output preservation, calendar/service-day semantics, and validation/recovery details. | Resolve execution/configuration behavior at the resolver/calendar review and historical representation at the artifact/serving review before implementation. The timezone authority itself is settled. |
 | F05 | **Confirmed:** backend adapters/resolvers derive parsable data capabilities; no manually configured `roles` field. | Resolved in section 6.4 and backend section 2. Detailed capability representation remains deferred under F13. |
 | F06 | **Confirmed:** full parsing/default inclusion and the current-stage assumption of one provider per source, with cross-source overlap out of scope (sections 6.5–6.6). **Confirmed:** globally unique `agencyId` as the agency primary key and the many-to-many `provider_agencies` association (sections 12.1–12.2). **Confirmed:** static domain data uses GTFS Schedule-inspired JSON with nullable data fields/collections and an extensible JSON object (section 13). The `lines` table/SQL-key proposal is withdrawn; JSON identifiers may be null and are not implicitly globally unique. Detailed identity/reference contracts remain deferred to the artifact review. **Deferred:** sharing, cross-source matching/deduplication/conflict handling, scope-enforcement mechanism, detailed identity mapping, route identity, and parameterized acquisition scope. | Revisit sharing/overlap only after explicit scope expansion or a concrete integration requirement. Review usage validation at the integration/write-contract review; any database constraint requires renewed agreement. Review current-scope identity/acquisition after route/agency/stop and adapter contracts are defined. |
 | F07 | The exact API structure of entries in Provider `sources`. | The derived-capability contract, selection rules, and source-version/provenance references are agreed. |
@@ -455,7 +458,7 @@ All items below are explicitly **Deferred** unless marked **In discussion** or *
 | F13 | **Confirmed:** nullable/incomplete static artifacts are supported; missing GTFS-required data does not by itself invalidate the ClockFace payload (section 13.2). **Confirmed:** station timetable data can be usable without trip identity (section 13.7); backend time processing must preserve StrictTime semantics (section 13.8). **Deferred:** capability output shape, coverage classifications, handling of unusable records and unresolved references, runtime health, and any persistence of derived results. | Define capability-specific requirements at the resolver/API contract review without reinstating GTFS required-field rules as global payload requirements. Resolve before publishing capability/availability results or adding storage for them. |
 | F14 | **Deferred:** whether explicit provider-specific exclusions of otherwise parsable data categories are needed. | A concrete usage requirement emerges and the capability/selection contracts are agreed; no exclusion fields are currently approved. |
 | F15 | **Confirmed:** each backend resolver provides a size-statistics method; omit the `contentSizeBytes` database field (section 8.6; backend section 5). **Deferred:** method name/signature, metrics and units, counting scope, result representation, unavailable/error handling, invocation and caching policy. | Define the method contract during the resolver-interface review once snapshot acquisition/storage representations are agreed, before implementation. Any future database persistence requires separate field agreement. |
-| F16 | **Confirmed:** hybrid storage responsibilities for ClockFace's static-only, read-heavy workload (section 10.4; backend section 7): management/search/publication metadata in PostgreSQL, detailed schedules in versioned JSON files. **Confirmed:** the parse-run JSON-output locator and entry-manifest direction (section 9.9). **Deferred:** publication tables and identifier (section 11), pending a concrete grouped-serving requirement under the scope in section 6.6. **Confirmed:** `agencies`, `agencyId`, and the whole `provider_agencies` association (sections 12.1–12.2). **Confirmed:** agency `names` (section 12.3). **Confirmed:** provider-owned schedule timezone; agency `timezone` proposal withdrawn (section 12.4). **Confirmed:** GTFS Schedule-inspired JSON for parsed static domain data, all data fields/collections nullable, and a custom extension object (section 13). **Confirmed:** `extras` naming, recursive JSON value type, and dataset/record placement (section 13.3). **Confirmed:** null, missing-key, and empty-collection conventions (section 13.2.1). **Confirmed:** populate `frequencies` only when concrete departure coverage in `stop_times` is missing/incomplete, without programmatic enforcement; source-backed template trips and their stop times may be retained alongside frequencies (section 13.6). **Confirmed:** station-oriented timetable organization, independently usable arrival/departure records, and optional source-backed trip relationships (section 13.7). **Confirmed:** backend `StrictTime` semantics across normalization, artifacts, and domain APIs (section 13.8; backend section 8). **Confirmed:** topology should align with GTFS-static as closely as possible; station timetables contain arrays of nullable/omittable owner-specified `trainRun` fields with opaque `filterTags` (section 13.9). **Confirmed correction:** mutually exclusive frequency units belong to line data, not individual `trainRun` records (section 13.10). **Confirmed:** line frequency information uses a map keyed by time interval; the rule-array proposal is withdrawn (section 13.11). **Confirmed:** option A, with `frequencies` as the map and a unit-bearing object for each value. **Confirmed:** inclusive-start/exclusive-end interval semantics (section 13.12). **Deferred prerequisite:** detailed StrictTime arithmetic/comparison semantics, including mixed-precision endpoints, before interval encoding or evaluation. **Confirmed:** `terminal` is a nullable object preserving a nullable station reference and supplied name; explicit names prevent topology fallback even when the reference is unresolved (section 13.13). **In discussion:** topology fallback only when the applicable directed path establishes one unambiguous endpoint (section 13.14). **Deferred:** exact outer containers/reference details, terminal fallback resolution, and frequency scoping across directions/time periods. Remaining GTFS-derived field mappings still require agreement. The `lines` SQL table/key proposal is withdrawn; topology SQL projections require a concrete query need. **Deferred:** further physical table decomposition/names/fields, service-pattern representation, JSON contracts, indexes, and serving/publication lifecycle details. | Review the retained database candidates and JSON contracts under the confirmed division, respecting F04/F06 identity and timezone dependencies. Resolve pattern representation during topology and artifact-index reviews, and publication consistency with F08 before implementation. Confirm every field before implementation. |
+| F16 | **Confirmed:** hybrid storage responsibilities for ClockFace's static-only, read-heavy workload (section 10.4; backend section 7): management/search/publication metadata in PostgreSQL, detailed schedules in versioned JSON files. **Confirmed:** the parse-run JSON-output locator and entry-manifest direction (section 9.9). **Deferred:** publication tables and identifier (section 11), pending a concrete grouped-serving requirement under the scope in section 6.6. **Confirmed:** `agencies`, `agencyId`, and the whole `provider_agencies` association (sections 12.1–12.2). **Confirmed:** agency `names` (section 12.3). **Confirmed:** provider-owned schedule timezone; agency `timezone` proposal withdrawn (section 12.4). **Confirmed:** GTFS Schedule-inspired JSON for parsed static domain data, all data fields/collections nullable, and a custom extension object (section 13). **Confirmed:** `extras` naming, recursive JSON value type, and dataset/record placement (section 13.3). **Confirmed:** null, missing-key, and empty-collection conventions (section 13.2.1). **Confirmed:** populate `frequencies` only when concrete departure coverage in `stop_times` is missing/incomplete, without programmatic enforcement; source-backed template trips and their stop times may be retained alongside frequencies (section 13.6). **Confirmed:** station-oriented timetable organization, independently usable arrival/departure records, and optional source-backed trip relationships (section 13.7). **Confirmed:** backend `StrictTime` semantics across normalization, artifacts, and domain APIs, initially limited to the three forms in section 13.8 with arithmetic/comparison and broader variants deferred (backend section 8). **Confirmed:** topology should align with GTFS-static as closely as possible; station timetables contain arrays of nullable/omittable owner-specified `trainRun` fields with opaque `filterTags` (section 13.9). **Confirmed correction:** mutually exclusive frequency units belong to line data, not individual `trainRun` records (section 13.10). **Confirmed:** line frequency information uses a map keyed by time interval; the rule-array proposal is withdrawn (section 13.11). **Confirmed:** option A, with `frequencies` as the map and a unit-bearing object for each value. **Confirmed:** inclusive-start/exclusive-end interval semantics (section 13.12). **Deferred prerequisite:** detailed StrictTime arithmetic/comparison semantics, including mixed-precision endpoints, before interval encoding or evaluation. **Confirmed:** `terminal` is a nullable object preserving a nullable station reference and supplied name; explicit names prevent topology fallback even when the reference is unresolved (section 13.13). **Confirmed:** topology fallback only when the applicable directed path establishes one unambiguous endpoint (section 13.14). **Confirmed:** first/last flags belong to each station record and retain their applicable service scope and source evidence (section 13.15); automatic derivation remains deferred. **Confirmed:** nullable station-record line reference `trainRun.routeId` (section 13.16). **Confirmed:** nullable station-record direction reference `trainRun.directionId` (section 13.17). **Confirmed:** nullable station-record platform reference `trainRun.platformId`, with GTFS-aligned location hierarchy (section 13.18). **Confirmed:** omit `trainRun.serviceId` and the suggested rename `serviceCalendarId`; use existing `filterTags` for service-applicability labels (section 13.19). Generic tag matching and tag-based frequency/date applicability are confirmed (sections 13.20–13.20.1); source-specific date-query conversion remains a resolver/API detail. **Confirmed:** topology location identifier `stop_id`, unique within its source/topology-version context when present (section 14.1). **Confirmed:** nullable numeric location type `location_type` (section 14.2). **Confirmed:** nullable parent-location reference `parent_station` with GTFS-aligned hierarchy and no self-parenting/cycles (section 14.3). **Confirmed:** nullable language-map primary location display name `stop_name`, superseding its former scalar contract (sections 14.4 and 15.8). **Confirmed:** language-keyed location aliases (section 15.2). **Confirmed:** direct localized maps replace scalar values for the five named topology display fields and the separate translation collection is removed (section 15.8). **Confirmed:** paired location coordinates `stop_lat` / `stop_lon` (section 14.5). **Confirmed:** unmentioned topology-batch items, including retained collection organization, core route/direction/path fields, completeness semantics and location aliases (section 15). **Removed:** `stop_url`, `wheelchair_boarding`, `level_id`, `route_url`, and pathway attributes outside the requested timing scope. **Confirmed boundary:** station pathways serve movement timing; pre-boarding limits retain transfer conditions and the subsequently agreed static cutoffs. **Confirmed refinement:** `ticketing_cutoff`, `checkin_cutoff`, `boarding_cutoff`, `transfer_passage_cutoff`, StrictTime-based time-of-day/before-departure wrappers, scoped validation semantics and flexible applicability (section 15.7.2). **Confirmed naming:** `in_station_pathways` and `pre_boarding_limits` replace the former normalized `pathways` and `transfers` names. **Deferred:** exact wrapper/scope fields, anchor binding and validation implementation; `boarding_rules` and `connection_rules` are unselected alternatives. **Confirmed:** retain `stop_code` and `route_type`; omit the other seven explanation-requested fields and whole networks/shapes/levels groups with dependent references; retain the reduced timing subset and direct localized name maps (section 15). **Deferred:** exact outer containers/reference details, detailed terminal lookup/materialization, and physical placement of tag-based frequency contexts/time intervals. **Confirmed:** frequency/date applicability uses `trainRun.filterTags` (section 13.20.1); field placement is settled. Its relationship to line-owned frequency data and resolver/API details remain deferred. Remaining GTFS-derived field mappings still require agreement. The `lines` SQL table/key proposal is withdrawn; topology SQL projections require a concrete query need. **Deferred:** any further physical table decomposition/names/fields, remaining JSON contracts, pattern selection/resolver mapping, indexes, and serving/publication lifecycle details; core service-pattern record fields are confirmed in section 15.5. | Review the retained database candidates and JSON contracts under the confirmed division, respecting F04/F06 identity and timezone dependencies. Resolve remaining pattern-selection and artifact-index details during resolver/API reviews, and publication consistency with F08 before implementation. Confirm every field before implementation. |
 
 ## 8. Source content version
 
@@ -769,7 +772,7 @@ Eight physical fields are confirmed for `source_parse_runs`: `sourceParseRunId`,
 
 ## 10. Table-by-table review inventory — planning candidates, not an approved schema
 
-Inventory date: 2026-09-23. Update this inventory as table/field decisions advance. There are **9 confirmed table names and 31 confirmed physical columns**, including `agencies.names`. The deferred `publications` / `publication_parse_runs` candidates and `publicationId` proposal are not included in these counts; `errorSummary`, `agencies.timezone`, and the `lines` table/SQL-key proposal were withdrawn. Agency fields have reached the first-pass checkpoint in section 12.5. The GTFS-inspired nullable JSON format and the `extras` name, type, and placement are confirmed in section 13. Null/missing/empty conventions are confirmed in section 13.2.1. Station-oriented timetable organization and optional trip relationships are confirmed in section 13.7; backend StrictTime semantics are confirmed in section 13.8. The initial nullable station `trainRun` fields and line frequency unit fields are confirmed in sections 13.9–13.10. Exact outer grouping/naming (section 13.5), remaining standard fields, and unresolved value encodings still require agreement. These JSON decisions add no database columns. None of the confirmed tables should be described as schema-complete while relevant deferred decisions remain open.
+Inventory date: 2026-09-26. Update this inventory as table/field decisions advance. There are **9 confirmed table names and 31 confirmed physical columns**, including `agencies.names`. The deferred `publications` / `publication_parse_runs` candidates and `publicationId` proposal are not included in these counts; `errorSummary`, `agencies.timezone`, and the `lines` table/SQL-key proposal were withdrawn. Agency fields have reached the first-pass checkpoint in section 12.5. The GTFS-inspired nullable JSON format and the `extras` name, type, and placement are confirmed in section 13. Null/missing/empty conventions are confirmed in section 13.2.1. Station-oriented timetable organization and optional trip relationships are confirmed in section 13.7; backend StrictTime semantics are confirmed in section 13.8. The initial nullable station `trainRun` fields and line frequency unit fields are confirmed in sections 13.9–13.10. Retained topology field/naming contracts are confirmed in section 15; outer station/dataset containers (section 13.5), any further fields and unresolved value encodings still require agreement. These JSON decisions add no database columns. None of the confirmed tables should be described as schema-complete while relevant deferred decisions remain open.
 
 ### 10.1 Confirmed tables and remaining review
 
@@ -791,12 +794,12 @@ Beyond the nine confirmed tables, the active main list contains **12 logical dom
 
 | Group | Logical concept | Responsibility to review in the JSON contract |
 | --- | --- | --- |
-| Topology | Lines/routes | Use GTFS route concepts as the starting point; detailed identifier and field mapping remains open. |
+| Topology | Lines/routes | Retained identities/display fields confirmed in section 15.3; selected mode/policy fields and resolver mapping remain open. |
 | Topology | Stations | Station/stop-place identity and metadata, informed by GTFS stop concepts. |
 | Topology | Platforms | Boarding locations and station relationships, informed by GTFS stop concepts. |
 | Topology | Line–station relationships | Preserve supplied membership without inventing ordered trips or complete topology. |
-| Topology | Service patterns | Directions, branches, and service variants; exact representation remains deferred. |
-| Topology | Pattern stops | Ordered stops, including repeated visits; exact representation remains deferred. |
+| Topology | Service patterns | Core independent pattern/direction records confirmed in section 15.5; resolver mapping and selection remain deferred. |
+| Topology | Pattern stops | Occurrences keyed by known pattern/sequence, including repeated stops, confirmed in section 15.5; geometry-dependent fields are removed under section 15.6. |
 | Schedule | Service calendars | Planned recurring service rules and dates. |
 | Schedule | Calendar exceptions | Date-specific changes. |
 | Schedule | Trips | Planned trips/templates and source identity when available. |
@@ -804,7 +807,7 @@ Beyond the nine confirmed tables, the active main list contains **12 logical dom
 | Schedule | Frequency rules | Headway-based service without fabricating exact trips. |
 | Schedule | Service windows | Partial first/last-service information without claiming a complete timetable. |
 
-**Confirmed — F16:** use GTFS Schedule as the JSON blueprint, permit null in every domain field and entire data collection, and provide a map/record-like extension object for data outside that model. Section 13 records the confirmed `extras` and null/missing/empty definitions; top-level grouping and naming are proposed in section 13.5. GTFS required/conditionally-required files, primary-key rules, and field-presence requirements are not inherited as mandatory ClockFace payload constraints.
+**Confirmed — F16:** use GTFS Schedule as the JSON blueprint, permit null in every domain field and entire data collection, and provide a map/record-like extension object for data outside that model. Section 13 records the confirmed `extras` and null/missing/empty definitions. Section 15 confirms retained topology collection/naming rules; the broader container examples in section 13.5 remain proposals. GTFS required/conditionally-required files, primary-key rules, and field-presence requirements are not inherited as mandatory ClockFace payload constraints.
 
 **Deferred — F04/F06/F13/F16:** agree exact collection/field mappings, non-null value types, ID/reference semantics, precision representation, query indexes, partitioning, and capability reporting before implementation. This is a blueprint, not a commitment to implement every GTFS component or reproduce each former SQL candidate as a JSON array. For populated identities, existing provider/source scoping applies until separately revised; the unapproved globally unique line-ID proposal is not carried over. The confirmed global `agencies.agency_id` database primary key remains unchanged.
 
@@ -830,10 +833,24 @@ The project owner reaffirmed that ClockFace stores static data and is read-heavy
 - Keep the nine agreed table identities and their confirmed fields (currently 31 columns). Their remaining decisions are still open.
 - The latest confirmed refinement places parsed static topology and schedule data in GTFS-inspired nullable JSON artifacts (section 13). Database search/projection tables are conditional on concrete queries. Keep the already confirmed configuration/metadata tables and their constraints; do not create full relational copies of artifact data by default.
 - Use versioned JSON artifacts for the static domain concepts in section 10.2. Validation must permit null domain fields and partial data; populated values and usable relationships still follow their reviewed contracts. Preserve incomplete schedules without manufacturing a complete GTFS dataset.
-- Review `service_patterns` and `service_pattern_stops` for artifact representation alongside schedules, retaining only any relational indexes justified by topology queries.
+- Use the confirmed core `service_patterns` and `service_pattern_stops` records in section 15.5; review remaining selection/context and artifact-index details alongside schedules. Retain only relational indexes justified by concrete queries.
 - Keep normalized artifacts separate from the already agreed raw-source snapshot storage. The parse-run artifact locator is separately confirmed in section 9.9; publication fields still require agreement.
 
 **Deferred — F16:** agree artifact schema/versioning, query indexes and partitioning, source/provider identity mappings, calendar and StrictTime encoding, bounded loading/caching, validation and publication consistency, and retention/recovery before implementation. Use representative provider feeds and the existing station/date and trip-path API needs to evaluate partitioning and memory/load costs; no performance guarantee or shard layout is selected now. Section 10.2 reflects the revised database-candidate versus JSON-contract inventory; remaining physical table counts still depend on their individual reviews. JSON fields follow the same discussion-and-agreement process as database fields. Do not introduce realtime storage or an unrequested realtime cache into ClockFace's scope.
+
+### 10.5 Review coverage checkpoint — 2026-09-26
+
+The principal storage and domain directions have been discussed, and the nine confirmed tables still contain 31 confirmed physical columns. The station `trainRun` currently has ten confirmed top-level fields plus the previously agreed `extras` extension (section 13.9). Its initial field review has reached a checkpoint; no further record field is currently proposed. This is not implementation readiness: several deferred items are substantial contracts, and remaining reference behavior, temporal/serving contracts and outer containers still require agreement. The remaining work can be grouped as follows; these groups introduce no new fields or mandatory tables.
+
+| Remaining review area | What still needs agreement |
+| --- | --- |
+| Domain JSON and references | Core fields and collection names are confirmed in section 15. Rule applicability/departure anchors, outer station grouping, resolver mappings and source/version references remain open. Frequency/date applicability uses confirmed `trainRun.filterTags`; the relation of line-owned frequencies to those records is part of outer JSON review. |
+| Temporal contract | Initial StrictTime scope is the three forms in section 13.8. Their exact encoding and cutoff wrappers remain for review; arithmetic/comparison and dependent operations are explicitly postponed. |
+| Artifact and serving lifecycle | Entry manifest, partitions/indexes, version/configuration binding, active-output selection, retention and cleanup. Publication tables remain conditional. |
+| Resolver and API contracts | Acquisition configuration, resolver interfaces/capability results and size statistics, query/response shapes, partial-data and error behavior. |
+| Execution and operations | Scheduler B01–B08, retry/recovery, remaining configuration validation and query-driven database constraints/indexes, and concrete Docker/no-Docker deployment procedures in the future backend repository. |
+
+Prioritize the data contracts needed by concrete station queries; the twelve logical responsibilities in section 10.2 are not a requirement to add twelve tables or exhaustively implement GTFS. The station record's line, direction and platform references are confirmed in sections 13.16–13.18. Section 13.19 withdraws the separate service-calendar reference; existing `filterTags` carry the applicable labels. Sections 13.20–13.20.1 confirm tag matching and reuse of `filterTags` for frequency/date applicability. Source-specific date-query conversion and API shapes remain resolver/API details, not an open choice of applicability model. The topology location identifier, type, parent relationship, primary display name and coordinate pair are confirmed in sections 14.1–14.5. Section 15 records acceptance of the reduced topology field inventory: retained core records, the timing-only subset, direct localized name maps and the agreed removals. The reduced topology field batch reached agreement; section 15.7.2 now confirms four cutoff fields with StrictTime wrapper semantics, scoped validation semantics and flexible applicability. Collection names are confirmed as `in_station_pathways` and `pre_boarding_limits`; exact wrappers/scope fields, departure-reference binding and validation implementation remain open. The older schedule-container examples in section 13.5 are not thereby approved. Further fields still require the owner's agreement; the independent backend repository has not been supplied.
 
 ## 11. Publication — deferred entity/table candidate
 
@@ -1072,13 +1089,13 @@ Review station/platform/line lookup and search against representative artifact c
 
 ### 13.5 Top-level grouping and naming — proposed, not yet confirmed
 
-**Confirmed boundary — F13/F16:** section 13.7 establishes station-oriented timetable organization and independently usable station entries with optional trip relationships. Their known service context must remain usable without a trip. Section 13.9 now specifies station-associated arrays of `trainRun` records and their owner-supplied camelCase field names. Topology should follow GTFS-static as closely as possible. The earlier flat-group/naming proposal below is only a candidate for applicable GTFS-derived data; it does not override station timetable grouping or rename `trainRun` fields. Exact outer containers and topology mappings remain unconfirmed.
+**Confirmed boundary — F13/F16:** section 13.7 establishes station-oriented timetable organization and independently usable station entries with optional trip relationships. Their known service context must remain usable without a trip. Section 13.9 now specifies station-associated arrays of `trainRun` records and their owner-supplied camelCase field names. Topology should follow GTFS-static as closely as possible. The earlier flat-group/naming proposal below is only a candidate for applicable GTFS-derived data; it does not override station timetable grouping or rename `trainRun` fields. Retained logical topology collections/naming are confirmed in section 15; physical outer containers and remaining resolver mappings are still unconfirmed.
 
 Propose a logical dataset object whose tabular data groups follow the corresponding GTFS Schedule file names without the `.txt` suffix. Each group contains an array of records when provided; the entire group may be null or omitted under section 13.2.1. Retain GTFS `snake_case` field spellings for fields adopted from that model. This naming proposal applies to the static domain JSON, not to the already agreed camelCase management API properties.
 
 For applicable GTFS-derived groups, the earlier proposal is to use separate flat record groups rather than nesting every trip and stop event inside its route. The newer station timetable direction in section 13.9 takes precedence for `trainRun` records. Use arrays rather than objects keyed by an ID: nullable or missing IDs must not prevent preservation of a record, collide at a `null` key, or silently overwrite another record. Any indices needed for lookups can be designed separately without making IDs mandatory in the stored data. Array-element validity and duplicate/reference policies remain deferred; this proposal does not silently resolve them.
 
-Illustrative logical shape, not an exhaustive approved collection/field list:
+Historical illustrative logical shape, not an approved collection list or outer-container contract. Section 15 supersedes its topology groups, including confirmed removal of `shapes`:
 
 ```json
 {
@@ -1135,15 +1152,23 @@ Illustrative requirement, not a field schema: a source lists station A departure
 
 **Confirmed serving direction:** support station/platform-and-date timetable queries to the extent the source supplies the required context. Offer a trip's ordered stop path only when that relationship is supported. Retain useful partial data without inventing a platform, direction, calendar, arrival/departure distinction, or precision. Preserve extended-hour service times and the confirmed provider timezone. GTFS imports should retain their available trip relationships and other useful source information.
 
-**Confirmed refinement:** section 13.9 records the nullable owner-specified `trainRun` fields and tags; section 13.10 assigns frequency information to line data. **Deferred — F04/F06/F13/F16:** review the exact outer container, remaining presence/value constraints, shared versus per-record context, station/platform and direction mapping, date applicability, any record identity distinct from trip identity, duplicate handling, and GTFS import/query mappings. Review frequency scope, first/last-only information, template representation, and capability criteria with their respective contracts. Physical artifact partitions and indexes follow the agreed queries; neither a new SQL table nor a nested physical file layout is selected here. The station-oriented direction alone adds no database column, required ID, or matching heuristic. The subsequently agreed JSON fields are recorded in sections 13.9–13.10; all other fields remain subject to agreement.
+**Confirmed refinement:** section 13.9 records the nullable owner-specified `trainRun` fields and tags; section 13.10 assigns frequency information to line data. **Deferred — F04/F06/F13/F16:** review the exact outer container, remaining presence/value constraints, shared versus per-record context, station/platform and direction mapping, source-specific date/tag conversion, any record identity distinct from trip identity, duplicate handling, and GTFS import/query mappings. Frequency/date applicability uses confirmed `filterTags` (section 13.20.1). Review placement of tagged frequency contexts, first/last-only information, template representation, and capability criteria with their respective contracts. Physical artifact partitions and indexes follow the agreed queries; neither a new SQL table nor a nested physical file layout is selected here. The station-oriented direction alone adds no database column, required ID, or matching heuristic. The subsequently agreed JSON fields are recorded in sections 13.9–13.10; all other fields remain subject to agreement.
 
 ### 13.8 Backend StrictTime contract — confirmed semantics; field encoding deferred
 
-**Confirmed:** the backend must implement and preserve the same `StrictTime` temporal semantics as the frontend. This applies to normalized schedule-time values from adapter/resolver output through persisted JSON artifacts and domain API responses, including independent station arrival/departure records and source-backed trip/template times. It also applies to normalized temporal bounds and validity times where relevant; raw source snapshots keep their original representation. Backend behavior and the semantic baseline are recorded in [backend section 8](CLOCKFACE_BACKEND_SPEC.md#8-backend-stricttime-contract).
+**Confirmed current-phase scope:** initially distinguish only the following three forms, using the existing precision distinction in [roadmap section 7](ROADMAP_SPEC.md#7-stricttime). The displayed strings illustrate meaning; they do not by themselves select plain-string JSON storage, property names or discriminator values.
 
-Use [roadmap section 7](ROADMAP_SPEC.md#7-stricttime) as the semantic requirement and [the current frontend implementation](../src/domain/strict-time.ts) as an explicit compatibility reference. The roadmap's conceptual union and the current frontend's epoch-based representation are not automatically the final backend artifact schema. Preserve known precision, truncation/underspecification, estimates, bounds, and unresolved interpretation without inventing precision or dates. The provider timezone remains authoritative, and service-day/extended-hour context must survive normalization.
+| Owner's form | Current semantic distinction |
+| --- | --- |
+| `12:00:00` | The second value is meaningful, including an explicitly known zero second. Other known second values are represented with the same distinction. |
+| `12:00:xx` | A finer second value exists but is not disclosed; preserve that uncertainty rather than substitute `00`. This corresponds to the roadmap's truncated/withheld distinction. |
+| `12:00` | The source defines the time only to the minute; no finer second value was specified. This corresponds to the roadmap's underspecified distinction. |
 
-**Deferred — F04/F13/F16:** agree each StrictTime field, tag, non-null type, optional/null behavior, duration/date distinction, and representation of recurring service-relative times versus dated instants before implementing the artifact/API contract. The detailed contract must also settle arithmetic and comparison semantics, mixed-precision values, and the operator-style or explicit API mechanism (backend section 8.4); interval-key encoding and evaluation depend on that review. Review missing or uninterpreted values and consumer capability rules under the existing all-nullable domain policy; missing time is not zero or midnight. Resolve version compatibility, shared type/schema distribution, runtime validation, and conversion with the future independent backend repository's integration contract. This semantic agreement does not add a database column, replace confirmed operational timestamp columns, or make every field in the frontend's current TypeScript union mandatory in ClockFace artifacts.
+**Confirmed deferral:** addition, subtraction and ordering/comparison operations can be implemented later. Estimated values, bounded times, sub-second variants and additional semantic variants are deferred beyond this initial three-form contract; they are not prerequisites for reviewing the initial field representation. The existing frontend implementation and the broader roadmap remain compatibility references, not a requirement to implement all of their variants in the first ClockFace contract. This scope change does not edit the current frontend types or renderer.
+
+Apply the initial StrictTime distinctions across resolver output, stored static JSON and domain APIs, including station arrivals/departures and the already agreed cutoff wrappers. Preserve provider timezone, service-day/extended-hour context and nullable fields; do not fabricate dates or seconds. Whole-value absence remains null/omitted and is distinct from a known minute with undisclosed seconds. Source formatting alone, including a padded `:00`, does not prove which meaning applies. If a source's meaning cannot be established or falls outside the initial forms, preserve the raw input; its normalized handling belongs to the resolver review rather than silently relabeling it as a supported exact value.
+
+**Deferred — F04/F13/F16:** review exact JSON fields/tags and serialization of the three forms, shared representation of clock times versus advance durations under `TimeOfDay | TimeBeforeDeparture`, provider/service-day binding and frontend compatibility. Initial representation discussion may proceed without implementing arithmetic. Arithmetic/comparison API, mixed-precision result semantics and dependent temporal calculations remain deferred to the later StrictTime operations review. This includes automatic cutoff derivation/order validation, time-window evaluation and the already deferred frequency interval-key design; their semantic requirements remain agreed, but no native comparison/coercion fallback is authorized. Existing acquisition/parse-run timestamp fields remain unchanged.
 
 ### 13.9 Station trainRun records — confirmed fields and nullable policy
 
@@ -1151,23 +1176,28 @@ Use [roadmap section 7](ROADMAP_SPEC.md#7-stricttime) as the semantic requiremen
 
 **Confirmed:** each station has an array of `trainRun` records describing its supplied static service entries. The name does not imply a known full-network trip or cross-station identity. Preserve explicit trip associations where available. The supplied bracket notation is a shape sketch, not a final JSON envelope; the outer property name and physical file layout remain undecided. Keep the owner's camelCase spellings for these record properties. The previously confirmed record-level `extras` remains available. **Confirmed correction:** frequency fields belong to line data (section 13.10), not to `trainRun`.
 
+**Placement clarification:** `filterTags` is stored directly on each `trainRun` as `trainRun.filterTags`; this placement is confirmed and independent of the outer envelope decision. Do not move it to the station, line or dataset wrapper or add parallel tag fields without agreement. The station-specific `trainRun` is the basic timetable record. Both first/last flags are already fields of that record, and their applicable service scope belongs to that record as well. Deferring the outer JSON envelope does not defer or relocate these flags. Review the exact fields or references expressing the record's scope separately; no new `scope` object, context field or unique record key is approved by this clarification.
+
 **Confirmed nullable policy:** all fields below may be null or omitted under section 13.2.1, including both time fields and both first/last flags. The owner's clarification retains this policy despite the absence of `?` on some fields in the original sketch. Unknown flags do not default to false; missing time does not default to zero/midnight or copy the other event's time. Terminal fallback has the explicitly requested semantic default described below; its unresolved/null handling must be settled before implementation.
 
 | JSON field | Non-null value type | Meaning / agreement |
 | --- | --- | --- |
 | `tripId` | `string` | Optional source-backed trip reference. Absence does not invalidate an otherwise useful station entry or authorize a fabricated trip. Identifier/reference mapping remains deferred. |
+| `routeId` | `string` | Source-backed line/route reference, usable without `tripId` (section 13.16). Unknown is null/omitted, with no default line. Exact identity mapping remains deferred. |
+| `directionId` | `string` | Direction reference interpreted within the applicable line/topology context (section 13.17). Nullable/omittable, with no default or global direction enum; distinct from a terminal or complete path. |
+| `platformId` | `string` | Optional topology platform/boarding-location reference (section 13.18). Unknown is null/omitted; missing platform information does not invalidate otherwise usable station-level data. |
 | `terminal` | Object with nullable/omittable `stationId: string` and `name: string` | Optional explicit terminal, defined in section 13.13. The default meaning is `topological_end`. A supplied name or station reference takes precedence; an unresolved station reference does not discard the name or trigger fallback. |
 | `arrivalTime` | `StrictTime` | The station entry's supplied arrival time, nullable/omittable independently of departure. Missing arrival must not be invented from departure. |
 | `departureTime` | `StrictTime` | The station entry's supplied departure time, nullable/omittable independently of arrival. Missing departure must not be invented from arrival. |
-| `filterTags` | `string[]` | Optional documented filtering/classification tags, such as `weekdays` or `Y801`. Open vocabulary; no semantic enforcement. |
-| `isFirstPassengerTrain` | `boolean` | Marks first passenger service within its applicable scope. Unknown is null/omitted, not false. Exact scope and derivation policy are deferred. |
-| `isLastPassengerTrain` | `boolean` | Marks last passenger service within its applicable scope. Unknown is null/omitted, not false. Exact scope and derivation policy are deferred. |
+| `filterTags` | `string[]` | Optional documented filtering/classification tags, including service applicability or operating-diagram labels such as `weekdays` or `Y801`. These carry the applicable labels instead of a separate service-calendar reference (section 13.19). Open vocabulary; no semantic enforcement. |
+| `isFirstPassengerTrain` | `boolean` | Marks first passenger service within the record's applicable scope (section 13.15). Unknown is null/omitted, not false. Exact context fields and automatic derivation remain deferred. |
+| `isLastPassengerTrain` | `boolean` | Marks last passenger service within the record's applicable scope (section 13.15). Unknown is null/omitted, not false. Exact context fields and automatic derivation remain deferred. |
 
-`filterTags` documents meanings rather than enforcing a built-in calendar or operating-diagram taxonomy. `weekdays` may label weekday service and `Y801` may label an operating diagram; neither spelling establishes a mandatory enum, a trip ID, or automatic date applicability. Do not reject unfamiliar tag values because their business meaning is unknown. Generic matching behavior (including AND/OR, case sensitivity and any association with dates) remains deferred until the filtering/query review. Primitive shape validation is distinct from enforcing tag semantics. This decision does not require a separate GTFS calendar object or silently turn tags into a complete date-resolution algorithm.
+`filterTags` documents meanings rather than enforcing a built-in calendar or operating-diagram taxonomy. `weekdays` may label weekday service and `Y801` may label an operating diagram; neither spelling establishes a mandatory enum, a trip ID, or automatic date applicability. **Confirmed correction:** use the existing tags for this service-applicability labeling task; the separate `serviceId` / `serviceCalendarId` proposal is withdrawn in section 13.19. Do not reject unfamiliar tag values because their business meaning is unknown. Generic matching behavior is **confirmed** in section 13.20; date applicability uses these tags as reaffirmed in section 13.20.1; source-specific conversion between query dates and tags remains resolver/API work. Primitive shape validation is distinct from enforcing tag semantics. This decision does not require a separate GTFS calendar object or silently turn tags into a complete date-resolution algorithm.
 
-**Confirmed — F06/F16:** section 13.13 defines a structured `terminal` value with a nullable station reference and supplied name, replacing the scalar type. **In discussion:** section 13.14 proposes how the applicable directed topology selects an unambiguous default endpoint. **Deferred — F04/F06/F13/F16:** review identifier/reference mapping and whether `topological_end` is materialized or resolved at read time. Resolve absent topology, branches, loops, short turns, multiple endpoints, and omitted versus explicit-null terminal handling before implementing fallback. Do not silently pick an arbitrary endpoint or equate a topology endpoint with a source-confirmed run terminal.
+**Confirmed — F06/F16:** section 13.13 defines a structured `terminal` value with a nullable station reference and supplied name, replacing the scalar type. Section 13.14 confirms that the applicable directed topology must yield one unambiguous endpoint for default resolution; missing or ambiguous context leaves the terminal unresolved. **Deferred — F04/F06/F13/F16:** review identifier/reference mapping, detailed topology lookup, omitted versus explicit-null/empty terminal handling, and whether `topological_end` is materialized or resolved at read time. Do not silently pick an arbitrary endpoint or equate a topology endpoint with a source-confirmed run terminal.
 
-**Deferred — F04/F13/F16:** review the first/last flags' scope (station, route/direction, diagram and service day), source evidence and partial-coverage behavior; a fragment's first/last row does not establish the first/last passenger service. Define service-date/calendar applicability and route/direction/platform context without inventing missing data. Preserve StrictTime and extended-hour service-day meaning. No new database table/column, extra record ID, or implicit calendar field is approved here.
+**Confirmed:** section 13.15 defines the first/last flags' scope, source evidence and partial-coverage behavior; a fragment's first/last row does not establish the first/last passenger service. Sections 13.16–13.18 define line, direction and platform references on each station record. Section 13.19 withdraws the service-calendar reference in favor of the existing `filterTags` labeling mechanism. **Confirmed:** section 13.20 defines tag filtering. **Deferred — F04/F13/F16:** define date-query behavior, preservation of detailed source calendar information and remaining route/direction/platform mapping without inventing missing data or reinstating the withdrawn reference. Preserve StrictTime and extended-hour service-day meaning. No new database table/column, extra record ID, or implicit calendar field is approved here.
 
 ### 13.10 Line frequency information — confirmed placement and unit exclusivity
 
@@ -1189,7 +1219,7 @@ When frequency information is supplied, use exactly one of these two value repre
 
 This code-enforced representation rule is separate from the documentation-only convention in section 13.6 about using frequency information when detailed stop-time coverage is absent/incomplete. Neither rule authorizes inferring a headway from adjacent station departures, generating exact trips, or treating a partial station list as complete service.
 
-**Confirmed refinement:** section 13.11 selects option A: `frequencies` is a map keyed by time interval, each value is an object carrying the numeric unit field, and duplicate-unit validation applies within that value. Distinct entries may use different disclosed units. **Deferred — F04/F06/F13/F16:** during line frequency field review, agree how directions/branches, time periods, operating diagrams and service dates apply, and how source GTFS frequency records map without losing their scope. Line-level ownership does not establish one constant headway for the entire line. Do not collapse differing source headways to an arbitrary value. Review frequency anchors/windows, StrictTime use for applicable boundaries, number range/fraction rules, validation error reporting, and unknown/partial scope before implementation. This agreement adds no implicit interval, direction, calendar, or discriminator field and no database columns.
+**Confirmed refinement:** section 13.11 selects option A: `frequencies` is a map keyed by time interval, each value is an object carrying the numeric unit field, and duplicate-unit validation applies within that value. Distinct entries may use different disclosed units. **Confirmed applicability:** use the existing `filterTags` mechanism for frequency/service-date applicability, as reaffirmed in section 13.20.1; this is not a new calendar or scope-field decision. **Confirmed placement:** `filterTags` belongs to `trainRun` (section 13.20.1). **Deferred — F04/F06/F13/F16:** review the relationship between line-owned frequency data and the tagged trainRun context in the outer JSON contract, and source mapping without losing known context. Line-level ownership does not establish one constant headway for the entire line. Do not collapse differing source headways to an arbitrary value. Review frequency anchors/windows, StrictTime use for applicable boundaries, number range/fraction rules, validation error reporting, and unknown/partial scope before implementation. This agreement adds no implicit interval, direction, calendar, or discriminator field and no database columns.
 
 ### 13.11 Line frequency interval map — confirmed container and value shape
 
@@ -1216,7 +1246,7 @@ Illustrative shape; the placeholder keys are not literal accepted time-range enc
 
 **Deferred — F04/F13/F16:** after the detailed StrictTime contract is agreed, define interval-key grammar and canonicalization under the confirmed inclusion rule in section 13.12. Preserve service-day and extended-hour meaning, and specify how keys preserve or reference StrictTime precision and uncertainty. A convenient string form alone is not approval to collapse unknown, truncated, estimated, or bounded time meanings into exact wall-clock instants. Also agree how to retain a known headway when one or both time boundaries are unavailable; do not invent all-day boundaries, a date, an `unknown`/wildcard key, or midnight to make a map entry fit.
 
-**Deferred — F04/F06/F13/F16:** at the frequency scope/query review, agree direction/branch/diagram/date context, where different contexts with the same interval key live, reference location/time anchoring, empty-map semantics, null entry handling, duplicate/canonical-key collisions, interval overlaps and rule selection. A single map key must not silently overwrite differing source data, and object iteration order does not establish temporal priority. Numeric constraints and validation error reporting remain deferred to value validation. This agreement adds no database fields, implicit scope keys, or final time-boundary schema.
+**Confirmed:** frequency/date applicability uses `filterTags` (section 13.20.1). **Deferred — F04/F06/F13/F16:** at outer-artifact and query review, decide where separately tagged contexts with the same interval key live, reference location/time anchoring, empty-map semantics, null entry handling, duplicate/canonical-key collisions and interval-overlap handling. The applicability mechanism itself is already selected; this review must preserve the confirmed tag matching rules. A single map key must not silently overwrite differing source data, and object iteration order does not establish temporal priority. Numeric constraints and validation error reporting remain deferred to value validation. This agreement adds no database fields, implicit scope keys, or final time-boundary schema.
 
 ### 13.12 Frequency interval endpoints — confirmed inclusion; StrictTime prerequisite
 
@@ -1228,7 +1258,7 @@ Illustrative shape; the placeholder keys are not literal accepted time-range enc
 
 Retain the confirmed provider timezone, service-day association and extended-hour values. A service time such as 24:40 must not silently wrap to 00:40 of the same service day. These requirements do not choose how an interval is encoded into a JSON object key.
 
-**Deferred — F04/F13/F16:** after StrictTime operations are agreed, review interval validity, unknown/open/estimated/bounded endpoints, source-specific boundary conversion, and uncertain event times near a boundary. Reference location, direction/calendar scope, overlaps, duplicate keys and gaps remain deferred to the scope/query review. The confirmed inclusion rule does not imply continuity, complete coverage, priority, or an invented precise boundary. Proceed with independent non-temporal field reviews while this prerequisite remains open.
+**Deferred — F04/F13/F16:** after StrictTime operations are agreed, review interval validity, unknown/open/estimated/bounded endpoints, source-specific boundary conversion, and uncertain event times near a boundary. Reference location, layout of the confirmed tag-based contexts, overlaps, duplicate keys and gaps remain deferred to artifact/query review; date/frequency applicability continues to use `filterTags`. The confirmed inclusion rule does not imply continuity, complete coverage, priority, or an invented precise boundary. Proceed with independent non-temporal field reviews while this prerequisite remains open.
 
 ### 13.13 Terminal identity and supplied name — confirmed
 
@@ -1254,13 +1284,13 @@ Example of an unmatched name:
 
 **Confirmed default guard:** an explicit supplied terminal name counts as terminal information even if its station reference is null. It must not be replaced by `topological_end` solely because station lookup failed. A supplied station reference also counts as explicit terminal information. The default meaning applies only when no terminal information is supplied; its resolution and serialization remain subject to the review below. No separate `terminalName` property, new sentinel or discriminator is added.
 
-**In discussion — F06/F13/F16:** section 13.14 proposes the topology scope and ambiguity behavior of default resolution. **Deferred — F04/F06/F13/F16:** review identifier mapping, reference validation, name/display precedence when both members exist, preservation of source text, empty-object/null/omission handling, and default materialization/read-time behavior at the terminal/topology contract review. Resolve topology-version changes and branch/loop/short-turn context before implementation. No fuzzy matching or arbitrary endpoint selection is implied by these confirmed fields.
+**Confirmed — F06/F13/F16:** section 13.14 defines the topology scope and ambiguity behavior of default resolution. **Deferred — F04/F06/F13/F16:** review identifier mapping, reference validation, name/display precedence when both members exist, preservation of source text, empty-object/null/omission handling, and default materialization/read-time behavior at the terminal/topology contract review. Resolve topology-version changes and the representation of branch/loop/short-turn context before implementation. No fuzzy matching or arbitrary endpoint selection is implied by these confirmed fields.
 
-### 13.14 topological_end fallback scope — proposed, not yet confirmed
+### 13.14 topological_end fallback scope — confirmed
 
-The `topological_end` default meaning and explicit-terminal guard are already confirmed. **Proposal:** when no terminal information is supplied, resolve the default against the entry's applicable directed route/path. Use known line, direction and, when necessary, branch/service-pattern context; do not select an endpoint from an undirected whole-line graph merely because it is a terminal somewhere on that line. This scope may come from the enclosing timetable or available topology; the proposal adds no new per-entry context fields.
+**Confirmed:** when no terminal information is supplied, resolve the `topological_end` default against the entry's applicable directed route/path. Use known line, direction and, when necessary, branch/service-pattern context; do not select an endpoint from an undirected whole-line graph merely because it is a terminal somewhere on that line. This scope may come from the enclosing timetable or available topology; the agreement adds no new per-entry context fields.
 
-| Situation | Proposed default behavior |
+| Situation | Agreed default behavior |
 | --- | --- |
 | Applicable directed path is established and has one unambiguous endpoint | Resolve the default to that terminal station. Display metadata can come from the identified station; do not fabricate an unavailable name. |
 | Branches or candidate paths leave multiple possible endpoints | Leave the terminal unresolved/null; do not choose by ordering, distance, popularity or an arbitrary branch. |
@@ -1269,4 +1299,413 @@ The `topological_end` default meaning and explicit-terminal guard are already co
 
 A default derived from topology is not a source-confirmed operational terminal and does not establish cross-station trip identity or prove a train runs the full line. Preserve this semantic distinction; metadata or API representation for its derivation is deferred rather than invented here. Known source terminal information for a short turn remains explicit and takes precedence.
 
-**Deferred — F06/F13/F16:** after the scope proposal is agreed, define reference lookup, permitted topology/path evidence, incomplete/contradictory topology handling, empty terminal objects, representation of an unresolved result, and configuration/version binding during topology/resolver review. Confirm materialization versus read-time resolution and any provenance fields during artifact/API review. The proposal selects neither a graph algorithm nor a matching heuristic, additional identifier, or new JSON property.
+**Deferred — F06/F13/F16:** define reference lookup, permitted topology/path evidence, detailed incomplete/contradictory topology handling, empty terminal objects, representation of an unresolved result, and configuration/version binding during topology/resolver review, following the confirmed ambiguity rules above. Confirm materialization versus read-time resolution and any provenance fields during artifact/API review. The agreement selects neither a graph algorithm nor a matching heuristic, additional identifier, or new JSON property.
+
+### 13.15 First/last passenger flags — confirmed scope and evidence rules
+
+**Confirmed:** the field names, placement inside each station-specific `trainRun`, nullable boolean types, absence of an automatic false default, and the paired semantic rules below are agreed. The scope describes that record's first/last status; it must not become an unrelated station-wide or line-wide flag. The owner's placement clarification concerns the record to which the scope belongs, not approval of additional scope fields.
+
+- Interpret first/last within the entry's station, line, direction and applicable service day or operating-diagram scope. Retain any explicitly narrower source scope, such as a branch or destination; do not promote a destination-specific last service into the last service of the whole direction. This agrees semantic scope, not a new context-field schema or a required identifier set.
+- `true` means the entry is the first/last passenger service within that scope; `false` means it is known not to be. An unavailable determination remains null/omitted under the confirmed policy. Retain explicit source markings without requiring a complete timetable merely to retain those markings.
+- Do not assign these flags merely from the first/last row of downloaded, filtered or paginated data, or recompute their meaning after a consumer filters the results. Unknown context must not be silently filled with a wider scope, and arbitrary `filterTags` must not acquire automatic calendar semantics.
+- The two flags are independent, not mutually exclusive. An entry may have both set to true when it is known to be the only passenger service within the applicable scope; absence of other downloaded entries does not establish that condition.
+
+**Deferred — F04/F06/F13/F16:** agree the exact fields or references expressing each `trainRun`'s scope, station versus platform distinctions, overlapping branch/destination scopes and conflicting source markings during the station/topology/calendar review. Keep unavailable context nullable under the existing policy; record-level scope does not require invented IDs or dates. Decide whether and how the backend may derive flags from a demonstrably complete timetable after coverage evidence and StrictTime ordering are defined; this agreement does not authorize such automatic derivation. Agreement on the semantic scope does not add a calendar field, scope identifier, provenance property or SQL column.
+
+### 13.16 trainRun.routeId — confirmed
+
+**Confirmed:** retain an explicit line/route reference on each station-specific `trainRun`, so the known line remains available even when `tripId` is absent. This continues the confirmed record-level context direction and camelCase naming; it does not create a SQL field or select the topology's final collection/key names.
+
+| Property | Agreed definition |
+| --- | --- |
+| JSON field | `routeId`, directly on `trainRun`. |
+| Non-null type | `string`. |
+| Meaning | Reference to the line/route identifier in the applicable normalized topology. It identifies the line associated with this station entry, not a global trip or the record itself. |
+| Nullability/default | Nullable/omittable; unknown remains null/absent. No guessed route or default line. |
+| Assignment | Preserve an established source-backed line association. A resolver may obtain it from supplied station-timetable context or an established trip-to-line relationship; `tripId` is not required. |
+| Reference behavior | Reuse the corresponding normalized route identifier when established. Do not invent a match from a display name, terminal or train number alone. Missing line context does not automatically invalidate all other supplied data. |
+
+**Deferred — F06/F13/F16:** agree route identifier scope, grammar, mapping, topology-version binding and unresolved-reference validation during the topology identity/resolver review. Review query usability when a reference is missing or unresolved with the capability/API contract. The direction reference is confirmed in section 13.17; station/platform and calendar context remain separate field reviews. This agreement establishes neither global route-ID uniqueness, a new record primary key, nor a route-name fallback field.
+
+### 13.17 trainRun.directionId — confirmed
+
+**Confirmed:** retain a direction reference on the station-specific `trainRun`, preserving known direction without requiring a trip. The reference is interpreted within the applicable line/topology context; an identical string on another line does not by itself mean the same direction. This reference is separate from the record's terminal station or supplied terminal name.
+
+| Property | Agreed definition |
+| --- | --- |
+| JSON field | `directionId`, directly on `trainRun`. |
+| Non-null type | `string`. |
+| Meaning | Reference to the applicable line's direction in the normalized topology. It does not identify the terminal, a complete path or the station record itself. |
+| Nullability/default | Nullable/omittable; unknown remains null/absent. No default direction. |
+| Assignment | Preserve a direction association established by source-backed station-timetable context or an established trip relationship; `tripId` is not required. |
+| Vocabulary | Do not impose a global direction enum, require only `0`/`1`, or assign universal compass/inbound/outbound meanings. Exact identifier values and mappings await the topology review. |
+| Terminal relationship | Full-length and short-turn services may share a direction while having different terminals. A terminal name or ID alone does not establish a direction match or a complete path. |
+
+Missing direction or line information remains permitted under the all-nullable policy; do not fabricate the missing context. Whether an incomplete reference supports a direction-specific query is a separate capability question.
+
+**Deferred — F06/F13/F16:** agree direction representation in topology, identifier grammar/uniqueness and source mapping, labels, route/version binding, loop and branch distinctions, and unresolved-reference validation during the topology/resolver review. Review query usability with the API contract. No direction table, direction-name field, service-pattern ID, fixed direction values or default is approved by this agreement.
+
+### 13.18 trainRun.platformId — confirmed
+
+**Confirmed:** retain an optional reference to the specific platform/boarding location associated with this station entry. It supplements the station-oriented organization without requiring platform information for otherwise usable station timetables. This is a normalized JSON reference, not a new SQL column or wholesale adoption of a topology schema.
+
+| Property | Agreed definition |
+| --- | --- |
+| JSON field | `platformId`, directly on `trainRun`. |
+| Non-null type | `string`. |
+| Meaning | Reference to the applicable topology's platform/boarding-location record for this station entry. It is an identity reference, not a display label such as “Platform 1”. |
+| Nullability/default | Nullable/omittable; unknown remains null/absent. No default platform. |
+| Assignment | Use an association established by the source or a source-backed topology mapping. Neither `tripId` nor platform information is required to retain station-level timetable data. |
+| Relationship | The referenced platform must belong to the applicable station when that relationship is established. A line/direction alone must not be treated as evidence of one particular platform; do not substitute the station or direction identifier for a missing platform reference. |
+
+A missing reference does not mean the station has no platforms. It means the entry's platform association is unavailable; preserve the independently useful station time and its known context.
+
+**GTFS reference clarification:** GTFS represents stations and platforms within `stops.txt`, distinguishing location types and linking children through `parent_station`. Its `stop_times.stop_id` references stops/platforms (`location_type=0` or empty), not parent station records (`location_type=1`). A standalone stop need not have a parent station, so the available feed data determines whether a station/platform hierarchy can be established. See the [official stops reference](https://gtfs.org/documentation/schedule/reference/#stopstxt) and [stop-times reference](https://gtfs.org/documentation/schedule/reference/#stop_timestxt). `platformId` is the agreed ClockFace record field name, not a native GTFS field. Retain the GTFS-aligned unified location hierarchy direction; this reference does not require separate platform storage or invent hierarchy absent from the source.
+
+**Deferred — F06/F13/F16:** review platform versus stop/boarding-location identities, identifier scope/grammar, source mapping, station membership and topology-version binding during the topology/resolver review. Resolve source-only platform labels, partial or contradictory relationships and any need to distinguish arrival/departure boarding locations there, without inventing additional fields now. Query behavior for absent or unresolved platforms awaits the capability/API contract. This agreement does not select a `platforms` table, a platform-name field, a second station-ID field on the record, or final outer station grouping keys.
+
+### 13.19 Service-calendar reference — withdrawn; filterTags retained
+
+**Confirmed owner decision:** omit a dedicated service-calendar reference from `trainRun`. The proposed `serviceId` and suggested replacement name `serviceCalendarId` are withdrawn. Do not substitute `stationTimetableId` or another calendar-reference field. The existing `filterTags` field handles the applicable service/operating-diagram labels.
+
+Retain the agreed plural field name `filterTags`, its nullable/omittable `string[]` type and open vocabulary. Tags may express weekdays, an operating diagram or other documented applicability labels. No fixed enum, foreign-key relationship, new calendar object or automatic interpretation of arbitrary tag text is introduced. Missing tags do not automatically mean daily service or no service.
+
+This withdrawal concerns the proposed normalized station-record field. Raw source snapshots retain their original content; removing the proposal does not instruct resolvers to discard supplied calendar facts or rename source-native identifiers. The confirmed station-oriented model and optional trip relationship remain unchanged.
+
+**Confirmed — F13/F16:** section 13.20 defines generic tag matching. **Deferred — F04/F06/F13/F16:** define source/resolver-specific tag conventions, preservation/mapping of detailed source calendar rules and exceptions, and date-query behavior during the filtering/resolver/API review. Any additional data structure requires separate agreement; these pending contracts must not silently restore a dedicated station-record calendar reference. Preserve provider timezone and service-day/extended-hour semantics under the detailed StrictTime contract. No calendar SQL table, additional date property or tag interpretation algorithm is selected here.
+
+### 13.20 filterTags query matching — confirmed
+
+**Confirmed:** the following generic filtering behavior applies to the existing open-vocabulary, nullable/omittable tag array. This is not a new field or business-semantic validation rule.
+
+| Query situation | Agreed behavior |
+| --- | --- |
+| No tag condition is supplied | Do not filter by tags. Records with missing/null tags or an empty tag array remain eligible under the query's other criteria. |
+| One or more tags are requested | Require all requested tags to be present on the record (AND). Extra tags on the record do not prevent a match. |
+| Comparing tag values | Exact, case-sensitive string matching. Do not automatically change case, translate labels or equate synonyms. |
+| A tag condition is supplied but the record's tags are null, missing or empty | The record does not satisfy that condition; do not assume unknown tags match. |
+
+Illustration: requesting `weekdays` and `Y801` matches a record carrying both tags, including one with additional tags. A record carrying only `weekdays` does not satisfy that combined condition. The vocabulary remains unrestricted; matching label text does not validate or infer its business meaning.
+
+This filtering agreement neither interprets a date into a tag nor proves service on a date. No tag condition also does not mean daily service; all other agreed query criteria still apply.
+
+**Deferred — F04/F13/F16:** define exact query parameter/response shapes, request validation, provider/resolver tag conventions and date-to-tag applicability during the resolver/API review, following the confirmed matching rules above. This agreement selects no API parameter name, matching-mode field, index, stored result or automatic calendar algorithm.
+
+#### 13.20.1 Frequency and date applicability — filterTags confirmed
+
+**Owner clarification:** frequency and date applicability directly reuse `filterTags`, whose placement is now confirmed as `trainRun.filterTags`; neither the choice of mechanism nor the location of that field remains open. Do not reopen it as a separate field-design topic or introduce a substitute calendar/service reference. This extends the already confirmed tag-based applicability model to the line-owned frequency information without moving frequencies onto each `trainRun`.
+
+Use the same nullable/omittable `string[]`, open vocabulary and matching semantics as section 13.20: requested tags match by exact, case-sensitive AND; no tag condition performs no tag filtering; missing/null/empty tags do not satisfy a nonempty condition. Tags may express the documented date, weekday, operating-diagram and other applicability distinctions supplied by the provider/resolver. Existing route/direction/platform identity references retain their roles; tags do not replace those identity references.
+
+Tag meaning is documented rather than inferred or enforced from arbitrary text. Choosing tags does not define a universal algorithm for translating a calendar date into labels. Any requested date-to-tag conversion follows established source/provider conventions under resolver/API review, without a new normalized calendar field or a second applicability mechanism. Preserve supplied raw calendar facts as already agreed.
+
+**Confirmed placement:** tags belong directly to `trainRun`. Do not add another `filterTags` to line/frequency values or an outer wrapper by inference, and do not move the confirmed line-owned frequency map onto trainRun. **Deferred — F04/F06/F13/F16:** the outer JSON contract must establish how line-owned frequency data is associated with the tagged trainRun context, including distinct applicable headways sharing an interval key. No association, tag inheritance, fabricated trainRun, new reference field, composite key, map-value layout or replacement rule array is selected here. Field placement itself is settled; this remaining issue is the relationship between the already selected structures. Interval-key encoding and evaluation still wait for detailed StrictTime; resolver/API parameter shapes and source-specific date/tag conventions retain their normal implementation-review points. Do not list the choice of frequency/date applicability representation as unresolved again.
+
+## 14. Topology location records — field review in progress
+
+Continue the agreed GTFS-aligned location hierarchy direction for stations, platforms and other supported location types. This section reviews normalized JSON fields, not SQL columns. The record-level `extras` and all-nullable policy remain applicable. Section 15 now confirms the logical `stops` collection. The physical outer container and file layout remain subject to artifact review; this does not approve the older schedule-container examples in section 13.5.
+
+**Terminology clarification:** a location record contains the location's identity and descriptive attributes. References in line/path relationships use the location identifier to look up that information. The `stop_name` reviewed here belongs to the location record; it does not replace `stop_id` in topology relationships or add a name field to each `trainRun`. This distinction does not select new collections, physical files or SQL tables.
+
+### 14.1 stop_id — confirmed
+
+**Confirmed:** use the GTFS-aligned JSON spelling `stop_id` for a topology location's identity. This is not a new identifier on each `trainRun`, and it does not rename the already confirmed camelCase reference fields on station records.
+
+| Property | Agreed definition |
+| --- | --- |
+| JSON field | `stop_id`, on a topology location record. |
+| Non-null type | `string`. |
+| Meaning | Identifies a location such as a station or platform. A station and each of its platforms have distinct identifiers when known. |
+| Nullability/default | Nullable/omittable under the domain policy. No automatic UUID or other generated default when an identity is unavailable. |
+| Uniqueness | Provided identifiers are unique across all location types within one source's applicable topology version. Null/missing IDs do not participate in identity matching. Different sources may reuse the same string. |
+| Assignment | Prefer preserving a supplied identifier. Where normalization requires an established stable mapping, the resolver must apply that mapping consistently to records and references; exact mapping rules remain deferred. Do not equate locations solely by name or silently assign identities from array positions. |
+| Reference relationship | A confirmed platform or terminal-station reference can target the corresponding location identity in its known source/version context. A bare string alone is not sufficient for cross-source matching or version selection. |
+
+**Storage clarification:** `stop_id` is a JSON string, including when its contents are a numeric-looking source identifier. An upstream UUID may be preserved as a string, but UUID syntax is neither required nor prohibited. There is no automatic UUID generation, and a human-facing location name is not the identifier by default.
+
+**Deferred — F01/F06/F13/F16:** agree identifier grammar, empty-string/invalid-value handling, source normalization and stability across versions, duplicate-ID diagnostics and usable-reference criteria during topology/resolver validation review. Agree how source/version context is carried in references and API queries at artifact/API review before implementing cross-artifact lookup. `location_type` is confirmed in section 14.2; parent relationships, names and coordinates have separate field reviews. This agreement does not require identifiers on all records, make IDs globally unique, create a location SQL table or choose an outer station timetable key.
+
+### 14.2 location_type — confirmed
+
+**Confirmed:** use `location_type` on a topology location record to distinguish the kinds of location sharing the `stop_id` namespace. Use a JSON number enum, with the following values and meanings aligned with the [official GTFS stops reference](https://gtfs.org/documentation/schedule/reference/#stopstxt):
+
+| Non-null value | Meaning |
+| --- | --- |
+| `0` | Stop/platform: a location where passengers board or alight; a platform when situated within a parent station. |
+| `1` | Station: the overall station containing platforms. |
+| `2` | Entrance/exit. |
+| `3` | Generic node within a station, used to represent connections in station pathways. |
+| `4` | Boarding area: a specific boarding/alighting area on a platform. |
+
+**Confirmed presence and assignment:** allow null/omission, with no default in normalized ClockFace JSON. A resolver supplies a value when the source or an established source-format mapping supports that classification; unknown does not become `0` or `1`. The non-null JSON value is numeric, not a numeric string or an arbitrary label. Recognizing a type does not require every dataset to contain all five types or require implementing station-pathway navigation.
+
+**GTFS conversion distinction:** GTFS assigns stop/platform meaning to an empty source `location_type`. That source-format rule must not become a generic default for null/missing ClockFace fields. Its explicit adapter conversion belongs to the source mapping review; do not silently assume an unknown non-GTFS location is a platform. The all-nullable policy remains unchanged.
+
+**Deferred — F06/F13/F16:** agree source-specific classification and default conversion, handling of invalid/unmapped source types, partial or contradictory location relationships, and capability-specific usability during topology/resolver validation review. Parent relationships are confirmed in section 14.3; other location fields require their own agreement. This agreement adds no SQL enum/table, parent field, inferred station hierarchy or mandatory graph representation.
+
+### 14.3 parent_station — confirmed
+
+**Confirmed:** use nullable/omittable string `parent_station` on a topology location record. It references the immediate parent location's `stop_id` within the applicable source/topology-version context. There is no default; retain only a source-backed relationship or an established resolver mapping. The field describes location hierarchy, not line membership, neighboring stations or stop sequence.
+
+Use the following GTFS-aligned parent meanings ([official reference](https://gtfs.org/documentation/schedule/reference/#stopstxt)):
+
+| Child location type | Agreed parent reference when known |
+| --- | --- |
+| `0` — stop/platform | A station (`location_type=1`). A standalone stop may have no parent. |
+| `1` — station | No parent reference; leave `parent_station` null/omitted. |
+| `2` — entrance/exit or `3` — generic node | A station (`location_type=1`). |
+| `4` — boarding area | A platform (`location_type=0`), rather than directly to the station above that platform. |
+
+The all-nullable ClockFace policy still applies to every type. Do not import GTFS's conditional parent-presence requirements as mandatory fields in partial ClockFace data. Outside an established root/standalone relationship, a null/missing parent does not by itself prove that no parent exists. Do not create a station or platform to fill the reference, or infer a parent from a shared name or nearby coordinates alone.
+
+**Confirmed structural rule:** a location cannot be its own parent and the parent hierarchy must not contain cycles. Unknown types or unavailable parent records do not authorize inventing a type or a matching parent; treatment of unresolved or contradictory data awaits validation review.
+
+**Deferred — F06/F13/F16:** agree source mapping, dangling/ambiguous references, type conflicts, validation diagnostics and partial-data query behavior during topology/resolver/API review. Apply the source/version reference context once its encoding is agreed under section 14.1. No SQL foreign key/table, additional relationship field, inferred location or final artifact container is selected by this agreement.
+
+### 14.4 stop_name — confirmed
+
+**Confirmed, revised 2026-09-26:** `stop_name` contains the location's primary display name in each supplied language. The owner accepted section 15.8's direct language-map replacement of the former scalar-string proposal and the separate translation collection. The field spelling follows GTFS, but its localized JSON value shape is a ClockFace extension.
+
+| Property | Agreed definition |
+| --- | --- |
+| JSON field | `stop_name`, on a topology location record. |
+| Non-null type | Object mapping language keys to `string` or null values. |
+| Meaning | One preferred display name per supplied language for the location, whether a station, platform, entrance or another supported type. |
+| Nullability/default | Field and map values are nullable/omittable, without defaults. Do not substitute an ID, parent name, empty string or fabricated translation. |
+| Assignment | Source-supplied names/translations or explicitly configured corrections. |
+| Languages | Language tags and `undetermined-language` for supplied text with unknown language. No mandatory English/local-language set; city-specific constraints are not inherited. |
+| Identity | Names need not be unique, and equal names do not establish location identity. Changing a name does not by itself change `stop_id`. |
+| Aliases | Alternative location names use the separately confirmed `aliases` map in section 15.2. |
+
+**Deferred — F03/F06/F08/F13/F16:** agree language normalization/selection/fallback, mapping source translations, blank/invalid names, source/configured precedence, refresh/version behavior and search matching during localized resolver/API review. The map shape is confirmed; these behavior details are not. Preserve supplied language distinctions rather than concatenating names or inventing translations. No translation SQL table or parallel `names` field is added.
+
+### 14.5 stop_lat / stop_lon — confirmed
+
+**Confirmed:** the location's geographic coordinates use the GTFS field names and WGS84 decimal-degree meanings, as defined in the [official field types](https://gtfs.org/documentation/schedule/reference/#field-types). These are attributes of the location record, not repeated coordinates on each station `trainRun` or a definition of a line's path.
+
+| JSON field | Non-null type | Meaning and agreed range |
+| --- | --- | --- |
+| `stop_lat` | Finite JSON `number` | WGS84 latitude in decimal degrees, inclusive range `[-90, 90]`. |
+| `stop_lon` | Finite JSON `number` | WGS84 longitude in decimal degrees, inclusive range `[-180, 180]`. |
+
+**Confirmed presence and default rules:** each field independently permits null/omission. Neither has a default. Retain an available coordinate component even when the other is unknown, but only treat the pair as a usable point when both components are valid and refer to the same location and coordinate system. Do not fill a missing component with zero; a source-supported zero is a valid value within the ranges above.
+
+**Confirmed assignment and interpretation:** preserve coordinates supplied for the specific location by source data or explicit configuration. Do not silently copy a parent station's coordinate onto a platform/entrance, geocode a name to fabricate a missing position, or infer identity from equal/nearby coordinates. Preserve source-supported precision rather than claiming additional accuracy from extra decimal places.
+
+The normalized fields use WGS84 consistently. Where a source uses another coordinate system, a resolver must establish its meaning and an appropriate conversion before populating these fields. Unknown or unconverted coordinates must not be presented as WGS84; retain original source data in the already agreed raw snapshot storage. This does not select a conversion algorithm or add a coordinate-system/provenance field.
+
+**Deferred — F06/F08/F13/F16:** agree source-coordinate-system detection and conversion, validation diagnostics for invalid/incomplete pairs, numeric precision/serialization policy, explicit configuration and refresh/version binding, and map/distance-query capability criteria during the resolver/artifact/API review. Define any additional preservation metadata separately if required; this agreement adds no SQL spatial type/index, automatic geocoder or geometry collection. Missing coordinates do not invalidate otherwise usable station/topology data.
+
+## 15. Topology batch — confirmed reduced scope
+
+**Confirmed — 2026-09-26:** the owner accepted the reduced topology proposal after the field explanations: retain `stop_code` and `route_type`; remove the other seven explanation-requested fields and the previously specified optional attributes; omit networks, shapes, levels and the separate translation collection; retain the reduced timing-only pathways/transfers subset; change the five reviewed display-name fields to language maps. Unmentioned core topology items were already accepted. ClockFace's purpose is storing and serving static timetables, not complete GTFS feature coverage.
+
+This section records the resulting contract, with the subsequent confirmed cutoff requirements and collection names, plus deferred encoding/applicability choices, distinguished in section 15.7.2. Deferred implementation behaviors remain open; approval adds no SQL tables and does not authorize backend implementation in the current repository.
+
+### 15.1 Common representation and reference rules — confirmed
+
+- The retained topology collections use arrays of records. Every collection and every domain field remains nullable/omittable, including identifiers and references, with no generated defaults. A partial record can be retained even when it cannot support a lookup.
+- Topology uses snake_case; the confirmed camelCase `trainRun` fields and line-frequency value fields retain their spellings. Dataset and domain records can carry `extras`; its arbitrary keys are not reserved or rewritten by this contract.
+- Identifiers are strings even when numeric-looking. Numbers are finite JSON numbers; enum and integer fields use numbers. Explicit GTFS source-default mapping does not establish a normalized default for unknown data.
+- Provided entity IDs are unique within their entity collection and source/topology-version context unless stated otherwise. Composite identities require their necessary components; null is not a shared key. Equal strings across sources or versions do not establish a match.
+- `routes.agency_id` references the configured, globally unique `agencies.agency_id`, after an established resolver mapping. Do not treat an arbitrary upstream ID as the configured ID, match by name alone or rewrite agency configuration during parsing. Unmapped source identity remains preservable in raw/custom data.
+- Logical collection agreements do not select physical files, manifests, schema-version metadata, indexes or the station-timetable outer container. Older schedule examples in section 13.5 remain unapproved as a container contract. The nine SQL tables and 31 confirmed physical columns are unchanged.
+
+Removing a normalized field does not delete its original source content from retained snapshots. A resolver may use relevant raw information to produce an agreed result without making every input attribute part of the public normalized contract.
+
+### 15.2 stops — confirmed retained fields and removals
+
+**Confirmed:** `stops` is the unified location collection for the six fields in section 14: `stop_id`, `location_type`, `parent_station`, `stop_name`, `stop_lat`, `stop_lon`. Stations, platforms, entrances, generic nodes and boarding areas share this identity namespace. Recognizing a location type does not require a resolver to manufacture all location types.
+
+| Field | Non-null type | Current decision |
+| --- | --- | --- |
+| `platform_code` | `string` | Confirmed: public-facing platform label, distinct from `stop_id`. |
+| `aliases` | Language-keyed object with `string[]` or null values | Confirmed: supplied alternative location names. No preferred-display meaning is assigned to the first alias. |
+| `stop_code` | `string` | Confirmed: passenger-facing station/stop code, such as an illustrative `A01`, distinct in purpose from an internal ID; useful for timetable station identification/search. |
+
+**Confirmed removed:** `stop_url`, `wheelchair_boarding`, `level_id`, `tts_stop_name`, `stop_desc`, `zone_id`, `stop_access`. Speech wording, general location descriptions, fare zones and street-access policies are outside this normalized timetable contract. Removing an accessibility attribute does not assert that a location is accessible or that a duration applies to wheelchair users.
+
+The confirmed `aliases` uses language tags and the existing `undetermined-language` fallback for supplied aliases with unknown language. No language is mandatory, no translations/aliases are generated, and aliases need not be unique across locations. Null/missing means unknown; a language's empty array means a known empty alias list in that scope. Language normalization, deduplication and search matching remain deferred to localization/search review.
+
+`stop_name` now uses the confirmed language-map shape in section 15.8, replacing its former scalar-string contract. `aliases` is not silently repurposed as a preferred-name map. Provider timezone authority remains unchanged; no normalized `stop_timezone` is added.
+
+References for the reviewed field meanings: [GTFS stops](https://gtfs.org/documentation/schedule/reference/#stopstxt) and [speech text examples](https://gtfs.org/documentation/schedule/examples/text-to-speech/).
+
+### 15.3 routes — confirmed retained fields and removals
+
+| Fields | Non-null type | Current decision |
+| --- | --- | --- |
+| `route_id`, `agency_id` | `string` each | Confirmed identities/references under section 15.1; `trainRun.routeId` targets the route. |
+| `route_short_name`, `route_long_name` | Language-keyed object with `string` or null values, each | Confirmed localized short label and full name under section 15.8; no automatic copying between fields. |
+| `route_desc` | `string` | Confirmed description; its scalar type is unchanged. |
+| `route_color`, `route_text_color` | `string` each | Confirmed six hexadecimal RGB digits without `#`; no white/black defaults. |
+| `route_sort_order` | Non-negative integer | Confirmed supplied display ordering, not stop sequence. |
+| `route_type` | Numeric GTFS base route-type code | Confirmed transport mode, e.g. `0` tram/light rail, `1` metro, `2` rail, `3` bus, `4` ferry, `5` cable tram, `6` aerial lift, `7` funicular, `11` trolleybus, `12` monorail. Retained to distinguish timetable categories, including mixed-mode sources. |
+
+**Confirmed removed:** `route_url`, `continuous_pickup`, `continuous_drop_off`. Along-route boarding/alighting between fixed stops is outside the current station-timetable contract. The already confirmed line-level `frequencies` map remains; direction/branch/tag/date scope and interval keys still await their stated reviews. There is no frequency field on individual `trainRun` records.
+
+References: [GTFS routes](https://gtfs.org/documentation/schedule/reference/#routestxt). Source-specific extended mode mapping and validation diagnostics remain deferred to resolver review.
+
+### 15.4 Networks — confirmed removed
+
+**Confirmed:** omit the whole normalized `networks` and `route_networks` collections, including `network_id`, `network_name` and their route association records. This supersedes the earlier acceptance of the network identity/association. Do not add `routes.network_id` as a replacement. Provider, agency and route identities remain unchanged.
+
+The reviewed grouping supports GTFS fare-leg rules, which are outside current scope. For historical accuracy, GTFS permits a route in only one network; the earlier multiple-membership proposal was a ClockFace extension, not unchanged GTFS. Removing the groups also withdraws that extension. See the [official definitions](https://gtfs.org/documentation/schedule/reference/#networkstxt).
+
+### 15.5 Direction, membership and ordered paths — confirmed core
+
+**Confirmed:** retain the four independent collections below so a source can supply topology without publishing trips. Geometry-dependent fields are removed under section 15.6; the retained pattern records require no shape references.
+
+| Collection | Confirmed fields and non-null types | Role and identity |
+| --- | --- | --- |
+| `directions` | `route_id: string`, `direction_id: string`, `direction_name: language map` | A direction within a route; a fully known `(route_id, direction_id)` identifies it. `trainRun.directionId` uses this route context. |
+| `route_stops` | `route_id: string`, `stop_id: string`, `direction_id: string` | Known membership, optionally narrowed to a direction, without requiring ordered paths. |
+| `service_patterns` | `pattern_id: string`, `route_id: string`, `direction_id: string`, `headsign: language map`, `is_complete: boolean` | One distinguishable directed calling pattern, identified by `pattern_id`. |
+| `service_pattern_stops` | `pattern_id: string`, `stop_id: string`, `stop_sequence: non-negative integer` | Ordered calling-point occurrences; a fully known `(pattern_id, stop_sequence)` identifies an occurrence. |
+
+Confirmed relationship rules:
+
+- Direction IDs are route-scoped strings, without forced global `0`/`1` or compass labels. Direction names, pattern headsigns and event terminals remain distinct. The display-name fields use the confirmed language maps in section 15.8.
+- A known route/stop establishes membership; a known direction narrows it. An unspecified direction does not prove service in every direction. Fully specified membership tuples can identify facts; null components must not merge unrelated partial facts. Membership is not adjacency or sequence, and a separately materialized membership index is not mandatory duplication of pattern data.
+- Pattern occurrences reference `stop_id` for stations, platforms or boarding areas. Entrances and generic nodes are not passenger calling points. A station-only source does not need invented platforms; known parent relationships supply station/platform context.
+- Sequence numbers may have gaps, and a stop may occur repeatedly in a path. `(pattern_id, stop_id)` is not a unique occurrence key. Do not invent order from array position, geography or unrelated per-station departure times.
+- Branches and short turns may share a route/direction. `is_complete=true` means this pattern's complete calling sequence is known; `false` means known partial coverage; null means unknown. It does not describe full timetable/network coverage or default to true on successful parsing.
+- Explicit source route order or a source-backed trip sequence can establish a pattern. Raw membership alone does not establish an ordered path. Source mapping and stable pattern identity rules still require resolver review.
+- The confirmed terminal fallback requires a complete, applicable directed path with one unambiguous endpoint. Unresolved branches, incomplete paths and loops without an established end remain unresolved. No `trainRun.patternId` is added; route/direction alone need not identify a unique pattern.
+- `headsign` is supplied display text rather than a station identity. No geometry or fabricated trip is required for the retained calling sequence.
+
+**Deferred — F01/F06/F13/F16:** agree stable resolver identity mapping, source/version binding, duplicate/conflicting membership treatment, completeness evidence, repeated-stop lookup and event-to-pattern selection before implementing joins, terminal defaults or capability claims. Any new selector or provenance field must return to field review.
+
+### 15.6 shapes and levels — confirmed removed
+
+**Confirmed:** omit the whole normalized `shapes` and `levels` collections.
+
+- Remove shape-point fields `shape_id`, `shape_pt_lat`, `shape_pt_lon`, `shape_pt_sequence`, `shape_dist_traveled`, plus the dependent `service_patterns.shape_id` and `service_pattern_stops.shape_dist_traveled`. Geographic alignment is not needed for the retained calling sequence or station timetable queries. Previously confirmed stop coordinates remain unchanged.
+- Remove floor fields `level_id`, `level_index`, `level_name`; `stops.level_id` is also removed. Floor order alone does not establish transfer duration. Timed connections can use endpoint `stop_id`s without a floor catalog.
+
+The original source snapshots remain available, including source-specific inputs a resolver can use under its reviewed contract. Geometry-distance-unit normalization is no longer an outstanding implementation prerequisite; reopen it only if a concrete future requirement explicitly restores geometry. Conversion of retained stop coordinates still has its existing review point. References: [GTFS shapes guide](https://gtfs.org/resources/gtfs-schedule-feature-guides/shapes/) and [levels](https://gtfs.org/documentation/schedule/reference/#levelstxt).
+
+### 15.7 Station pathways and pre-boarding limits — confirmed fields
+
+**Confirmed correspondence:** `pre_boarding_limits` is the ClockFace name for the retained GTFS `transfers` collection, extended with the four agreed cutoff fields. Its identity and ownership are settled: retain the approved transfer fields and add the cutoffs to this same logical collection. Do not introduce a parallel normalized `transfers` collection, a separate cutoff/rule collection or an additional SQL table for this rename. Likewise, `in_station_pathways` corresponds to the retained GTFS `pathways` collection. The original GTFS filenames in raw source snapshots remain unchanged.
+
+**Confirmed scope:** retain information for movement/transfer timing and the static pre-boarding limits in section 15.7.2. The table below records the retained connection-related fields; the four additional cutoff fields are listed in section 15.7.2. No indoor navigation, accessible-route planning, signage serving or full station-map contract is introduced. The following retained subset is confirmed for that scope; it introduces no new field names.
+
+| Collection | Confirmed retained fields and non-null types | Why needed for time data |
+| --- | --- | --- |
+| `in_station_pathways` | `pathway_id: string`, `from_stop_id: string`, `to_stop_id: string` | Identify a connection and its endpoints; distinct connections can share the same endpoints. |
+| `in_station_pathways` | `traversal_time: positive integer` (seconds), `is_bidirectional: integer enum 0–1` | Retain supplied connection duration and permitted traversal direction. |
+| `in_station_pathways` | `length: non-negative number` (meters), `pathway_mode: integer enum 1–7` | Support an explicitly chosen estimate when duration is absent; distinguish an ordinary walkway from stairs, moving equipment or gates rather than apply one speed to every connection. |
+| `pre_boarding_limits` | `from_stop_id: string`, `to_stop_id: string` | Identify which locations a transfer-time constraint concerns. |
+| `pre_boarding_limits` | `from_route_id: string`, `to_route_id: string`, `from_trip_id: string`, `to_trip_id: string` | Preserve source-supplied route/trip-specific applicability instead of treating an exception as a station-wide duration. No trip is manufactured when IDs are unavailable. |
+| `pre_boarding_limits` | `transfer_type: integer enum 0–5`, `min_transfer_time: non-negative integer` (seconds) | Interpret the transfer condition and supplied minimum time; a prohibited, waiting or same-vehicle connection must not be treated as an ordinary walking transfer. |
+
+**Removed under the requested scope:** `in_station_pathways.stair_count`, `max_slope`, `min_width`, `signposted_as`, `reversed_signposted_as`. Rich source-specific estimation can consume raw inputs in the resolver; these attributes are not retained as general normalized fields. The route/trip applicability fields in `pre_boarding_limits` are retained because dropping them could apply a valid source duration to the wrong connection. This is not a requirement to make trip-based queries available.
+
+Timing interpretation:
+
+- `traversal_time` is a connection traversal duration. `min_transfer_time` is a minimum allowed arrival-to-departure interval that can include buffer. They are not interchangeable, and neither is the timetable wait until the next train.
+- Supplied durations and minima remain source facts. A duration estimated by a resolver must remain distinguishable from a published value; do not overwrite the supplied minimum with the sum of walking-edge times or silently claim an estimate was published by the operator.
+- Missing duration, direction, connection or transfer rule is unknown, not zero or proof of impossibility. Do not assume reverse traversal when directionality is unknown. For a declared bidirectional connection, applying a timing value follows its established source semantics; directional exceptions must not be erased.
+- Only adequately connected, applicable data may support summing traversal durations. A partial graph cannot justify an arbitrary shortcut or a claimed globally shortest duration. A transfer prohibition or scope conflict cannot be ignored merely because edges can be joined.
+- `length / walkingSpeed` is an illustrative estimation possibility, not an agreed formula or default speed. It is not automatically suitable for stairs, elevators, escalators, gates, queues or unknown modes. Unknown or insufficient evidence may leave duration unresolved. No additional persisted field is selected for estimates.
+- Durations are seconds, not StrictTime clock instants. Location/route/trip references still need the appropriate source/version context. All fields remain nullable/omittable, even if GTFS normally requires them.
+
+**Deferred — F06/F13/F16:** agree source/reference resolution, applicable transfer-rule precedence, transfer-time query scope, estimation method and assumptions, estimate/source distinction in API results, validation and partial-graph behavior at resolver/API review. Confirm any required result/provenance fields separately before implementation. No general-purpose routing algorithm or scalar estimate default is approved. References: [GTFS pathways](https://gtfs.org/documentation/schedule/reference/#pathwaystxt) and [transfers](https://gtfs.org/documentation/schedule/reference/#transferstxt).
+
+#### 15.7.1 Responsibilities — clarification
+
+`in_station_pathways` describes physical connections between locations and the cost of traversing them. An individual edge may describe only part of a platform-to-platform movement. Its timing data can be evidence for an estimate, without claiming a complete navigable station map.
+
+`pre_boarding_limits` describes the applicability and operational constraints of changing between arriving and departing services: the relevant locations and optional routes/trips, connection type and any published minimum arrival-to-departure interval. It does not describe the intervening walking geometry. Its minimum can already include walking and buffer time.
+
+The records are independent: `pre_boarding_limits` has no `pathway_id` reference and there is no one-to-one relationship. One transfer may traverse several known pathways; a valid supplied transfer rule may exist with no pathway data. Conversely, physical connectivity alone does not establish an operator-published transfer rule, permission for every service pair or guaranteed connection.
+
+Illustrative explanation, not a new estimation/precedence algorithm: source connections A–concourse and concourse–B take 60 and 120 seconds, giving 180 seconds along that established path. A separately supplied rule for the applicable services requires 300 seconds between arrival at A and departure from B. An arrival at 10:00 and departure at 10:04 leave 240 seconds, so that minimum is not satisfied despite exceeding the path's traversal time. Do not replace the 300-second minimum with 180 seconds or automatically add both to demand 480 seconds: the rule may already include the walking portion. Conflicting source values, estimation policy and API presentation remain deferred above.
+
+#### 15.7.2 Pre-boarding limits — confirmed names and fields, encoding deferred
+
+**Owner refinement:** the rules must support `ticketing_cutoff` (ticket sales close), `checkin_cutoff` (ticket checks close), `boarding_cutoff` (vehicle doors close), and `transfer_passage_cutoff` (a relevant transfer passage closes, potentially before last service). Each uses StrictTime with an outer distinction analogous to `TimeOfDay | TimeBeforeDeparture`, preserving minute or second precision. The owner accepted the validation semantics below, including scoped ticket-check/door-closing order, definite-conflict errors and unresolved results for insufficient context/precision, together with flexible applicability. These four semantic fields and their ownership by `pre_boarding_limits` records are confirmed; physical artifact packaging, exact tagged-union wire shape and validation implementation remain open.
+
+**Confirmed naming:** use `in_station_pathways` for physical connections and `pre_boarding_limits` for the broader limits/rule collection, replacing the earlier normalized collection names `pathways` and `transfers`. `boarding_rules` and `connection_rules` are unselected alternatives. This renames the logical JSON collections only: existing inner fields such as `pathway_id`, `transfer_type` and `min_transfer_time` keep their agreed names. The broader rules retain the approved transfer conditions and minimum intervals together with the four cutoffs; none is silently discarded or converted to another value. Initial boarding may be supported without inventing an arriving trip. Physical packaging and rule applicability/anchor fields remain deferred.
+
+| Confirmed new rule field | Meaning | Confirmed semantic value requirement |
+| --- | --- | --- |
+| `ticketing_cutoff` | Deadline for purchasing a ticket under the applicable sales rule. | StrictTime-bearing wrapper distinguishing a local time-of-day value from a lead before the applicable departure. |
+| `checkin_cutoff` | Deadline for passing the applicable ticket check. | The same wrapper requirement. |
+| `boarding_cutoff` | Door-closing deadline for boarding the applicable vehicle/service. | The same wrapper requirement. |
+| `transfer_passage_cutoff` | Closing deadline of an applicable transfer passage, including source-defined last-service-related closure. | The same wrapper requirement, bound to its actual source-defined departure reference if relative. |
+
+All four fields retain the existing nullable/omittable domain policy, without defaults. A missing ticket-check deadline does not mean that no check exists, or that it closes at departure; a missing passage deadline does not prove continuous availability. The new fields belong to `pre_boarding_limits` records alongside the retained transfer fields; they are not automatically added to every `trainRun`, pathway record or SQL table. No additional rule ID or station-entry cutoff field is selected.
+
+`ticketing_cutoff` concerns ticket sales, independently of passing a ticket check or boarding. Its addition does not establish a universal order relative to the other cutoffs, nor select purchase-channel or ticket-state fields. Any ticketing-specific applicability or cross-field ordering needs its own scoped review.
+
+**Confirmed wrapper semantics:** each cutoff can express a fixed local service-day time (`TimeOfDay`) or a time before a referenced departure (`TimeBeforeDeparture`), with a StrictTime value preserving minute/second precision and relevant uncertainty. These labels establish semantic variants, not discriminator/property names or final TypeScript definitions. The relative variant uses StrictTime precision semantics for an advance duration, not a dated clock instant: do not fabricate an epoch date or encode three minutes as a purported 00:03 clock time. The current frontend StrictTime union primarily represents dated instants/ranges; its required duration/time-of-day support must be settled in the detailed shared contract before implementation. Do not fall back to an unqualified seconds number to bypass the owner's StrictTime requirement.
+
+`TimeBeforeDeparture` needs the actual relevant departure context; a rule tied to last service must not use an arbitrary candidate departure or the last row of incomplete downloaded data. Departure binding, direction/service-day applicability and the wrapper's exact fields remain deferred. Fixed times require provider timezone and service-day/extended-hour context; a plain clock comparison across midnight is insufficient. The same record may contain differently wrapped cutoffs, and different source fields may use different precision.
+
+**Confirmed validation semantics:** when both rules apply to the same passenger's check-before-boarding sequence, validation must detect a ticket-check deadline later than the corresponding door-closing deadline. For comparable advance durations tied to the same departure, the owner's example is:
+
+- `boarding advance <= checkin advance`.
+- Once resolved to comparable actual deadline instants, the equivalent order is `checkin deadline <= boarding deadline`.
+
+For example, ticket checks closing three minutes before departure and doors closing thirty seconds before departure have the intended order. Therefore a raw `boarding_cutoff <= checkin_cutoff` comparison cannot be used for every union variant: clock instants order in the opposite direction to advance durations. With mixed variants or different reference departures, resolve the actual relevant deadlines before ordering them, using the detailed StrictTime comparison rules. These mathematical relations are explanatory semantics, not a selected native operator implementation.
+
+Validate only facts with an established shared scope and passenger-stage relationship. Minute/second precision, bounds, uninterpreted values, missing anchors or unclear applicability can make a comparison undecidable; do not assume zero, invent exact seconds or treat unresolved context as a successful consistency check. Definite contradictions must produce a validation error. Insufficient context or precision remains unresolved rather than passing by default. Error serialization, whether an error blocks a record or the whole artifact, partial-data retention and the comparison API remain deferred; no persisted validation-status field is introduced.
+
+There is no universal ordering of `transfer_passage_cutoff` against `checkin_cutoff` and `boarding_cutoff`. A passage may lead to a ticket checkpoint or may serve a route that bypasses it; a last-service closure may also have a different departure anchor. First establish which passage/stage a passenger uses. A closure does not retroactively invalidate a passenger who has already passed it. Do not infer a station-wide prohibition from a scoped passage deadline.
+
+**Owner's frontend use case:** station times along an illustrative incoming service are 13:00, 13:03 and 13:07. The relevant outgoing intercity service departs at 13:17 and stops checking tickets three minutes before departure. At the displayed minute precision, its check-in deadline is 13:14, leaving a nominal seven minutes from the 13:07 arrival to that checkpoint deadline. The ten-minute arrival-to-departure difference is not the time available to reach the checkpoint. Preserve the outgoing `departureTime` as 13:17.
+
+This example alone does not prove the connection can be made: the applicable arrival-location-to-checkpoint duration, passage closures and any remaining boarding/transfer constraints must also be satisfied. It does not manufacture an incoming trip identity from separate station times or require ClockFace to become a complete journey planner. Do not copy a whole platform-to-platform traversal time onto the shorter arrival-to-checkpoint segment without evidence. Any derived deadline or connection result must preserve StrictTime precision; the minute-form calculation does not assert zero seconds or select inclusion at the deadline itself.
+
+Existing published minimum transfer times can already include walking and cutoff-related buffers. Do not automatically add those minima, pathway durations and advance values together; review covered stages, scope and precedence first. Relative advance is distinct from actual elapsed movement and from a cutoff instant.
+
+**Deferred — F04/F06/F13/F16:** review rule record organization and flexible applicability fields (station/platform/checkpoint/passage, route/direction, tags, optional event/trip, source/version), departure-reference binding and mapping of retained transfer rules. Existing IDs/tags may be reused where appropriate, but no new scope fields or hard trip requirement are implied. Then settle exact wrapper/property names, minute/second duration representation, arithmetic/comparison, unknown/incomparable handling and midnight/service-day interpretation with detailed StrictTime. Confirm equality/admission boundaries separately from deadline-order consistency; the frequency-map interval rule does not decide cutoff inclusion. Resolve diagnostic representation and blocking policy, overlapping rules, source/estimated results and API presentation before implementation. No migration, validation code or frontend change is approved here.
+
+### 15.8 Localization — direct name maps confirmed
+
+**Confirmed:** omit the separate normalized GTFS-shaped `translations` collection. Replace the former scalar-string contracts for these five display-name fields with language-keyed maps on their owning records:
+
+| Field | Confirmed non-null type |
+| --- | --- |
+| `stops.stop_name` | Language-keyed object with `string` or null values |
+| `routes.route_short_name`, `routes.route_long_name` | The same map type, separately for each field |
+| `directions.direction_name`, `service_patterns.headsign` | The same map type |
+
+Example of the confirmed shape:
+
+```json
+{
+  "stop_name": {
+    "zh-CN": "示例站",
+    "en": "Example Station"
+  },
+  "aliases": {
+    "zh-CN": ["示例站旧称"]
+  }
+}
+```
+
+Keep these field names without a parallel `names` field. Each language maps to one preferred display string; alternative names remain in the already confirmed location `aliases`. Language tags and `undetermined-language` preserve supplied text with known or unknown language. Fields and map values remain nullable/omittable, without mandatory English/local-language completeness, generated translations or defaults. Existing provider/city/agency SQL name-map contracts remain unchanged.
+
+The GTFS resolver applies applicable source translations when constructing the owning name maps; raw snapshots retain the original records. No generic target/field/record-ID translation registry is served. Unresolved or non-name translations remain preservable in raw/custom content without invented targets. `route_desc` and `trainRun.terminal.name` retain their existing scalar types. `stop_desc` and `tts_stop_name` are removed, not changed to maps. Review any future localized non-name text or terminal-name type change against a concrete query requirement.
+
+**Deferred — F03/F06/F08/F13/F16:** agree language normalization/selection/fallback, conflicting source translations, configured corrections, alias search and terminal/topology display interaction during localized resolver/API review. Representation is now agreed; these behavioral details remain open.
+
+### 15.9 Remaining data-contract and implementation deferrals
+
+| Subject | Current state / review trigger |
+| --- | --- |
+| Pre-boarding rule structure and cutoff encoding | `pre_boarding_limits` is the renamed and extended GTFS `transfers` collection; the four cutoffs belong to its records. Review applicability and departure-reference fields, including which facts share a record; collection ownership is settled. Exact StrictTime wrappers and comparison implementation wait for the detailed temporal contract. |
+| Transfer-time behavior | The timing-only fields are confirmed; review source/estimated result semantics, applicability, precedence and estimation at resolver/API review. |
+| Topology localization behavior | Direct name maps are confirmed; review language selection, source/configured conflicts, alias search and terminal display interaction. |
+| Station-timetable outer grouping and source/version references | Artifact/API review against the confirmed station-oriented lookup requirements. |
+| Initial StrictTime encoding and later operations | Only known seconds, withheld seconds and minute-only values are in the initial scope. Review their encoding and cutoff wrappers; implement arithmetic/comparison and dependent frequency-window operations later. Tags already belong to `trainRun`; only their relation to line-owned frequency data awaits outer JSON review. |
+| Stable mappings, partial-data capability, validation, completeness and pattern selection | Resolver/API review before implementing joins or derived terminal defaults. |
+| Stop-coordinate conversion | Resolver/artifact/API review before coordinate-dependent serving; the shapes catalog is removed. |
+| Manifest, partitions/indexes, active output selection, configuration binding and retention | Artifact/serving lifecycle review; publication SQL tables remain conditional. |
+| Optional trip/calendar payloads | Only when concrete preservation/query needs justify them; do not restore mandatory trips or the withdrawn event calendar reference. |
+| Fare calculation, accessible navigation, street/indoor directions and other unreviewed GTFS capabilities | Outside current normalized scope; reopen only for an explicit product requirement, not to complete GTFS coverage. |
+
+Scheduler, resolver interfaces, size statistics and Docker/no-Docker deployment retain their existing review points. No backend implementation, new independent repository or additional SQL field is selected by this update.

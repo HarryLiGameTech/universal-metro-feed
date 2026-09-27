@@ -197,7 +197,6 @@ main {
 .timetable-minute { display: inline-grid; grid-template-columns: 2ch 0.7ch; align-items: start; width: 3.05ch; font-family: "DM Mono", monospace; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; cursor: help; }
 .timetable-minute > span { min-width: 0; }
 .timetable-minute sup { color: var(--signal); font-size: 0.58em; line-height: 1; margin: 0.08em 0 0 0.08em; }
-.timetable-minute .timetable-route-tag { grid-column: 1 / -1; color: var(--muted); font-size: 9px; line-height: 1; }
 .timetable-footer { min-height: 48px; margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 0 34px; border-top: 1px solid var(--line); color: var(--muted); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 .timetable-footer strong { color: var(--ink); font-weight: 500; }
 

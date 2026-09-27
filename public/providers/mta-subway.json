@@ -9,7 +9,9 @@
     "catalogUrl": "/providers/mta-subway/catalog.json"
   },
   "schedule": {
-    "kind": "gtfs-static"
+    "kind": "clockface",
+    "baseUrl": "",
+    "runId": ""
   },
   "predictions": {
     "kind": "gtfs-realtime",

@@ -5,6 +5,7 @@ import mbtaManifestFixture from "../../public/providers/mbta-subway.json";
 import nbrtManifestFixture from "../../public/providers/nbrt-subway.json";
 import toeiManifestFixture from "../../public/providers/toei-subway.json";
 import { parseProviderCatalog, parseProviderManifest, parseProviderRegistry } from "./registry";
+import { runtimeForProvider } from "./runtime";
 
 describe("provider configuration", () => {
   it("registers Ningbo as a partial HTTP schedule with no predictions or line topology", () => {
@@ -42,6 +43,18 @@ describe("provider configuration", () => {
     const topology = parseProviderManifest(manifestFixture, "mta-subway").topology;
     expect(topology.kind === "none" ? null : topology.catalogUrl)
       .toBe("/providers/mta-subway/catalog.json");
+  });
+
+  it("routes MTA's static timetable through Clockface configuration", async () => {
+    const manifest = parseProviderManifest(manifestFixture, "mta-subway");
+    expect(manifest.schedule).toEqual({ kind: "clockface", baseUrl: "", runId: "" });
+    const runtime = await runtimeForProvider(manifest);
+    await expect(runtime.loadTimetable!("127", ["1"], "N", "weekday"))
+      .rejects.toThrow("Clockface has not been configured");
+    expect(() => parseProviderManifest({
+      ...manifestFixture,
+      schedule: { kind: "clockface", baseUrl: "http://example.com", runId: "invalid" },
+    }, "mta-subway")).toThrow("Invalid provider manifest");
   });
 
   it("registers Boston independently and preserves its GTFS topology with an API fallback", () => {

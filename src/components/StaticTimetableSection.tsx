@@ -157,7 +157,6 @@ export function StaticTimetableSection({ timezone, locality, loadTimetable, defa
                       >
                         <span>{event.minute}</span>
                         {event.hasHalfMinute && <sup aria-hidden="true">+</sup>}
-                        {event.routeId && <span className="timetable-route-tag">{event.routeId}</span>}
                       </span>
                     ))}
                   </div>

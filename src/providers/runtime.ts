@@ -28,10 +28,17 @@ export async function runtimeForProvider(manifest: ProviderManifest): Promise<Pr
     return createToeiRuntime(manifest);
   }
   if (manifest.predictions.kind === "gtfs-realtime" && manifest.predictions.adapter === "mta" &&
-      manifest.schedule.kind === "gtfs-static") {
+      manifest.schedule.kind === "clockface") {
     const { mtaLoaders } = await import("./mta/runtime");
+    const { clockfaceTimetableLoader } = await import("./mta/clockface-timetable");
+    const clockfaceConfig = {
+      ...manifest.schedule,
+      baseUrl: import.meta.env.VITE_CLOCKFACE_BASE_URL || manifest.schedule.baseUrl,
+      runId: import.meta.env.VITE_CLOCKFACE_RUN_ID || manifest.schedule.runId,
+    };
     return {
       ...mtaLoaders,
+      loadTimetable: clockfaceTimetableLoader(clockfaceConfig),
       arrivalSource: "prediction",
       feedLabel: "MTA feed",
       refreshIntervalMs: manifest.refreshIntervalMs ?? 5_000,
