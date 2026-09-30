@@ -1,0 +1,116 @@
+{
+  "sourceContentHash": "67bf028e155e9f6eec5157c0768f1c490c111055b0a45d63d3e4a497765a77e8",
+  "sourceParseRunId": "53b31254-465a-492a-b9ec-ac213d0efa4d",
+  "calendar": [
+    {
+      "serviceId": "26B-AllLines-Weekday-02",
+      "startDate": "20260720",
+      "endDate": "20261113",
+      "days": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "serviceId": "26B-AllLines-Saturday-02",
+      "startDate": "20260725",
+      "endDate": "20261114",
+      "days": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "serviceId": "26B-AllLines-Sunday-02",
+      "startDate": "20260726",
+      "endDate": "20261108",
+      "days": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "serviceId": "26B-AllLines-Monday-25",
+      "startDate": "20260907",
+      "endDate": "20260907",
+      "days": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "serviceId": "26B-NoLine-Weekday-01",
+      "startDate": "20260720",
+      "endDate": "20261113",
+      "days": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "serviceId": "26B-NoLine-Saturday-01",
+      "startDate": "20260725",
+      "endDate": "20261114",
+      "days": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "serviceId": "26B-NoLine-Sunday-01",
+      "startDate": "20260726",
+      "endDate": "20261108",
+      "days": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  ],
+  "exceptions": [
+    {
+      "serviceId": "26B-AllLines-Weekday-02",
+      "date": "20260907",
+      "exceptionType": 2
+    },
+    {
+      "serviceId": "26B-NoLine-Weekday-01",
+      "date": "20260907",
+      "exceptionType": 2
+    }
+  ]
+}

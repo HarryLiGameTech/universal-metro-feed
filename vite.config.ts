@@ -10,6 +10,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/clockface/, ""),
       },
+      "/path-feed": {
+        target: "https://www.panynj.gov",
+        changeOrigin: true,
+        rewrite: () => "/bin/portauthority/ridepath.json",
+      },
     },
   },
 });

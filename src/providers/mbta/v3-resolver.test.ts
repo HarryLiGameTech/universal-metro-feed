@@ -166,9 +166,9 @@ describe("MBTA V3 adapter", () => {
     expect(result.data.stops[1]?.arrival?.time).toMatchObject({ kind: "estimate", toleranceSeconds: 45 });
   });
 
-  it("renders provider schedules without claiming second precision", async () => {
+  it("marks the shared + boundary when the schedule timestamp has 30 seconds", async () => {
     const now = Math.floor(Date.now() / 1_000);
-    const planned = new Date((now + 180) * 1_000).toISOString();
+    const planned = new Date((Math.floor((now + 180) / 60) * 60 + 30) * 1_000).toISOString();
     vi.stubGlobal("fetch", vi.fn(async (input: string | URL) => {
       const url = String(input);
       if (url.endsWith("/providers/mbta-subway/catalog.json")) return jsonResponse(catalogFixture);
@@ -181,7 +181,7 @@ describe("MBTA V3 adapter", () => {
 
     const result = await fetchMbtaTimetable("place-sstat", ["Red"], "0", "weekday");
     expect(result.scheduledTrainCount).toBe(1);
-    expect(result.hours[0]?.events[0]?.exactTime).toMatch(/^\d{2}:\d{2}$/);
-    expect(result.hours[0]?.events[0]?.hasHalfMinute).toBe(false);
+    expect(result.hours[0]?.events[0]?.exactTime).toMatch(/^\d{2}:\d{2}:30$/);
+    expect(result.hours[0]?.events[0]?.hasHalfMinute).toBe(true);
   });
 });

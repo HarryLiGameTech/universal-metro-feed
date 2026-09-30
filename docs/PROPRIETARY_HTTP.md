@@ -39,10 +39,12 @@ The GTFS topology generation script and MTA source kinds are unchanged.
 ## Preserved provider policies
 
 MBTA keeps its GTFS station/platform selection, real trip identities, trip paths,
-full-day timetable queries, minute-level published schedules, prediction seconds
+full-day timetable queries, minute-level trip-path schedule labels, prediction seconds
 and supplied uncertainty. Schedule and prediction failures still degrade
 independently in a trip path. Its existing provenance and freshness rules remain
 in the MBTA policy, not in the JSON codec.
+The static minute grid uses the supplied schedule timestamp seconds to mark `+`
+at `:30` or later, following the shared timetable rule.
 
 NBRT's `PartialScheduleResolver` retains second-precision planned times, explicit
 origin departure selection, intermediate arrival selection, null trip IDs,

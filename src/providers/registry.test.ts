@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import registryFixture from "../../public/providers/index.json";
 import manifestFixture from "../../public/providers/mta-subway.json";
 import mbtaManifestFixture from "../../public/providers/mbta-subway.json";
+import pathManifestFixture from "../../public/providers/path-rail.json";
+import pathCatalogFixture from "../../public/providers/path-rail/catalog.json";
 import nbrtManifestFixture from "../../public/providers/nbrt-subway.json";
 import toeiManifestFixture from "../../public/providers/toei-subway.json";
 import { parseProviderCatalog, parseProviderManifest, parseProviderRegistry } from "./registry";
@@ -66,6 +68,26 @@ describe("provider configuration", () => {
     expect(manifest.schedule).toMatchObject({ kind: "proprietary-http", adapter: "mbta-v3", coverage: "full-day" });
     expect(manifest.predictions.kind).toBe("proprietary-http");
     expect(manifest.predictions.kind === "proprietary-http" ? manifest.predictions.adapter : null).toBe("mbta-v3");
+  });
+
+  it("registers PATH with the official feed and a direction-only station directory", () => {
+    const registry = parseProviderRegistry(registryFixture);
+    expect(registry.providers.find((provider) => provider.id === "path-rail")?.manifest)
+      .toBe("/providers/path-rail.json");
+    const manifest = parseProviderManifest(pathManifestFixture, "path-rail");
+    expect(manifest).toMatchObject({
+      topology: { kind: "station-directory" },
+      schedule: { kind: "clockface", baseUrl: "", runId: "" },
+      predictions: {
+        kind: "proprietary-http",
+        adapter: "path-ridepath",
+        urlTemplate: "https://www.panynj.gov/bin/portauthority/ridepath.json",
+      },
+    });
+    const catalog = parseProviderCatalog(pathCatalogFixture, "path-rail");
+    expect(catalog.stations).toHaveLength(13);
+    expect(catalog.stations.find((station) => station.id === "JSQ")?.routes[0]?.directions)
+      .toEqual(["ToNJ", "ToNY"]);
   });
 
   it("pairs Toei's dynamic feeds with local references without enabling static schedules", () => {

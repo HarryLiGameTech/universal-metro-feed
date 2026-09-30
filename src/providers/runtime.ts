@@ -19,6 +19,8 @@ export interface ProviderRuntime {
   arrivalSource: "prediction" | "schedule";
   feedLabel: string;
   refreshIntervalMs: number;
+  /** Keep prediction semantics while allowing a provider to omit the visual ~ prefix. */
+  suppressApproximationMark?: boolean;
 }
 
 /** The registry selects one adapter; the UI only consumes the shared contracts. */

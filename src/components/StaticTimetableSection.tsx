@@ -8,11 +8,12 @@ import type { Direction, TimetableDayType, TimetableResult } from "../types";
 import { RouteBullet } from "./RouteBullet";
 import { SelectorPanel } from "./SelectorPanel";
 
-export function StaticTimetableSection({ timezone, locality, loadTimetable, defaultStationId }: {
+export function StaticTimetableSection({ timezone, locality, loadTimetable, defaultStationId, scopeDescription }: {
   timezone: string;
   locality: string;
   loadTimetable: TimetableLoader;
   defaultStationId: string;
+  scopeDescription?: string;
 }) {
   const { stations } = useCatalog();
   const firstStation = stations[0] ?? (() => {
@@ -96,7 +97,7 @@ export function StaticTimetableSection({ timezone, locality, loadTimetable, defa
           <p className="section-kicker">Scheduled service</p>
           <h2 id="timetable-section-title">Static timetable</h2>
         </div>
-        <p>A full-day, platform-specific view inspired by Japanese station timetables.</p>
+        <p>{scopeDescription ?? "A full-day, platform-specific view inspired by Japanese station timetables."}</p>
       </header>
 
       <div className="workspace timetable-workspace">
@@ -134,7 +135,7 @@ export function StaticTimetableSection({ timezone, locality, loadTimetable, defa
             <div className={status === "error" ? "timetable-prompt is-error" : "timetable-prompt"}>
               {status === "loading" ? <RefreshCw className="spin" aria-hidden="true" /> : <CalendarClock aria-hidden="true" />}
               <strong>{status === "loading" ? "Loading schedule…" : "Couldn’t load the timetable"}</strong>
-              <span>{status === "error" ? error : "Fetching the selected platform timetable."}</span>
+              <span>{status === "error" ? error : "Fetching the selected station timetable."}</span>
             </div>
           ) : timetable.hours.length === 0 ? (
             <div className="timetable-prompt">

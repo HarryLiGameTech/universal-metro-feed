@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "path-rail",
+  "timezone": "America/New_York",
+  "defaultStationId": "JSQ",
+  "sourceUrl": "https://www.panynj.gov/bin/portauthority/ridepath.json",
+  "refreshIntervalMs": 15000,
+  "topology": {
+    "kind": "station-directory",
+    "catalogUrl": "/providers/path-rail/catalog.json"
+  },
+  "schedule": { "kind": "clockface", "baseUrl": "", "runId": "" },
+  "predictions": {
+    "kind": "proprietary-http",
+    "adapter": "path-ridepath",
+    "urlTemplate": "https://www.panynj.gov/bin/portauthority/ridepath.json",
+    "accessUrl": ""
+  }
+}

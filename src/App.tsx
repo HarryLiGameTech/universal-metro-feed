@@ -212,7 +212,7 @@ function PlatformView({ descriptor, catalog, manifest, runtime, providerId }: {
         <ArrivalBoard providerId={catalog.providerId} timezone={manifest.timezone} runtime={runtime} station={station} routeIds={routeIds} direction={direction} />
       </div>
 
-      {runtime.loadTimetable && <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} />}
+      {runtime.loadTimetable && <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} scopeDescription={providerId === "path-rail" ? "A full-day timetable for the selected PATH station and direction." : undefined} />}
 
     </>
   );

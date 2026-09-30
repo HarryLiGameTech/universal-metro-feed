@@ -37,6 +37,11 @@ export interface TimetableSource {
   calendar: CalendarPayload;
 }
 
+/** Shared minute-grid rule for source times with known seconds. */
+export function hasPlusMarker(second: number) {
+  return second >= 30;
+}
+
 const dayIndexes: Record<TimetableDayType, readonly number[]> = {
   weekday: [1, 2, 3, 4, 5],
   saturday: [6],
@@ -229,7 +234,7 @@ export function renderTimetable(
         events.push({
           seconds,
           minute: String(minute).padStart(2, "0"),
-          hasHalfMinute: second === 30,
+          hasHalfMinute: hasPlusMarker(second),
           exactTime,
           eventKind,
           ...(event.routeId ? { routeId: event.routeId } : {}),

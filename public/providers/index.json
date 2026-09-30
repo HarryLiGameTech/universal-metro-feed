@@ -23,6 +23,24 @@
       "manifest": "/providers/mta-subway.json"
     },
     {
+      "id": "path-rail",
+      "names": { "en": "PATH" },
+      "introduction": {
+        "kicker": "PATH · live train arrivals",
+        "description": "Predicted PATH train arrivals from the Port Authority's live times feed.",
+        "locality": "New York",
+        "attribution": "the Port Authority of New York and New Jersey"
+      },
+      "cities": [
+        { "id": "us-ny-new-york", "names": { "en": "New York" } },
+        { "id": "us-nj-newark", "names": { "en": "Newark" } },
+        { "id": "us-nj-jersey-city", "names": { "en": "Jersey City" } },
+        { "id": "us-nj-hoboken", "names": { "en": "Hoboken" } },
+        { "id": "us-nj-harrison", "names": { "en": "Harrison" } }
+      ],
+      "manifest": "/providers/path-rail.json"
+    },
+    {
       "id": "mbta-subway",
       "names": { "en": "Boston Subway & Light Rail" },
       "introduction": {

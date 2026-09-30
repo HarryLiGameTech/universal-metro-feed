@@ -1,0 +1,22 @@
+{
+  "providerId": "path-rail",
+  "timezone": "America/New_York",
+  "routes": {
+    "PATH": { "id": "PATH", "name": "PATH", "label": "P", "color": "#555555", "textColor": "#ffffff" }
+  },
+  "stations": [
+    { "id": "NWK", "name": "Newark", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNY"], "directionNames": { "ToNY": "To New York" } }] },
+    { "id": "HAR", "name": "Harrison", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "JSQ", "name": "Journal Square", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "GRV", "name": "Grove Street", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "NEW", "name": "Newport", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "EXP", "name": "Exchange Place", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "HOB", "name": "Hoboken", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "WTC", "name": "World Trade Center", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ"], "directionNames": { "ToNJ": "To New Jersey" } }] },
+    { "id": "CHR", "name": "Christopher Street", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "09S", "name": "9th Street", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "14S", "name": "14th Street", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "23S", "name": "23rd Street", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ", "ToNY"], "directionNames": { "ToNJ": "To New Jersey", "ToNY": "To New York" } }] },
+    { "id": "33S", "name": "33rd Street", "latitude": null, "longitude": null, "routes": [{ "routeId": "PATH", "directions": ["ToNJ"], "directionNames": { "ToNJ": "To New Jersey" } }] }
+  ]
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeServiceIds, availableTimetableDays, findTimetableDate, renderTimetable, shiftDateKey } from "./timetable";
+import { activeServiceIds, availableTimetableDays, findTimetableDate, hasPlusMarker, renderTimetable, shiftDateKey } from "./timetable";
 
 const calendar = {
   calendar: [
@@ -11,6 +11,10 @@ const calendar = {
 };
 
 describe("static timetable", () => {
+  it("marks the global minute-grid boundary at 30 seconds", () => {
+    expect([0, 29, 30, 31, 59].map(hasPlusMarker)).toEqual([false, false, true, true, true]);
+  });
+
   it("applies calendar exceptions", () => {
     expect([...activeServiceIds(calendar, "20260914")]).toEqual([]);
   });

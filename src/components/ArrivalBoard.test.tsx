@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { exactTime } from "../domain/strict-time";
+import { estimatedTime, exactTime } from "../domain/strict-time";
 import { CatalogContext } from "../providers/catalog-context";
 import type { ProviderRuntime } from "../providers/runtime";
 import type { Arrival, ArrivalSnapshot, Station } from "../types";
@@ -23,7 +23,7 @@ const arrival: Arrival = {
   displayTime: exactTime(now + 250, "Asia/Shanghai"), delaySeconds: null,
   delayStatus: "undetermined", delayLabel: "", identityStability: "snapshot-only",
 };
-function render(arrivals: Arrival[]) {
+function render(arrivals: Arrival[], boardRuntime = runtime) {
   vi.useFakeTimers();
   vi.setSystemTime(now * 1_000);
   const client = new QueryClient();
@@ -32,7 +32,7 @@ function render(arrivals: Arrival[]) {
   const html = renderToStaticMarkup(
     <QueryClientProvider client={client}>
       <CatalogContext.Provider value={{ providerId: "nbrt-subway", timezone: "Asia/Shanghai", routes: {}, stations: [station] }}>
-        <ArrivalBoard providerId="nbrt-subway" timezone="Asia/Shanghai" runtime={runtime} station={station} routeIds={["8"]} direction="1" />
+        <ArrivalBoard providerId="nbrt-subway" timezone="Asia/Shanghai" runtime={boardRuntime} station={station} routeIds={["8"]} direction="1" />
       </CatalogContext.Provider>
     </QueryClientProvider>,
   );
@@ -59,6 +59,19 @@ describe("schedule-only arrival board", () => {
     expect(html).toContain("This is not a full-day schedule");
     expect(html).not.toMatch(/No more trains today|live feed|Live/);
   });
+});
+
+it("can hide the tilde for PATH while keeping its time an estimate", () => {
+  const predicted: Arrival = {
+    ...arrival, timeSource: "prediction", scheduledTime: null,
+    displayTime: estimatedTime(now + 250, "Asia/Shanghai", "second"),
+  };
+  const predictionRuntime: ProviderRuntime = { ...runtime, arrivalSource: "prediction" };
+  expect(render([predicted], predictionRuntime)).toContain("~18:34:10");
+  const pathRuntime: ProviderRuntime = { ...predictionRuntime, suppressApproximationMark: true };
+  const html = render([predicted], pathRuntime);
+  expect(html).toContain("18:34:10");
+  expect(html).not.toContain("~18:34:10");
 });
 
 it("uses the shared board without a catalog, preserving multiple stop predictions and missing labels", () => {

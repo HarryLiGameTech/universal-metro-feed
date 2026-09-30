@@ -9,6 +9,7 @@ import {
   type TopologySource,
 } from "../../domain/resolver";
 import { shiftDateKey, timetableDayTypeForDate } from "../../lib/service-date";
+import { hasPlusMarker } from "../../lib/timetable";
 import { catalogUrlForProvider, loadProviderCatalog, type ProviderCatalog, type ProviderManifest } from "../registry";
 import type { Arrival, ArrivalSnapshot, Direction, TimetableDayType, TimetableEvent, TimetableResult } from "../../types";
 import type { ProviderRuntime } from "../runtime";
@@ -224,7 +225,7 @@ export function createMbtaRuntime(manifest: ProviderManifest): ProviderRuntime {
     const byHour = new Map<number, TimetableEvent[]>();
     const seen = new Set<string>();
     const formatter = new Intl.DateTimeFormat("en-US", {
-      timeZone: TIMEZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+      timeZone: TIMEZONE, hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
     });
     for (const resource of data) {
       const routeId = relatedId(resource, "route");
@@ -237,16 +238,16 @@ export function createMbtaRuntime(manifest: ProviderManifest): ProviderRuntime {
       const time = departure ?? arrival;
       if (time == null) continue;
       const clock = formatter.format(time * 1_000);
-      const [hour = NaN, minute = NaN] = clock.split(":").map(Number);
-      if (!Number.isInteger(hour) || !Number.isInteger(minute)) continue;
+      const [hour = NaN, minute = NaN, second = NaN] = clock.split(":").map(Number);
+      if (!Number.isInteger(hour) || !Number.isInteger(minute) || !Number.isInteger(second)) continue;
       const key = `${routeId}:${tripId}:${clock}`;
       if (seen.has(key)) continue;
       seen.add(key);
       const row = byHour.get(hour) ?? [];
       row.push({
-        seconds: hour * 3_600 + minute * 60,
+        seconds: hour * 3_600 + minute * 60 + second,
         minute: String(minute).padStart(2, "0"),
-        hasHalfMinute: false,
+        hasHalfMinute: hasPlusMarker(second),
         exactTime: clock,
         eventKind: departure == null ? "arrival" : "departure",
         ...(routeIds.length > 1 ? { routeId } : {}),

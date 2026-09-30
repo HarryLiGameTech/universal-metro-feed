@@ -145,7 +145,7 @@ export function ArrivalBoard({ providerId, timezone, runtime, station, routeIds 
                     className={isSchedule ? "arrival-time is-scheduled" : `arrival-time delay-${arrival.delayStatus}`}
                     dateTime={new Date(arrival.eventTime * 1_000).toISOString()}
                   >
-                    {presented ? `${presented.qualifier === "about" ? "~" : ""}${presented.primary}` : timeFormatter.format(arrival.eventTime * 1_000)}
+                    {presented ? `${presented.qualifier === "about" && !runtime.suppressApproximationMark ? "~" : ""}${presented.primary}` : timeFormatter.format(arrival.eventTime * 1_000)}
                   </time>
                   <div className="arrival-annotations">
                     <small>{isSchedule ? arrival.eventKind === "departure" ? "Scheduled departure" : "Scheduled arrival" : fromFeed ? arrival.eventKind === "departure" ? "Departs" : "Arrives" : "Last prediction"}</small>

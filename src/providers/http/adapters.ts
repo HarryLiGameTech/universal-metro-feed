@@ -19,6 +19,10 @@ const adapters: Record<string, (manifest: ProviderManifest) => Promise<ProviderR
     const { createMbtaRuntime } = await import("../mbta/v3-resolver");
     return createMbtaRuntime(manifest);
   },
+  "path-ridepath": async (manifest) => {
+    const { createPathRuntime } = await import("../path/ridepath-adapter");
+    return createPathRuntime(manifest);
+  },
 };
 
 export function proprietaryHttpRuntime(manifest: ProviderManifest): Promise<ProviderRuntime> {

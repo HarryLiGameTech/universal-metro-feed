@@ -18,6 +18,8 @@ export interface ProprietaryHttpConfig {
   kind: "proprietary-http";
   adapter: string;
   urlTemplate: string;
+  /** Same-origin proxy for sources that do not permit browser CORS requests. */
+  accessUrl?: string;
 }
 
 export interface GtfsRealtimeConfig {
@@ -67,7 +69,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isHttpConfig(value: Record<string, unknown>): boolean {
-  if (typeof value.adapter !== "string" || !value.adapter || typeof value.urlTemplate !== "string") return false;
+  if (typeof value.adapter !== "string" || !value.adapter || typeof value.urlTemplate !== "string" ||
+      (value.accessUrl !== undefined && (typeof value.accessUrl !== "string" ||
+        (value.accessUrl !== "" && (!value.accessUrl.startsWith("/") || value.accessUrl.startsWith("//") ||
+          value.accessUrl.includes("?") || value.accessUrl.includes("#")))))) return false;
   try {
     return new URL(value.urlTemplate).protocol === "https:";
   } catch {

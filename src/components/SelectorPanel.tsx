@@ -40,7 +40,7 @@ export function SelectorPanel({
 
   return (
     <section className="selector-panel" aria-labelledby={`${idPrefix}-selector-title`}>
-      <div className="section-kicker">Choose your platform</div>
+      <div className="section-kicker">Choose your station and direction</div>
       <h2 id={`${idPrefix}-selector-title`}>Where are you waiting?</h2>
 
       <div className="field-group">

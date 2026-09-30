@@ -10,6 +10,7 @@ import {
 } from "../../lib/timetable";
 import type { Direction } from "../../types";
 import type { TimetableLoader } from "../runtime";
+import { clockfaceTime, parseClockfaceRuns, type ClockfaceTrainRun } from "../clockface/station-timetable";
 
 interface ClockfaceSchedule {
   kind: "clockface";
@@ -17,54 +18,11 @@ interface ClockfaceSchedule {
   runId: string;
 }
 
-interface ClockfaceTime {
-  type: "TimeSpecMinute" | "TimeSpecSecond";
-  hour: number;
-  minute: number;
-  second?: number | "Unknown";
-}
-
-interface ClockfaceTrainRun {
-  routeId?: string | null;
-  platformId?: string | null;
-  filterTags?: string[] | null;
-  arrivalTime?: ClockfaceTime | null;
-  departureTime?: ClockfaceTime | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function parseTime(value: unknown): string | null {
-  if (value == null) return null;
-  if (!isRecord(value) || !Number.isSafeInteger(value.hour) || Number(value.hour) < 0 ||
-      !Number.isInteger(value.minute) || Number(value.minute) < 0 || Number(value.minute) > 59) {
-    throw new Error("Clockface returned an invalid timetable time.");
-  }
-  if (value.type === "TimeSpecMinute") return null;
-  if (value.type !== "TimeSpecSecond" || value.second === "Unknown") return null;
-  if (!Number.isInteger(value.second) || Number(value.second) < 0 || Number(value.second) > 59) {
-    throw new Error("Clockface returned an invalid timetable second.");
-  }
-  return `${String(value.hour).padStart(2, "0")}:${String(value.minute).padStart(2, "0")}:${String(value.second).padStart(2, "0")}`;
-}
-
-function parseRuns(value: unknown): ClockfaceTrainRun[] {
-  if (!Array.isArray(value) || value.some((group) =>
-    !isRecord(group) || !Array.isArray(group.trainRuns) || group.trainRuns.some((run: unknown) =>
-      !isRecord(run) || (run.filterTags != null &&
-        (!Array.isArray(run.filterTags) || run.filterTags.some((tag: unknown) => typeof tag !== "string")))))) {
-    throw new Error("Clockface returned an invalid station timetable.");
-  }
-  return value.flatMap((group) => group.trainRuns as ClockfaceTrainRun[]);
-}
-
 function addRuns(shard: TimetableShard, runs: ClockfaceTrainRun[], routeId: string, platformId: string) {
   for (const run of runs) {
     if (run.routeId !== routeId || run.platformId !== platformId) continue;
-    const arrival = parseTime(run.arrivalTime);
-    const departure = parseTime(run.departureTime);
+    const arrival = clockfaceTime(run.arrivalTime);
+    const departure = clockfaceTime(run.departureTime);
     if (!arrival && !departure) continue;
     if (!run.filterTags?.length) continue;
     const event: RawTimetableEvent = { routeId, arrival, departure };
@@ -91,7 +49,7 @@ export function clockfaceTimetableLoader(config: ClockfaceSchedule): TimetableLo
     const url = `${baseUrl}/v1/runs/${encodeURIComponent(config.runId)}/stations/${encodeURIComponent(stationId)}/timetable?${query}`;
     const runsRequest = fetch(url, { signal }).then(async (response) => {
       if (!response.ok) throw new Error(`Clockface could not load this platform timetable (${response.status}).`);
-      return parseRuns(await response.json());
+      return parseClockfaceRuns(await response.json(), stationId);
     });
     const calendarRequest = fetch(assetUrl("/timetables/calendar.json"), { signal }).then(async (response) => {
       if (!response.ok) throw new Error("The static service calendar could not be loaded.");
