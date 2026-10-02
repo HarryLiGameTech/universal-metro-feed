@@ -8,11 +8,12 @@ import type { Direction, TimetableDayType, TimetableResult } from "../types";
 import { RouteBullet } from "./RouteBullet";
 import { SelectorPanel } from "./SelectorPanel";
 
-export function StaticTimetableSection({ timezone, locality, loadTimetable, defaultStationId, scopeDescription }: {
+export function StaticTimetableSection({ timezone, locality, loadTimetable, defaultStationId, onStationViewed, scopeDescription }: {
   timezone: string;
   locality: string;
   loadTimetable: TimetableLoader;
   defaultStationId: string;
+  onStationViewed(stationId: string): void;
   scopeDescription?: string;
 }) {
   const { stations } = useCatalog();
@@ -22,7 +23,7 @@ export function StaticTimetableSection({ timezone, locality, loadTimetable, defa
   const [stationId, setStationId] = useState(stations.some((item) => item.id === defaultStationId) ? defaultStationId : firstStation.id);
   const station = useMemo(
     () => stations.find((item) => item.id === stationId) ?? firstStation,
-    [stationId],
+    [stations, stationId, firstStation],
   );
   const initialRoute = station.routes[0] ?? (() => {
     throw new Error(`No routes found for station ${station.id}.`);
@@ -42,6 +43,7 @@ export function StaticTimetableSection({ timezone, locality, loadTimetable, defa
     setStationId(nextStationId);
     setRouteIds([nextRoute.routeId]);
     setDirection(nextRoute.directions[0] ?? "");
+    onStationViewed(nextStationId);
   }
 
   function selectRoute(nextRouteId: string) {

@@ -9,17 +9,27 @@ import { ArrivalBoard } from "./components/ArrivalBoard";
 import { SelectorPanel } from "./components/SelectorPanel";
 import { StaticTimetableSection } from "./components/StaticTimetableSection";
 import { runtimeForProvider, type ProviderRuntime } from "./providers/runtime";
+import { StationPreferencesProvider, useStationPreferences } from "./hooks/useStationPreferences";
+import { initialStationId } from "./lib/station-preferences";
 import "./styles.css";
 
 export default function App() {
-  const [providerId, setProviderId] = useState("mta-subway");
+  return <StationPreferencesProvider><MetroApp /></StationPreferencesProvider>;
+}
+
+function MetroApp() {
+  const { lastStation } = useStationPreferences();
+  const [requestedProviderId, setProviderId] = useState(lastStation?.providerId ?? "mta-subway");
   const registry = useQuery({
     queryKey: ["provider-registry"],
     queryFn: loadProviderRegistry,
     staleTime: Infinity,
     retry: 1,
   });
-  const descriptor = registry.data?.providers.find((provider) => provider.id === providerId);
+  const descriptor = registry.data?.providers.find((provider) => provider.id === requestedProviderId)
+    ?? registry.data?.providers.find((provider) => provider.id === "mta-subway")
+    ?? registry.data?.providers[0];
+  const providerId = descriptor?.id ?? requestedProviderId;
   const selectedProvider = useQuery({
     queryKey: ["provider", providerId],
     queryFn: async () => {
@@ -105,21 +115,31 @@ function PlatformView({ descriptor, catalog, manifest, runtime, providerId }: {
   runtime: ProviderRuntime;
   providerId: string;
 }) {
+  const { lastStation, rememberStation } = useStationPreferences();
   const stations = catalog.stations;
   const firstStation = stations[0] ?? (() => {
     throw new Error("The provider station catalog is empty.");
   })();
-  const defaultStationId = manifest.defaultStationId && stations.some((station) => station.id === manifest.defaultStationId)
-    ? manifest.defaultStationId : firstStation.id;
+  const [defaultStationId] = useState(() => initialStationId(stations, manifest.defaultStationId,
+    lastStation?.providerId === providerId ? lastStation.stationId : undefined));
   const [stationId, setStationId] = useState(defaultStationId);
   const station = useMemo(
     () => stations.find((item) => item.id === stationId) ?? firstStation,
-    [stationId],
+    [stations, stationId, firstStation],
   );
   const initialRoute = station.routes[0];
   if (!initialRoute) throw new Error(`No routes found for station ${station.id}.`);
   const [routeIds, setRouteIds] = useState<string[]>([initialRoute.routeId]);
   const [direction, setDirection] = useState<Direction>(initialRoute.directions[0] ?? "");
+
+  const rememberViewedStation = useCallback((nextStationId: string) => {
+    rememberStation({ providerId, stationId: nextStationId });
+  }, [providerId, rememberStation]);
+
+  // Persist only a resolved station, after its provider catalog has loaded.
+  useEffect(() => {
+    rememberViewedStation(defaultStationId);
+  }, [defaultStationId, rememberViewedStation]);
 
   const selectPlatform = useCallback((nextStationId: string, nextRouteId?: string, nextDirection?: Direction) => {
     const nextStation = stations.find((item) => item.id === nextStationId);
@@ -133,7 +153,8 @@ function PlatformView({ descriptor, catalog, manifest, runtime, providerId }: {
     setStationId(nextStationId);
     setRouteIds([nextRoute.routeId]);
     setDirection(resolvedDirection);
-  }, []);
+    rememberViewedStation(nextStationId);
+  }, [stations, rememberViewedStation]);
 
   const selectStation = useCallback((nextStationId: string) => {
     selectPlatform(nextStationId);
@@ -212,7 +233,7 @@ function PlatformView({ descriptor, catalog, manifest, runtime, providerId }: {
         <ArrivalBoard providerId={catalog.providerId} timezone={manifest.timezone} runtime={runtime} station={station} routeIds={routeIds} direction={direction} />
       </div>}
 
-      {runtime.loadTimetable && <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} scopeDescription={providerId === "path-rail" ? "A full-day timetable for the selected PATH station and direction." : undefined} />}
+      {runtime.loadTimetable && <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} onStationViewed={rememberViewedStation} scopeDescription={providerId === "path-rail" ? "A full-day timetable for the selected PATH station and direction." : undefined} />}
 
     </>
   );

@@ -1,9 +1,9 @@
-import { ChevronDown } from "lucide-react";
 import { useCatalog } from "../providers/catalog-context";
 import { timetableDayLabels } from "../lib/service-date";
 import { directionDisplay, sharedLineGroups } from "../lib/platform-selection";
 import type { Direction, Station, TimetableDayType } from "../types";
 import { RouteBullet } from "./RouteBullet";
+import { StationPicker } from "./StationPicker";
 
 interface SelectorPanelProps {
   idPrefix?: string;
@@ -32,7 +32,7 @@ export function SelectorPanel({
   timetableDay,
   onTimetableDayChange,
 }: SelectorPanelProps) {
-  const { routes, stations } = useCatalog();
+  const { routes } = useCatalog();
   const selectedRoute = station.routes.find((item) => item.routeId === routeIds[0]) ?? station.routes[0];
   const directions = (selectedRoute?.directions ?? []).filter((value) =>
     routeIds.every((routeId) => station.routes.some((item) => item.routeId === routeId && item.directions.includes(value))));
@@ -43,23 +43,7 @@ export function SelectorPanel({
       <div className="section-kicker">Choose your station and direction</div>
       <h2 id={`${idPrefix}-selector-title`}>Where are you waiting?</h2>
 
-      <div className="field-group">
-        <label htmlFor={`${idPrefix}-station`}>Station</label>
-        <div className="select-shell">
-          <select
-            id={`${idPrefix}-station`}
-            value={station.id}
-            onChange={(event) => onStationChange(event.target.value)}
-          >
-            {stations.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name} · {option.routes.map((item) => item.routeId).join(" ")}
-              </option>
-            ))}
-          </select>
-          <ChevronDown aria-hidden="true" size={18} />
-        </div>
-      </div>
+      <StationPicker idPrefix={idPrefix} station={station} onStationChange={onStationChange} />
 
       <fieldset className="field-group">
         <legend>Line</legend>
