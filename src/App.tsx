@@ -198,7 +198,7 @@ function PlatformView({ descriptor, catalog, manifest, runtime, providerId }: {
 
   return (
     <>
-      <div className="workspace">
+      {runtime.showRealtime !== false && <div className="workspace">
         <SelectorPanel
           idPrefix="realtime"
           station={station}
@@ -210,7 +210,7 @@ function PlatformView({ descriptor, catalog, manifest, runtime, providerId }: {
           onDirectionChange={selectDirection}
         />
         <ArrivalBoard providerId={catalog.providerId} timezone={manifest.timezone} runtime={runtime} station={station} routeIds={routeIds} direction={direction} />
-      </div>
+      </div>}
 
       {runtime.loadTimetable && <StaticTimetableSection key={providerId} timezone={manifest.timezone} locality={descriptor.introduction?.locality ?? manifest.timezone} loadTimetable={runtime.loadTimetable} defaultStationId={defaultStationId} scopeDescription={providerId === "path-rail" ? "A full-day timetable for the selected PATH station and direction." : undefined} />}
 

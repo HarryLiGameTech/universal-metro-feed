@@ -13,6 +13,8 @@ export type TimetableLoader = (
 export interface ProviderRuntime {
   /** Feed scope uses the same loader without a station/route/direction selection. */
   arrivalScope?: "platform" | "feed";
+  /** Static-only providers omit the realtime selector and board. */
+  showRealtime?: boolean;
   loadArrivals: ArrivalLoader;
   loadTripPath: TripPathLoader | null;
   loadTimetable: TimetableLoader | null;
@@ -25,6 +27,10 @@ export interface ProviderRuntime {
 
 /** The registry selects one adapter; the UI only consumes the shared contracts. */
 export async function runtimeForProvider(manifest: ProviderManifest): Promise<ProviderRuntime> {
+  if (manifest.id === "bart" || manifest.id === "cta") {
+    const { gtfsRailRuntime } = await import("./rail/gtfs-runtime");
+    return gtfsRailRuntime(manifest);
+  }
   if (manifest.predictions.kind === "gtfs-realtime" && manifest.predictions.adapter === "toei") {
     const { createToeiRuntime } = await import("./toei/realtime-adapter");
     return createToeiRuntime(manifest);

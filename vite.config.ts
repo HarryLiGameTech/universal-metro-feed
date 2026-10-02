@@ -15,6 +15,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => "/bin/portauthority/ridepath.json",
       },
+      "/bart-gtfsrt": {
+        target: "https://api.bart.gov",
+        changeOrigin: true,
+        rewrite: () => "/gtfsrt/tripupdate.aspx",
+      },
     },
   },
 });

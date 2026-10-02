@@ -67,7 +67,14 @@ const newYorkDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 export function newYorkDateKey(date: Date) {
-  const parts = newYorkDateFormatter.formatToParts(date);
+  return dateKeyInTimezone(date, "America/New_York");
+}
+
+export function dateKeyInTimezone(date: Date, timezone: string) {
+  const formatter = timezone === "America/New_York" ? newYorkDateFormatter : new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  const parts = formatter.formatToParts(date);
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
   return `${part("year")}${part("month")}${part("day")}`;
 }
@@ -230,11 +237,13 @@ export function renderTimetable(
         const minute = Math.floor((seconds % 3_600) / 60);
         const second = seconds % 60;
         const eventKind = event.departure == null ? "arrival" : "departure";
-        const exactTime = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+        const exactTime = gtfsTime.split(":").length === 2
+          ? `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+          : `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
         events.push({
           seconds,
           minute: String(minute).padStart(2, "0"),
-          hasHalfMinute: hasPlusMarker(second),
+          hasHalfMinute: gtfsTime.split(":").length === 3 && hasPlusMarker(second),
           exactTime,
           eventKind,
           ...(event.routeId ? { routeId: event.routeId } : {}),

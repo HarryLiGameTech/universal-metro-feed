@@ -19,9 +19,9 @@ function eventTime(event: transit_realtime.TripUpdate.IStopTimeEvent | null | un
 }
 
 /** Join published trip/stop-sequence IDs to lightweight static references, never static times. */
-export function toeiArrivals(feed: transit_realtime.FeedMessage, timezone: string, map?: ToeiTripMap): ArrivalSnapshot {
+export function mappedGtfsArrivals(feed: transit_realtime.FeedMessage, timezone: string, map?: ToeiTripMap): ArrivalSnapshot {
   if (feed.header.incrementality === realtime.FeedHeader.Incrementality.DIFFERENTIAL) {
-    throw new Error("Toei predictions require a full feed snapshot.");
+    throw new Error("GTFS-Realtime predictions require a full feed snapshot.");
   }
   const arrivals: Arrival[] = [];
   let incomplete = false;
@@ -87,6 +87,8 @@ export function toeiArrivals(feed: transit_realtime.FeedMessage, timezone: strin
   };
 }
 
+export const toeiArrivals = mappedGtfsArrivals;
+
 export function createToeiRuntime(manifest: ProviderManifest): ProviderRuntime {
   if (manifest.predictions.kind !== "gtfs-realtime" || manifest.predictions.adapter !== "toei" ||
       !manifest.predictions.urlTemplate || manifest.topology.kind !== "gtfs-static" ||
@@ -112,7 +114,7 @@ export function createToeiRuntime(manifest: ProviderManifest): ProviderRuntime {
       signal?.throwIfAborted();
       const [feed, map] = await Promise.all([fetchGtfsRealtimeFeed(url, signal), mapping()]);
       signal?.throwIfAborted();
-      const snapshot = toeiArrivals(feed, manifest.timezone, map);
+      const snapshot = mappedGtfsArrivals(feed, manifest.timezone, map);
       return {
         ...snapshot,
         arrivals: snapshot.arrivals.filter((arrival) => arrival.routeId != null && arrival.stopId != null &&

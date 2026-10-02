@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "bart",
+  "timezone": "America/Los_Angeles",
+  "defaultStationId": "MONT",
+  "sourceUrl": "https://www.bart.gov/schedules/developers/gtfs-realtime",
+  "refreshIntervalMs": 15000,
+  "topology": {
+    "kind": "gtfs-static",
+    "sourceUrl": "https://www.bart.gov/dev/schedules/google_transit.zip",
+    "catalogUrl": "/providers/bart/catalog.json",
+    "tripMapUrl": "/providers/bart/trip-map.json",
+    "routeTypes": [1]
+  },
+  "schedule": { "kind": "clockface", "baseUrl": "", "runId": "" },
+  "predictions": {
+    "kind": "gtfs-realtime",
+    "adapter": "bart",
+    "urlTemplate": "https://api.bart.gov/gtfsrt/tripupdate.aspx",
+    "accessUrl": ""
+  }
+}

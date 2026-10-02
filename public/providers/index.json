@@ -55,6 +55,34 @@
       "manifest": "/providers/mbta-subway.json"
     },
     {
+      "id": "bart",
+      "names": { "en": "BART" },
+      "introduction": {
+        "kicker": "San Francisco Bay Area · BART",
+        "description": "BART train arrival predictions and published station timetables.",
+        "locality": "Bay Area",
+        "attribution": "BART"
+      },
+      "cities": [
+        { "id": "us-ca-san-francisco", "names": { "en": "San Francisco Bay Area" } }
+      ],
+      "manifest": "/providers/bart.json"
+    },
+    {
+      "id": "cta",
+      "names": { "en": "Chicago 'L' · CTA" },
+      "introduction": {
+        "kicker": "Chicago · CTA rail",
+        "description": "Published CTA rail timetables from Clockface. Live GTFS-Realtime requires a CTA API key.",
+        "locality": "Chicago",
+        "attribution": "the Chicago Transit Authority"
+      },
+      "cities": [
+        { "id": "us-il-chicago", "names": { "en": "Chicago" } }
+      ],
+      "manifest": "/providers/cta.json"
+    },
+    {
       "id": "nbrt-subway",
       "names": { "en": "Ningbo Rail Transit · 宁波地铁", "zh-CN": "宁波地铁" },
       "introduction": {

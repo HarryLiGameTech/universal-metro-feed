@@ -27,6 +27,8 @@ export interface GtfsRealtimeConfig {
   /** Omitted only for legacy adapters that resolve their own endpoint, such as MTA. */
   urlTemplate?: string;
   adapter?: string;
+  /** Same-origin endpoint when the official protobuf feed has no browser CORS support. */
+  accessUrl?: string;
 }
 
 export type OptionalGtfsRealtimeConfig = GtfsRealtimeConfig | { kind: "none" };
@@ -104,6 +106,9 @@ function isClockfaceBaseUrl(value: unknown): value is string {
 function isGtfsRealtimeConfig(value: unknown, allowAdapterEndpoint = false): value is GtfsRealtimeConfig {
   if (!isRecord(value) || value.kind !== "gtfs-realtime" ||
       (value.adapter !== undefined && (typeof value.adapter !== "string" || !value.adapter))) return false;
+  if (value.accessUrl !== undefined && (typeof value.accessUrl !== "string" ||
+      (value.accessUrl !== "" && (!value.accessUrl.startsWith("/") || value.accessUrl.startsWith("//") ||
+        value.accessUrl.includes("?") || value.accessUrl.includes("#"))))) return false;
   if (value.urlTemplate !== undefined && !isHttpsUrl(value.urlTemplate)) return false;
   return isHttpsUrl(value.urlTemplate) || (allowAdapterEndpoint && typeof value.adapter === "string");
 }

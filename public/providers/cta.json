@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "cta",
+  "timezone": "America/Chicago",
+  "defaultStationId": "40380",
+  "sourceUrl": "https://transitdata.transitchicago.com/",
+  "refreshIntervalMs": 15000,
+  "topology": {
+    "kind": "gtfs-static",
+    "sourceUrl": "https://www.transitchicago.com/downloads/sch_data/google_transit.zip",
+    "catalogUrl": "/providers/cta/catalog.json",
+    "routeTypes": [1]
+  },
+  "schedule": { "kind": "clockface", "baseUrl": "", "runId": "" },
+  "predictions": {
+    "kind": "gtfs-realtime",
+    "adapter": "cta",
+    "urlTemplate": "https://transitdata.transitchicago.com/GtfsRealtime/TripUpdates.pb",
+    "accessUrl": ""
+  }
+}
