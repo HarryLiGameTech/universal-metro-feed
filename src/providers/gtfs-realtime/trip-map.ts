@@ -1,6 +1,6 @@
 import { assetUrl } from "../../lib/asset-url";
 
-export interface ToeiTripMap {
+export interface GtfsTripMap {
   schemaVersion: 1;
   providerId: string;
   source: {
@@ -20,13 +20,13 @@ export interface ToeiTripMap {
   trips: Record<string, number | null>;
 }
 
-export async function loadToeiTripMap(url: string, providerId: string): Promise<ToeiTripMap> {
+export async function loadGtfsTripMap(url: string, providerId: string): Promise<GtfsTripMap> {
   const response = await fetch(assetUrl(url));
   if (!response.ok) throw new Error(`Could not load station mappings (${response.status}).`);
-  const value = await response.json() as ToeiTripMap | null;
+  const value = await response.json() as GtfsTripMap | null;
   if (!value || value.schemaVersion !== 1 || value.providerId !== providerId || !value.source ||
       !Array.isArray(value.patterns) || !value.trips || typeof value.trips !== "object") {
-    throw new Error("Invalid Toei station mappings.");
+    throw new Error("Invalid GTFS station mappings.");
   }
   return value;
 }

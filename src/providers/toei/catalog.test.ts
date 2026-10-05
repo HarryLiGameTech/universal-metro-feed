@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import catalog from "../../../public/providers/toei-subway/catalog.json";
 import fixture from "../../../public/providers/toei-subway/trip-map.json";
-import type { ToeiTripMap } from "./trip-map";
+import type { GtfsTripMap } from "../gtfs-realtime/trip-map";
 
-const map = fixture as ToeiTripMap;
+const map = fixture as GtfsTripMap;
 
 describe("Toei's generated lightweight references", () => {
   it("keeps only subway lines and shares stopping patterns across trips", () => {

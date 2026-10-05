@@ -1,10 +1,10 @@
 import { assetUrl } from "../../lib/asset-url";
 import { gtfsClockfaceTimetableLoader } from "../clockface/gtfs-timetable";
+import { mappedGtfsArrivals } from "../gtfs-realtime/mapped-arrivals";
 import { fetchGtfsRealtimeFeed } from "../gtfs-realtime/source";
+import { loadGtfsTripMap } from "../gtfs-realtime/trip-map";
 import { loadProviderCatalog, type ProviderManifest } from "../registry";
 import type { ProviderRuntime } from "../runtime";
-import { loadToeiTripMap } from "../toei/trip-map";
-import { mappedGtfsArrivals } from "../toei/realtime-adapter";
 
 export function gtfsRailRuntime(manifest: ProviderManifest): ProviderRuntime {
   if ((manifest.id !== "bart" && manifest.id !== "cta") || manifest.topology.kind !== "gtfs-static" ||
@@ -22,10 +22,10 @@ export function gtfsRailRuntime(manifest: ProviderManifest): ProviderRuntime {
   // access URL leaves its live panel absent; it never exposes a key in the bundle.
   const accessUrl = configuredAccessUrl ? assetUrl(configuredAccessUrl) : null;
   const { catalogUrl, tripMapUrl } = manifest.topology;
-  let mapPromise: ReturnType<typeof loadToeiTripMap> | undefined;
+  let mapPromise: ReturnType<typeof loadGtfsTripMap> | undefined;
   const map = () => {
     if (!tripMapUrl) throw new Error("GTFS trip mapping is not configured.");
-    return mapPromise ??= loadToeiTripMap(tripMapUrl, manifest.id).then((tripMap) => manifest.id === "bart"
+    return mapPromise ??= loadGtfsTripMap(tripMapUrl, manifest.id).then((tripMap) => manifest.id === "bart"
       // BART's current ZIP advertises an August feed_end_date while its own
       // service calendar extends through January; retain exact trip IDs here.
       ? { ...tripMap, source: { ...tripMap.source, feedEndDate: null } } : tripMap).catch((error: unknown) => {

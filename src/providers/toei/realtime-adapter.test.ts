@@ -6,12 +6,12 @@ import tripMapFixture from "../../../public/providers/toei-subway/trip-map.json"
 import { parseProviderManifest } from "../registry";
 import { runtimeForProvider } from "../runtime";
 import { toeiArrivals } from "./realtime-adapter";
-import type { ToeiTripMap } from "./trip-map";
+import type { GtfsTripMap } from "../gtfs-realtime/trip-map";
 
 const realtime = GtfsRealtimeBindings.transit_realtime;
 const timezone = "Asia/Tokyo";
 const manifest = parseProviderManifest(manifestFixture, "toei-subway");
-const tripMap: ToeiTripMap = tripMapFixture as ToeiTripMap;
+const tripMap: GtfsTripMap = tripMapFixture as GtfsTripMap;
 const stop = { stopSequence: 6, arrival: { time: 1_790_211_960, uncertainty: 60 } };
 function bytes(entity: object[], header: object = {}) {
   return realtime.FeedMessage.encode(realtime.FeedMessage.fromObject({
@@ -95,7 +95,7 @@ describe("Toei realtime adapter", () => {
   });
 
   it("does not guess mappings for unknown trips, sparse sequences, expired or mismatched references", () => {
-    const map: ToeiTripMap = {
+    const map: GtfsTripMap = {
       ...tripMap, trips: { known: 0, tram: null },
       patterns: [{ routeId: "1", direction: "0", headsign: "印西牧の原", stops: { "13": "119", "20": "120" } }],
     };
