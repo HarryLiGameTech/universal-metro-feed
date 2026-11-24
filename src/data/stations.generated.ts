@@ -4313,12 +4313,6 @@ export const stations: readonly Station[] = [
         "directions": [
           "N"
         ]
-      },
-      {
-        "routeId": "H",
-        "directions": [
-          "N"
-        ]
       }
     ]
   },
@@ -4330,13 +4324,6 @@ export const stations: readonly Station[] = [
     "routes": [
       {
         "routeId": "A",
-        "directions": [
-          "N",
-          "S"
-        ]
-      },
-      {
-        "routeId": "H",
         "directions": [
           "N",
           "S"
@@ -7888,13 +7875,6 @@ export const stations: readonly Station[] = [
           "N",
           "S"
         ]
-      },
-      {
-        "routeId": "H",
-        "directions": [
-          "N",
-          "S"
-        ]
       }
     ]
   },
@@ -8112,7 +8092,7 @@ export const stations: readonly Station[] = [
   },
   {
     "id": "G05",
-    "name": "Jamaica Center-Parsons/Archer",
+    "name": "Jamaica Center-York College",
     "latitude": 40.702147,
     "longitude": -73.801109,
     "routes": [
@@ -10076,13 +10056,6 @@ export const stations: readonly Station[] = [
     "routes": [
       {
         "routeId": "A",
-        "directions": [
-          "N",
-          "S"
-        ]
-      },
-      {
-        "routeId": "H",
         "directions": [
           "N",
           "S"

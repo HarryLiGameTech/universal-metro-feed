@@ -1,7 +1,11 @@
 service_id,date,exception_type
-Sunday,20260907,1
-Sunday-H-20260526-20260907,20260907,1
-Saturday,20260703,1
-Saturday-H-20260526-20260907,20260703,1
-Weekday,20260703,2
-Weekday,20260907,2
+Sunday,20261126,1
+Sunday,20261225,1
+Sunday,20270101,1
+Saturday,20270118,1
+Saturday,20270215,1
+Weekday,20261126,2
+Weekday,20261225,2
+Weekday,20270101,2
+Weekday,20270118,2
+Weekday,20270215,2
