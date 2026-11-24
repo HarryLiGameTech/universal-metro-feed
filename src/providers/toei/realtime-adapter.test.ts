@@ -12,6 +12,8 @@ const realtime = GtfsRealtimeBindings.transit_realtime;
 const timezone = "Asia/Tokyo";
 const manifest = parseProviderManifest(manifestFixture, "toei-subway");
 const tripMap: GtfsTripMap = tripMapFixture as GtfsTripMap;
+// CI regenerates the trip map from the live feed; use a date inside its window.
+const serviceDate = tripMap.source.feedStartDate!;
 const stop = { stopSequence: 6, arrival: { time: 1_790_211_960, uncertainty: 60 } };
 function bytes(entity: object[], header: object = {}) {
   return realtime.FeedMessage.encode(realtime.FeedMessage.fromObject({
@@ -82,7 +84,7 @@ describe("Toei realtime adapter", () => {
 
   it("maps the screenshot's trip and stop sequence without substituting scheduled times", () => {
     const snapshot = toeiArrivals(realtime.FeedMessage.decode(bytes([
-      trip([{ ...stop, stopSequence: 13 }], { tripId: "100939N0", startDate: "20260924" }),
+      trip([{ ...stop, stopSequence: 13 }], { tripId: "100939N0", startDate: serviceDate }),
     ])), timezone, tripMap);
     expect(snapshot.arrivals[0]).toMatchObject({
       tripId: "100939N0", routeId: "1", direction: "0", stopId: "119",
@@ -99,14 +101,14 @@ describe("Toei realtime adapter", () => {
       ...tripMap, trips: { known: 0, tram: null },
       patterns: [{ routeId: "1", direction: "0", headsign: "印西牧の原", stops: { "13": "119", "20": "120" } }],
     };
-    const decode = (tripId: string, sequence: number, startDate = "20260924", header: object = {}) =>
+    const decode = (tripId: string, sequence: number, startDate = serviceDate, header: object = {}) =>
       toeiArrivals(realtime.FeedMessage.decode(bytes([
         trip([{ ...stop, stopSequence: sequence }], { tripId, startDate }),
       ], header)), timezone, map);
     expect(decode("known", 20).arrivals[0]?.stopId).toBe("120");
     expect(decode("known", 14).arrivals[0]?.stopId).toBeNull();
     for (const result of [decode("missing", 13), decode("known", 13, "20300101"),
-      decode("known", 13, "20260924", { feedVersion: "different" })]) {
+      decode("known", 13, serviceDate, { feedVersion: "different" })]) {
       expect(result.arrivals[0]).toMatchObject({ routeId: null, stopId: null, direction: null, destinationName: null });
       expect(result.warnings?.[0]).toContain("incomplete");
     }
